@@ -10,7 +10,7 @@ namespace Chess {
 		interface();
 		static std::string nextWord(std::string s, uint8_t* index);
 		void local();
-		void playerMove(std::string input);
+		bool playerMove(std::string input);
 		void botMove();
 		void getChoice();
 		void drawBoard();

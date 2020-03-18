@@ -45,13 +45,13 @@ namespace Chess{
 		game = board();
 		ai = bot();
 		std::string input;
-		ai.setbTime(300000);
-		ai.setwTime(300000);
+		ai.setbTime(200000);
+		ai.setwTime(200000);
 		drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
-				playerMove(input);
+				while (!playerMove(input)) { std::getline(std::cin, input); }
 				drawBoard();
 				if (game.checkMate()) { break; }
 				botMove();
@@ -117,14 +117,14 @@ namespace Chess{
 		}
 	}
 
-	void interface::playerMove(std::string input) {//makes external moves
+	bool interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {
 			uint8_t from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
 			uint8_t to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				m = game.createMove(from, to);
 				if (m.getFlags() != FAIL && m.getFlags() < PROMOTE) {
-					game.movePiece(m);
+					if (game.movePiece(m)) { return true; }
 				}
 			}
 		}
@@ -141,10 +141,11 @@ namespace Chess{
 					case 'r': { m = (m.getFlags() == QPROMOTEC) ? move(m.getFrom(), m.getTo(), RPROMOTEC) : move(m.getFrom(), m.getTo(), RPROMOTE); break; }
 					case 'q': { m = (m.getFlags() == QPROMOTEC) ? move(m.getFrom(), m.getTo(), QPROMOTEC) : move(m.getFrom(), m.getTo(), QPROMOTE); break; }
 					}
-					game.movePiece(m);
+					if (game.movePiece(m)) { return true; }
 				}
 			}
 		}
+		return false;
 	}
 
 	void interface::botMove() {//generates internal moves
