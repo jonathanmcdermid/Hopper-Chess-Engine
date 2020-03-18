@@ -3,7 +3,7 @@
 
 namespace Chess{
 
-	void interface::drawBoard() {
+	void interface::drawBoard() {//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
 		for (uint8_t i = 0; i < WIDTH; i++) {
@@ -31,7 +31,7 @@ namespace Chess{
 		std::cout << "\n---------------------------------\n";
 	}
 
-	interface::interface(){
+	interface::interface(){//awaits input from user or uci
 		std::string input;
 		while (1) {
 			std::getline(std::cin, input);
@@ -41,7 +41,7 @@ namespace Chess{
 		}
 	}
 
-	void interface::local() {
+	void interface::local() {//for play without uci
 		game = board();
 		ai = bot();
 		std::string input;
@@ -62,7 +62,7 @@ namespace Chess{
 		std::cout << "good game\n";
 	}
 
-	std::string interface::nextWord(std::string s, uint8_t* index) {
+	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from gui
 		while (s.c_str()[*index] == ' ') { (*index)++; }
 		uint8_t temp = *index;
 		while (s.c_str()[*index] != '\0' && s.c_str()[*index] != '\n') {
@@ -74,7 +74,7 @@ namespace Chess{
 		return w1;
 	}
 
-	void interface::uci() {
+	void interface::uci() {//communicates with uci
 		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\n";
 		std::cout << "uciok\n";
 		while (1) {
@@ -117,7 +117,7 @@ namespace Chess{
 		}
 	}
 
-	void interface::playerMove(std::string input) {
+	void interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {
 			uint8_t from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
 			uint8_t to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
@@ -147,7 +147,7 @@ namespace Chess{
 		}
 	}
 
-	void interface::botMove() {
+	void interface::botMove() {//generates internal moves
 		m = ai.getMove(&game);
 		game.movePiece(m);
 		char message[] = { (int) WIDTH - m.getFrom() / WIDTH + '0', (int) m.getFrom() % WIDTH + 'a', (int) WIDTH - m.getTo() / WIDTH + '0', (int) m.getTo() % WIDTH + 'a' };

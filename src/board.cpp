@@ -2,7 +2,7 @@
 
 namespace Chess {
 
-	board::board() {
+	board::board() {//sets board to starting state
 		z = zobrist();
 		cturn  = 0;
 		check  = 0;
@@ -30,14 +30,14 @@ namespace Chess {
 		zkey = z.newKey(this);
 	}
 
-	int16_t board::abs(int16_t a) {
+	int16_t board::abs(int16_t a) {//quick absolute function
 		int16_t s = a >> 15;
 		a ^= s;
 		a -= s;
 		return a;
 	}
 
-	bool board::movePiece(move m) {
+	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
 		bool enemy = (turn) ? 0 : 1;
 		switch (m.getFlags()) {
 		case STANDARD:
@@ -138,7 +138,7 @@ namespace Chess {
 		return true;
 	}
 
-	void board::unmovePiece() {
+	void board::unmovePiece() {//unmakes a move
 		turn = (turn) ? 0 : 1;
 		cturn--;
 		bool enemy = (turn) ? 0 : 1;
@@ -248,7 +248,7 @@ namespace Chess {
 		mHist[cturn] = move();
 	}
 
-	move board::createMove(uint8_t from, uint8_t to) {
+	move board::createMove(uint8_t from, uint8_t to) {//generates a pseudo legal move from start and endpoint (cannot create nullmove)
 		if ((turn && (grid[from] <= 0 || grid[to] > 0)) || (!turn && (grid[from] >= 0 || grid[to] < 0))) { return move(); }
 		uint8_t end, i;
 		int8_t direction;
@@ -365,7 +365,7 @@ namespace Chess {
 		return move();
 	}
 
-	int16_t board::negaEval() {
+	int16_t board::negaEval() {//evaluates for negamax function, uses material weight and estimated mobility
 		int8_t msum = 0;
 		for (uint8_t from = 0; from < SPACES; from++) {
 			if (grid[from]) { msum = (grid[from] > 0) ? msum + moveTotal(from) : msum - moveTotal(from); }
@@ -373,7 +373,7 @@ namespace Chess {
 		return (turn) ? vHist[cturn - 1] + 10*msum : -vHist[cturn - 1] - 10*msum; 
 	}
 
-	uint8_t board::moveTotal(uint8_t from) {
+	uint8_t board::moveTotal(uint8_t from) {//estimates mobility of one piece, omits king moves
 		int8_t end, i;
 		int8_t direction;
 		uint8_t mcount = 0;
@@ -547,7 +547,7 @@ namespace Chess {
 		return mcount;
 	}
 
-	bool board::checkMate() {
+	bool board::checkMate() {//looks for checkmate or draw
 		for (uint8_t from = 0; from < SPACES; from++) {
 			if ((grid[from] > 0 && turn) || (grid[from] < 0 && !turn)) {
 				for (uint8_t to = 0; to < SPACES; to++) {
@@ -559,7 +559,7 @@ namespace Chess {
 		return true;
 	}
 	
-	bool board::checkTurn() {
+	bool board::checkTurn() {//looks for check
 		uint8_t to;
 		for (to = 0; to < SPACES; to++) { if ((turn && grid[to] == KING) || (!turn && grid[to] == -KING)) { break; } }
 		turn = (turn) ? 0 : 1;

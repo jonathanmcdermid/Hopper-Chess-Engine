@@ -10,7 +10,7 @@ namespace Chess {
 		btime = 0;
 	}
 
-	move bot::getMove(board* b) {
+	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
 		uint32_t limit = (b->getTurn()) ? wtime / 50 : btime / 50;
 		auto start = std::chrono::high_resolution_clock::now();
 		int16_t score;
@@ -43,7 +43,7 @@ namespace Chess {
 		return pv.movelink[0];
 	}
 
-	int16_t bot::miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull) {
+	int16_t bot::miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
 		if (!depth) {
 			pline->cmove = 0;
 			//return b->negaEval();
@@ -141,7 +141,7 @@ namespace Chess {
 		return alpha;
 	}
 
-	int16_t bot::qSearch(board* b, int16_t alpha, int16_t beta) {
+	int16_t bot::qSearch(board* b, int16_t alpha, int16_t beta) {//quiescent search
 		int16_t score = b->negaEval();
 		if (score >= beta) { return score; }
 		if (score > alpha) { alpha = score; }

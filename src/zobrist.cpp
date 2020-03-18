@@ -4,7 +4,7 @@
 
 namespace Chess {
 
-	zobrist::zobrist() {
+	zobrist::zobrist() {//generates pseudo random template
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
 		std::uniform_int_distribution<std::uintmax_t> dis;
@@ -25,7 +25,7 @@ namespace Chess {
 		}
 	}
 
-	uint64_t zobrist::newKey(board* b) {
+	uint64_t zobrist::newKey(board* b) {//XORs random template with board state and returns zobrist key
 		uint64_t key = 0;
 		for (uint8_t i = 0; i < SPACES; i++) {
 			if		(b->getGrid(i) > 0) { key ^= pieces[ b->getGrid(i) % 100][1][i]; }
