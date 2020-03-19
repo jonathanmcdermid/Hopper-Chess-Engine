@@ -6,8 +6,8 @@ namespace Chess {
 
 	bot::bot() { 
 		for (uint16_t i = 0; i < HASHSIZE; i++) { table[i] = hashtable(); }
-		wtime = 0;
-		btime = 0;
+		wtime = 200000;
+		btime = 200000;
 	}
 
 	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
