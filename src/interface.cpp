@@ -12,15 +12,15 @@ namespace Chess{
 				switch (game.getGrid(i * WIDTH + j)) {
 				case PAWN:		{ letter = 'P'; break; }
 				case ROOK:		{ letter = 'R'; break; }
-				case KNIGHT:	{ letter = 'N'; break; }
-				case BISHOP:	{ letter = 'B'; break; }
+				case KNIGHT:		{ letter = 'N'; break; }
+				case BISHOP:		{ letter = 'B'; break; }
 				case QUEEN:		{ letter = 'Q'; break; }
 				case KING:		{ letter = 'K'; break; }
 				case -PAWN:		{ letter = 'p'; break; }
 				case -ROOK:		{ letter = 'r'; break; }
-				case -KNIGHT:	{ letter = 'n'; break; }
-				case -BISHOP:	{ letter = 'b'; break; }
-				case -QUEEN:	{ letter = 'q'; break; }
+				case -KNIGHT:		{ letter = 'n'; break; }
+				case -BISHOP:		{ letter = 'b'; break; }
+				case -QUEEN:		{ letter = 'q'; break; }
 				case -KING:		{ letter = 'k'; break; }
 				default:		{ letter = ' '; }
 				}
