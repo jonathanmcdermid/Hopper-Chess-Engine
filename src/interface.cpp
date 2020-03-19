@@ -12,15 +12,15 @@ namespace Chess{
 				switch (game.getGrid(i * WIDTH + j)) {
 				case PAWN:		{ letter = 'P'; break; }
 				case ROOK:		{ letter = 'R'; break; }
-				case KNIGHT:	{ letter = 'N'; break; }
-				case BISHOP:	{ letter = 'B'; break; }
+				case KNIGHT:		{ letter = 'N'; break; }
+				case BISHOP:		{ letter = 'B'; break; }
 				case QUEEN:		{ letter = 'Q'; break; }
 				case KING:		{ letter = 'K'; break; }
 				case -PAWN:		{ letter = 'p'; break; }
 				case -ROOK:		{ letter = 'r'; break; }
-				case -KNIGHT:	{ letter = 'n'; break; }
-				case -BISHOP:	{ letter = 'b'; break; }
-				case -QUEEN:	{ letter = 'q'; break; }
+				case -KNIGHT:		{ letter = 'n'; break; }
+				case -BISHOP:		{ letter = 'b'; break; }
+				case -QUEEN:		{ letter = 'q'; break; }
 				case -KING:		{ letter = 'k'; break; }
 				default:		{ letter = ' '; }
 				}
@@ -62,7 +62,7 @@ namespace Chess{
 		std::cout << "good game\n";
 	}
 
-	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from gui
+	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from inut stream
 		while (s.c_str()[*index] == ' ') { (*index)++; }
 		uint8_t temp = *index;
 		while (s.c_str()[*index] != '\0' && s.c_str()[*index] != '\n') {
