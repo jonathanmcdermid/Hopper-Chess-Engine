@@ -4,29 +4,65 @@ namespace Chess {
 
 	board::board() {//sets board to starting state
 		z = zobrist();
-		cturn  = 0;
-		check  = 0;
-		turn   = 1;
-		for (uint8_t i =  0; i < MEMORY;	i++) { mHist[i] = move(); vHist[i] = 0; }
-		for (uint8_t i =  0; i < SPACES;	i++) { grid[i]  = EMPTY; }
-		for (uint8_t i =  0; i < 2 * WIDTH; i++) { grid[i]  = -PAWN; }
-		for (uint8_t i = 48; i < SPACES;	i++) { grid[i]  =  PAWN; }
-		grid[0]	 = -ROOK;
-		grid[1]  = -KNIGHT;
-		grid[2]  = -BISHOP;
-		grid[3]  = -QUEEN;
-		grid[4]  = -KING;
-		grid[5]  = -BISHOP;
-		grid[6]	 = -KNIGHT;
-		grid[7]	 = -ROOK;
-		grid[56] = ROOK;
-		grid[57] = KNIGHT;
-		grid[58] = BISHOP;
-		grid[59] = QUEEN;
-		grid[60] = KING;
-		grid[61] = BISHOP;
-		grid[62] = KNIGHT;
-		grid[63] = ROOK;
+		fenSet("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	}
+
+	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string, no 50 move rule implementation
+		for (uint8_t i = 0; i < MEMORY; i++) { mHist[i] = move(); vHist[i] = 0; }
+		cturn = 0;
+		uint8_t index = 0;
+		uint8_t counter = 0;
+		uint8_t helper;
+		while (fs[index] != ' ') {
+			switch (fs[index]) {
+			case 'P': { grid[counter] = PAWN; counter++; break; }
+			case 'R': { grid[counter] = ROOK; counter++; break; }
+			case 'N': { grid[counter] = KNIGHT; counter++; break; }
+			case 'B': { grid[counter] = BISHOP; counter++; break; }
+			case 'Q': { grid[counter] = QUEEN; counter++; break; }
+			case 'K': { grid[counter] = KING; counter++; break; }
+			case 'p': { grid[counter] = -PAWN; counter++; break; }
+			case 'r': { grid[counter] = -ROOK; counter++; break; }
+			case 'n': { grid[counter] = -KNIGHT; counter++; break; }
+			case 'b': { grid[counter] = -BISHOP; counter++; break; }
+			case 'q': { grid[counter] = -QUEEN; counter++; break; }
+			case 'k': { grid[counter] = -KING; counter++; break; }
+			case '/': { break; }
+			default:
+				helper = fs[index] - '0';
+				while (helper) {
+					grid[counter] = EMPTY;
+					counter++;
+					helper--;
+				}
+			}
+			index++;
+		}
+		index++;
+		turn = (fs[index] == 'w') ? 1 : 0;
+		index++;
+		bool castled[4] = { true,true,true,true };
+		while (fs[index] != ' ') {
+			switch (fs[index]) {
+			case 'K': {castled[3] = false; break; }
+			case 'Q': {castled[2] = false; break; }
+			case 'k': {castled[1] = false; break; }
+			case 'q': {castled[0] = false; break; }
+			}
+			index++;
+		}
+		if (castled[0]) { mHist[cturn] = move(0, 0, NULLMOVE); cturn++; }
+		if (castled[1]) { mHist[cturn] = move(WIDTH-1, 0, NULLMOVE); cturn++; }
+		if (castled[2]) { mHist[cturn] = move(SPACES - WIDTH, 0, NULLMOVE); cturn++; }
+		if (castled[3]) { mHist[cturn] = move(SPACES - 1, 0, NULLMOVE); cturn++; }
+		index++;
+		if(fs[index]!='-'){
+			uint8_t from = (turn) ? fs[index] - '0' - WIDTH : fs[index] - '0' + WIDTH;
+			uint8_t to   = (turn) ? fs[index] - '0' + WIDTH : fs[index] - '0' - WIDTH;
+			mHist[cturn] = move(from, to, DOUBLEPUSH);
+			cturn++;
+		}
+		index++;
 		zkey = z.newKey(this);
 	}
 
