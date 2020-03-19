@@ -16,6 +16,7 @@ The engine utilizes the following methods and more.
 
 ```
 negamax algorithm
+forsyth–edwards notation
 material evaluation
 mobility evaluation
 pruning
