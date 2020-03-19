@@ -62,7 +62,7 @@ namespace Chess{
 		std::cout << "good game\n";
 	}
 
-	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from gui
+	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from inut stream
 		while (s.c_str()[*index] == ' ') { (*index)++; }
 		uint8_t temp = *index;
 		while (s.c_str()[*index] != '\0' && s.c_str()[*index] != '\n') {
