@@ -21,7 +21,8 @@ mobility evaluation
 pruning
 iterative deepening 
 principle variations
-hashtables
+hashing
+transposition tables
 zobrist keys
 null moves
 quiescent search
