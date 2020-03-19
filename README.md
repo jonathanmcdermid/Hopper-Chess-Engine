@@ -4,13 +4,13 @@ This is an amateur chess engine, and still in development. UCI compatibility for
 
 ## Playing In Arena
 
-To play the engine in Arena, compile a binary file using the source material and follow the standard process of loading the Engine in arena. *limited functionality at the moment
+To play the engine in Arena, compile a binary file using the source material and follow the standard process of loading the Engine in arena. *limited functionality at the moment*
 
 ## Playing Locally
 
 To play the engine without Arena, generate and run .exe file. Enter "local" in the cmd window. The board should subsequently be printed, and moves can be input in standard UCI format (a2a4).
 
-### Engine Features
+## Engine Features
 
 The engine utilizes the following methods and more.  
 
