@@ -27,3 +27,4 @@ null moves
 quiescent search
 dynamic alpha beta windows
 ```
+FEN strings, UCI compatibility, and time management are at the top of the to do list.
