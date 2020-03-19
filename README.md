@@ -4,7 +4,7 @@ This is an amateur chess engine, and still in development. UCI compatibility for
 
 ## Playing In Arena
 
-To play the engine in Arena, compile a binary file using the source material and follow the standard process of loading the Engine in arena. *limited functionality at the moment*
+To play the engine in Arena, compile a binary file using the source material and follow the standard process of installing an Engine in Arena. *limited functionality at the moment*
 
 ## Playing Locally
 
