@@ -67,13 +67,6 @@ namespace Chess {
 		zkey = z.newKey(this);
 	}
 
-	int16_t board::abs(int16_t a) {//quick absolute function
-		int16_t s = a >> 15;
-		a ^= s;
-		a -= s;
-		return a;
-	}
-
 	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
 		bool enemy = (turn) ? BLACK : WHITE;
 		switch (m.getFlags()) {

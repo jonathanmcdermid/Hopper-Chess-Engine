@@ -7,8 +7,10 @@
 namespace Chess {
 	class interface {
 	public:
-		interface();
-		static std::string nextWord(std::string s, uint8_t* index);
+		interface(int argc, char* argv[]);
+		void uci(int argc, char* argv[]);
+		void go(std::istringstream& is);
+		void position(std::istringstream& is);
 		void local();
 		bool playerMove(std::string input);
 		void botMove();
@@ -16,7 +18,6 @@ namespace Chess {
 		void drawBoard();
 		void promote();
 		void checkBoth();
-		void uci();
 	private:
 		board game;
 		bot ai;

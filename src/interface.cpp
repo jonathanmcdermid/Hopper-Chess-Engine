@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include "interface.h"
 
 namespace Chess{
@@ -10,19 +11,19 @@ namespace Chess{
 			std::cout << "\n---------------------------------\n|";
 			for (uint8_t j = 0; j < WIDTH; ++j) {
 				switch (game.getGrid(i * WIDTH + j)) {
-				case PAWN: { letter = 'P'; break; }
-				case ROOK: { letter = 'R'; break; }
-				case KNIGHT: { letter = 'N'; break; }
-				case BISHOP: { letter = 'B'; break; }
-				case QUEEN: { letter = 'Q'; break; }
-				case KING: { letter = 'K'; break; }
-				case -PAWN: { letter = 'p'; break; }
-				case -ROOK: { letter = 'r'; break; }
-				case -KNIGHT: { letter = 'n'; break; }
-				case -BISHOP: { letter = 'b'; break; }
-				case -QUEEN: { letter = 'q'; break; }
-				case -KING:	{ letter = 'k'; break; }
-				default: { letter = ' '; }
+				case PAWN:		{ letter = 'P'; break; }
+				case ROOK:		{ letter = 'R'; break; }
+				case KNIGHT:	{ letter = 'N'; break; }
+				case BISHOP:	{ letter = 'B'; break; }
+				case QUEEN:		{ letter = 'Q'; break; }
+				case KING:		{ letter = 'K'; break; }
+				case -PAWN:		{ letter = 'p'; break; }
+				case -ROOK:		{ letter = 'r'; break; }
+				case -KNIGHT:	{ letter = 'n'; break; }
+				case -BISHOP:	{ letter = 'b'; break; }
+				case -QUEEN:	{ letter = 'q'; break; }
+				case -KING:		{ letter = 'k'; break; }
+				default:		{ letter = ' '; }
 				}
 				std::cout << " " << letter << " |";
 			}
@@ -31,19 +32,75 @@ namespace Chess{
 		std::cout << "\n---------------------------------\n";
 	}
 
-	interface::interface(){//awaits input from user or uci
+	void interface::go(std::istringstream& is) {//most options are not implemented yet
+		std::string word;
+		while (is >> word) {
+			if (word == "searchmoves")		{ ; }
+			else if (word == "wtime")		{ is >> ai.lim.time[WHITE]; }
+			else if (word == "btime")		{ is >> ai.lim.time[BLACK]; }
+			else if (word == "winc")		{ is >> ai.lim.inc[WHITE]; }
+			else if (word == "binc")		{ is >> ai.lim.inc[BLACK]; }
+			else if (word == "movestogo")	{ is >> ai.lim.movesleft; }
+			else if (word == "depth")		{ is >> ai.lim.depth; }
+			else if (word == "nodes")		{ is >> ai.lim.nodes; }
+			else if (word == "movetime")	{ is >> ai.lim.movetime; }
+			else if (word == "mate")		{ is >> ai.lim.mate; }
+			else if (word == "perft")		{ is >> ai.lim.perft; }
+			else if (word == "infinite")	{ ai.lim.infinite = true; }
+			else if (word == "ponder")		{ ; }
+		}
+		interface::botMove();
+	}
+
+	void interface::position(std::istringstream& is) {
+		std::string word, fen;
+		is >> word;
+		if (word == "startpos") {
+			fen = STARTFEN;
+			is >> word;
+		}
+		else if (word == "fen") { while (is >> word && word != "moves") { fen += word + " "; } }
+		else { return; }
+		game.fenSet(fen);
+		while (is >> word) { if (!playerMove(word)) { break; } }
+	}
+
+	void interface::uci(int argc, char* argv[]) {//uci communication loop, some options non functioning
+		std::string word, cmd;
+		game = board();
+		ai = bot();
+		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
+		for (int i = 1; i < argc; ++i) { cmd += std::string(argv[i]) + " "; }
+		do {
+			if (argc == 1 && !getline(std::cin, cmd)) { cmd = "quit"; }
+			std::istringstream is(cmd);
+			word.clear();
+			is >> std::skipws >> word;
+			if (word == "quit" || word == "stop")	{ ; }
+			else if (word == "ponderhit")			{ ; }
+			else if (word == "uci")					{ std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n"; }
+			else if (word == "setoption")			{ ; }
+			else if (word == "go")					{ go(is); }
+			else if (word == "position")			{ position(is); }
+			else if (word == "ucinewgame")			{ game = board(); }
+			else if (word == "isready")				{ std::cout << "readyok\n"; }
+			else if (word == "print")				{ drawBoard(); }
+		} while (word != "quit" && argc == 1);
+	}
+
+	interface::interface(int argc, char* argv[]){//awaits input from user or uci
 		std::string input;
 		while (1) {
 			std::getline(std::cin, input);
-			if (input == "uci") { uci(); }
-			if (input == "local") { local(); }
-			if (input == "quit") { exit(1); }
+			if (input == "uci")		{ uci(argc, argv); }
+			if (input == "local")	{ local(); }
+			if (input == "quit")	{ exit(1); }
 		}
 	}
 
 	void interface::local() {//for play without uci
 		game = board();
-		ai = bot::bot();
+		ai = bot();
 		std::string input;
 		interface::drawBoard();
 		while (1) {
@@ -59,62 +116,6 @@ namespace Chess{
 		}
 		std::cout << "good game\n";
 	}
-
-	std::string interface::nextWord(std::string s, uint8_t* index) {//temporary fix to find next word from inut stream
-		while (s.c_str()[*index] == ' ') { (*index)++; }
-		uint8_t temp = *index;
-		while (s.c_str()[*index] != '\0' && s.c_str()[*index] != '\n') {
-			(*index)++;
-			if (s.c_str()[*index] == ' ') { break; }
-		}
-		uint8_t temp2 = *index - temp;
-		std::string w1 = s.substr(temp, temp2);
-		return w1;
-	}
-
-	void interface::uci() {//communicates with uci
-		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\n";
-		std::cout << "uciok\n";
-		while (1) {
-			std::string input;
-			std::string w1;
-			uint8_t index = 0;
-			std::getline(std::cin, input);
-			w1 = nextWord(input, &index);
-			if (w1 == "ucinewgame") { std::cout << "readyok\n"; }
-			else if (w1 == "isready") { std::cout << "readyok\n"; }
-			else if (w1 == "position") {
-				w1 = nextWord(input, &index);
-				if (w1 == "startpos") {
-					game = board();
-					ai = bot::bot();
-				}
-				w1 = nextWord(input, &index);
-				if (w1 == "moves") {
-					while (w1 != "\0") {
-						w1 = nextWord(input, &index);
-						playerMove(w1);
-					}
-				}
-			}
-			else if (w1 == "go") { 
-				w1 = nextWord(input, &index);
-				if (w1 == "wtime") {
-					w1 = nextWord(input, &index);
-					ai.lim.time[WHITE] = stoi(w1);
-					w1 = nextWord(input, &index);
-					if (w1 == "btime") {
-						w1 = nextWord(input, &index);
-						ai.lim.time[BLACK] = stoi(w1);
-					}
-				}
-				botMove(); 
-			}
-			else if (input == "print") { drawBoard(); }
-			else if (input == "quit") { exit(1); }
-		}
-	}
-
 
 	bool interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {

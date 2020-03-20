@@ -15,6 +15,10 @@ namespace Chess {
 		 uint8_t movesleft;
 		 uint8_t depth;
 		 uint8_t nodes;
+		 uint8_t perft;
+		 uint8_t mate;
+		 uint8_t movetime;
+		 bool infinite;
 	}limits;
 	class bot{
 	public:

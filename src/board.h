@@ -25,7 +25,6 @@ namespace Chess {
 	private:
 		zobrist z;
 		uint64_t zkey;
-		static int16_t abs(int16_t a);
 		uint8_t cturn;
 		int16_t grid[SPACES] = { 0 };
 		int16_t vHist[MEMORY] = { 0 };

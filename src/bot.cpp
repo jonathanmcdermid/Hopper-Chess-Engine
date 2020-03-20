@@ -11,6 +11,12 @@ namespace Chess {
 		lim.inc[WHITE] = 0;
 		lim.inc[WHITE] = 0;
 		lim.depth = MAXDEPTH;
+		lim.movesleft = 0;
+		lim.nodes = 0;
+		lim.perft = 0;
+		lim.mate = 0;
+		lim.movetime = 0;
+		bool infinite = false;
 	}
 
 	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
