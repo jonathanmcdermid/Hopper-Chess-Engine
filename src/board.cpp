@@ -42,7 +42,7 @@ namespace Chess {
 		turn = (fs[index] == 'w') ? WHITE : BLACK;
 		index++;
 		bool castled[4] = { true,true,true,true };
-		while (fs[index] != ' ') {
+		do{
 			switch (fs[index]) {
 			case 'K': {castled[3] = false; break; }
 			case 'Q': {castled[2] = false; break; }
@@ -50,7 +50,7 @@ namespace Chess {
 			case 'q': {castled[0] = false; break; }
 			}
 			index++;
-		}
+		} while (fs[index] != ' ');
 		if (castled[0]) { mHist[cturn] = move(0, 0, NULLMOVE); cturn++; }
 		if (castled[1]) { mHist[cturn] = move(WIDTH-1, 0, NULLMOVE); cturn++; }
 		if (castled[2]) { mHist[cturn] = move(SPACES - WIDTH, 0, NULLMOVE); cturn++; }

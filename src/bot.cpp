@@ -20,6 +20,7 @@ namespace Chess {
 	}
 
 	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
+		std::cout << "time: " << lim.time[WHITE] << " " << lim.time[BLACK] << "\n";
 		uint32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / 50 : lim.time[BLACK] / 50;
 		auto start = std::chrono::high_resolution_clock::now();
 		int16_t score;
