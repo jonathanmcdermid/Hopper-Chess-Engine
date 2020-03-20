@@ -8,7 +8,7 @@ namespace Chess {
 	class move {
 		public:
 			move(uint8_t from, uint8_t to, uint8_t flags) { m = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f); }
-			move(uint16_t m) { m = m; }
+			move(uint16_t n) { m = n; }
 			move() { m = 28672; }
 			void operator=(move a) { m = a.m; }
 			bool operator==(move a) const { return (m & 0xffff) == (a.m & 0xffff); }

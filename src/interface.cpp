@@ -6,9 +6,9 @@ namespace Chess{
 	void interface::drawBoard() {//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (uint8_t i = 0; i < WIDTH; i++) {
+		for (uint8_t i = 0; i < WIDTH; ++i) {
 			std::cout << "\n---------------------------------\n|";
-			for (uint8_t j = 0; j < WIDTH; j++) {
+			for (uint8_t j = 0; j < WIDTH; ++j) {
 				switch (game.getGrid(i * WIDTH + j)) {
 				case PAWN: { letter = 'P'; break; }
 				case ROOK: { letter = 'R'; break; }
@@ -43,19 +43,17 @@ namespace Chess{
 
 	void interface::local() {//for play without uci
 		game = board();
-		ai = bot();
+		ai = bot::bot();
 		std::string input;
-		ai.setbTime(200000);
-		ai.setwTime(200000);
-		drawBoard();
+		interface::drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
 				while (!playerMove(input)) { std::getline(std::cin, input); }
-				drawBoard();
+				interface::drawBoard();
 				if (game.checkMate()) { break; }
-				botMove();
-				drawBoard();
+				interface::botMove();
+				interface::drawBoard();
 				if (game.checkMate()) { break; }
 			}
 		}
@@ -89,7 +87,7 @@ namespace Chess{
 				w1 = nextWord(input, &index);
 				if (w1 == "startpos") {
 					game = board();
-					ai = bot();
+					ai = bot::bot();
 				}
 				w1 = nextWord(input, &index);
 				if (w1 == "moves") {
@@ -103,11 +101,11 @@ namespace Chess{
 				w1 = nextWord(input, &index);
 				if (w1 == "wtime") {
 					w1 = nextWord(input, &index);
-					ai.setwTime(std::stoi(w1));
+					ai.lim.time[WHITE] = stoi(w1);
 					w1 = nextWord(input, &index);
 					if (w1 == "btime") {
 						w1 = nextWord(input, &index);
-						ai.setbTime(std::stoi(w1));
+						ai.lim.time[BLACK] = stoi(w1);
 					}
 				}
 				botMove(); 
@@ -116,6 +114,7 @@ namespace Chess{
 			else if (input == "quit") { exit(1); }
 		}
 	}
+
 
 	bool interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {

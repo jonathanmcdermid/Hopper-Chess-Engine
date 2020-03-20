@@ -9,8 +9,8 @@ namespace Chess {
 		uint64_t newKey(board* b);
 		uint64_t pieces[6][2][SPACES];
 	private:
-		uint64_t cCastle[2];
-		uint64_t lCastle[2];
+		uint64_t whitecastle[2];
+		uint64_t blackcastle[2];
 		uint64_t enpassant[SPACES];
 		uint64_t side;
 	};

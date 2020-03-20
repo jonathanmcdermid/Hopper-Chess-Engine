@@ -4,11 +4,11 @@ namespace Chess {
 
 	board::board() {//sets board to starting state
 		z = zobrist();
-		fenSet("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		fenSet(STARTFEN);
 	}
 
 	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string, no 50 move rule implementation
-		for (uint8_t i = 0; i < MEMORY; i++) { mHist[i] = move(); vHist[i] = 0; }
+		for (uint8_t i = 0; i < MEMORY; ++i) { mHist[i] = move(); vHist[i] = 0; }
 		cturn = 0;
 		uint8_t index = 0;
 		uint8_t counter = 0;
@@ -39,7 +39,7 @@ namespace Chess {
 			index++;
 		}
 		index++;
-		turn = (fs[index] == 'w') ? 1 : 0;
+		turn = (fs[index] == 'w') ? WHITE : BLACK;
 		index++;
 		bool castled[4] = { true,true,true,true };
 		while (fs[index] != ' ') {
@@ -62,6 +62,7 @@ namespace Chess {
 			mHist[cturn] = move(from, to, DOUBLEPUSH);
 			cturn++;
 		}
+		check = checkTurn();
 		index++;
 		zkey = z.newKey(this);
 	}
@@ -74,7 +75,7 @@ namespace Chess {
 	}
 
 	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
-		bool enemy = (turn) ? 0 : 1;
+		bool enemy = (turn) ? BLACK : WHITE;
 		switch (m.getFlags()) {
 		case STANDARD:
 			zkey ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getFrom()];
@@ -161,23 +162,29 @@ namespace Chess {
 			zkey ^= z.pieces[QINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
 			break; 
-		case FAIL:		{return false; }
+		case FAIL: {return false; }
 		}
 		if (m.getFlags() != NULLMOVE) { grid[m.getFrom()] = EMPTY; }
-		for (uint8_t i = 0; i < SPACES; i++) 
+		for (uint8_t i = 0; i < SPACES; ++i) 
 			vHist[cturn] += grid[i];
 		mHist[cturn] = m;
 		cturn++;
-		if (checkTurn()) { turn = (turn) ? 0 : 1; unmovePiece(); return false; }
-		turn = (turn) ? 0 : 1;
-		check = checkTurn();
-		return true;
+		if (checkTurn()) { 
+			turn = (turn) ? BLACK : WHITE;
+			unmovePiece();
+			return false; 
+		}
+		else {
+			turn = (turn) ? BLACK : WHITE;
+			check = checkTurn();
+			return true;
+		}
 	}
 
 	void board::unmovePiece() {//unmakes a move
-		turn = (turn) ? 0 : 1;
+		turn = (turn) ? BLACK : WHITE;
 		cturn--;
-		bool enemy = (turn) ? 0 : 1;
+		bool enemy = (turn) ? BLACK : WHITE;
 		switch (mHist[cturn].getFlags()) {
 		case STANDARD:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
@@ -298,13 +305,13 @@ namespace Chess {
 			end = (!turn) ? 0 : WIDTH - 1;
 			if (from % WIDTH == 4 && from / WIDTH == to / WIDTH && from / WIDTH == end && !check) {
 				if (from - 2 == to && !grid[from - 1] && !grid[from - 2] && !grid[from - 3]) {
-					for (i = 0; i < cturn; i++) {
+					for (i = 0; i < cturn; ++i) {
 						if (mHist[i].getFrom() == from || mHist[i].getFrom() == from - 4 || mHist[i].getTo() == from - 4) { return move(); }
 					}
 					if (i == cturn) { return move(from, to, QCASTLE); }
 				}
 				else if (from + 2 == to && !grid[from + 1] && !grid[from + 2]) {
-					for (i = 0; i < cturn; i++) {
+					for (i = 0; i < cturn; ++i) {
 						if (mHist[i].getFrom() == from || mHist[i].getFrom() == from + 3 || mHist[i].getTo() == from + 3) { return move(); }
 					}
 					if (i == cturn) { return move(from, to, KCASTLE); }
@@ -403,7 +410,7 @@ namespace Chess {
 
 	int16_t board::negaEval() {//evaluates for negamax function, uses material weight and estimated mobility
 		int8_t msum = 0;
-		for (uint8_t from = 0; from < SPACES; from++) {
+		for (uint8_t from = 0; from < SPACES; ++from) {
 			if (grid[from]) { msum = (grid[from] > 0) ? msum + moveTotal(from) : msum - moveTotal(from); }
 		}
 		return (turn) ? vHist[cturn - 1] + 10*msum : -vHist[cturn - 1] - 10*msum; 
@@ -584,9 +591,9 @@ namespace Chess {
 	}
 
 	bool board::checkMate() {//looks for checkmate or draw
-		for (uint8_t from = 0; from < SPACES; from++) {
+		for (uint8_t from = 0; from < SPACES; ++from) {
 			if ((grid[from] > 0 && turn) || (grid[from] < 0 && !turn)) {
-				for (uint8_t to = 0; to < SPACES; to++) {
+				for (uint8_t to = 0; to < SPACES; ++to) {
 					move m = createMove(from, to);
 					if (movePiece(m)) { unmovePiece(); return false; }
 				}
@@ -597,12 +604,12 @@ namespace Chess {
 	
 	bool board::checkTurn() {//looks for check
 		uint8_t to;
-		for (to = 0; to < SPACES; to++) { if ((turn && grid[to] == KING) || (!turn && grid[to] == -KING)) { break; } }
-		turn = (turn) ? 0 : 1;
-		for (uint8_t from = 0; from < SPACES; from++) {
+		for (to = 0; to < SPACES; ++to) { if ((turn && grid[to] == KING) || (!turn && grid[to] == -KING)) { break; } }
+		turn = (turn) ? BLACK : WHITE;
+		for (uint8_t from = 0; from < SPACES; ++from) {
 			if (createMove(from, to).getFlags() != FAIL) { turn = (turn) ? 0 : 1; return true; }
 		}
-		turn = (turn) ? 0 : 1;
+		turn = (turn) ? BLACK : WHITE;
 		return false;
 	}
 }

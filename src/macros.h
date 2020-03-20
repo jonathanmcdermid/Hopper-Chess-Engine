@@ -1,5 +1,7 @@
 #pragma once
-#define SURFACE		15
+#define BLACK		0
+#define WHITE		1
+#define MAXDEPTH	20
 #define HASHSIZE	30000
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
@@ -46,3 +48,4 @@
 #define RPROMOTEC	14
 #define QPROMOTEC	15
 #define MEMORY		255
+#define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
