@@ -153,7 +153,7 @@ namespace Chess{
 		game.movePiece(m);
 		char message[] = { (int) WIDTH - m.getFrom() / WIDTH + '0', (int) m.getFrom() % WIDTH + 'a', (int) WIDTH - m.getTo() / WIDTH + '0', (int) m.getTo() % WIDTH + 'a' };
 		std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2];
-		if (game.getmHist(game.getCturn()).getFlags() >= PROMOTE) { std::cout << "q"; }
+		if (game.getmHist(0).getFlags() >= PROMOTE) { std::cout << "q"; }
 		std::cout << "\n";
 	}
 }

@@ -20,8 +20,7 @@ namespace Chess {
 	}
 
 	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
-		std::cout << "time: " << lim.time[WHITE] << " " << lim.time[BLACK] << "\n";
-		uint32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / 50 : lim.time[BLACK] / 50;
+		int32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / 50: lim.time[BLACK] / 50;
 		auto start = std::chrono::high_resolution_clock::now();
 		int16_t score;
 		int16_t alpha = LOWERLIMIT;
@@ -57,7 +56,6 @@ namespace Chess {
 		if (!depth) {
 			pline->cmove = 0;
 			return qSearch(b, alpha, beta);
-
 		}
 		line localline;
 		int16_t score;
@@ -73,7 +71,7 @@ namespace Chess {
 		uint8_t index2;
 		uint8_t flag = CAPTURE;
 		uint8_t cmove = 0;
-		uint16_t keyindex = b->getKey() % HASHSIZE;
+		uint16_t keyindex = b->getzHist(0) % HASHSIZE;
 		move possiblemoves[MEMORY];
 		for (index1 = 0; index1 < SPACES; ++index1) {
 			if ((b->getGrid(index1) > 0 && b->getTurn()) || (b->getGrid(index1) < 0 && !b->getTurn())) {
@@ -140,13 +138,13 @@ namespace Chess {
 					alpha = score;
 				}
 				if (score >= beta) { 
-					table[keyindex] = hashtable(b->getKey(), depth, possiblemoves[index1]);
+					if (table[keyindex].getDepth() < depth) { table[keyindex] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
 					return score; 
 				}
 			}
 		}
 		if (stuck) { alpha = (b->getCheck()) ? MATE : 0; }
-		else if (table[keyindex].getDepth() < depth) { table[keyindex] = hashtable(b->getKey(), depth, pline->movelink[0]); }
+		else if (table[keyindex].getDepth() < depth) { table[keyindex] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
 		return alpha;
 	}
 

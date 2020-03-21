@@ -7,12 +7,12 @@ namespace Chess {
 	public:
 		zobrist();
 		uint64_t newKey(board* b);
-		uint64_t pieces[6][2][SPACES];
+		uint64_t pieces[6][2][SPACES] = { 0 };
 	private:
-		uint64_t whitecastle[2];
-		uint64_t blackcastle[2];
-		uint64_t enpassant[SPACES];
-		uint64_t side;
+		uint64_t whitecastle[2] = { 0 };
+		uint64_t blackcastle[2] = { 0 };
+		uint64_t enpassant[SPACES] = { 0 };
+		uint64_t side = 0;
 	};
 }
 

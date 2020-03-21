@@ -8,7 +8,7 @@ namespace Chess {
 	}
 
 	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string, no 50 move rule implementation
-		for (uint8_t i = 0; i < MEMORY; ++i) { mHist[i] = move(); vHist[i] = 0; }
+		for (uint8_t i = 0; i < MEMORY; ++i) { mHist[i] = move(); vHist[i] = 0; zHist[i] = 0; }
 		cturn = 0;
 		uint8_t index = 0;
 		uint8_t counter = 0;
@@ -64,102 +64,102 @@ namespace Chess {
 		}
 		check = checkTurn();
 		index++;
-		zkey = z.newKey(this);
+		zHist[cturn] = z.newKey(this);
 	}
 
 	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
 		bool enemy = (turn) ? BLACK : WHITE;
+		zHist[cturn + 1] = zHist[cturn];
 		switch (m.getFlags()) {
 		case STANDARD:
-			zkey ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getTo()];
-			grid[m.getTo()] = grid[m.getFrom()]; 
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getTo()];
+			grid[m.getTo()] = grid[m.getFrom()];
 			break;
 		case DOUBLEPUSH:
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[PINDEX][turn][m.getTo()];
-			grid[m.getTo()] = grid[m.getFrom()]; 
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getTo()];
+			grid[m.getTo()] = grid[m.getFrom()];
 			break;
 		case KCASTLE:
-			zkey ^= z.pieces[KINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[KINDEX][turn][m.getTo()];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo()+1];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo()-1];
-			grid[m.getTo()] = grid[m.getFrom()]; 
-			grid[m.getTo() - 1] = grid[m.getTo() + 1]; 
-			grid[m.getTo() + 1] = EMPTY; 
-			break; 
-		case QCASTLE:	
-			zkey ^= z.pieces[KINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[KINDEX][turn][m.getTo()];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo() - 2];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo() + 1];
-			grid[m.getTo()] = grid[m.getFrom()]; 
-			grid[m.getTo() + 1] = grid[m.getTo() - 2]; 
-			grid[m.getTo() - 2] = EMPTY; 
-			break; 
-		case ENPASSANT:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[PINDEX][enemy][m.getTo()];
-			zkey ^= z.pieces[PINDEX][turn][m.getTo()];
-			grid[m.getTo()] = grid[m.getFrom()]; 
-			grid[mHist[cturn - 1].getTo()] = EMPTY; 
-			break; 
+			zHist[cturn + 1] ^= z.pieces[KINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[KINDEX][turn][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo() + 1];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo() - 1];
+			grid[m.getTo()] = grid[m.getFrom()];
+			grid[m.getTo() - 1] = grid[m.getTo() + 1];
+			grid[m.getTo() + 1] = EMPTY;
+			break;
+		case QCASTLE:
+			zHist[cturn + 1] ^= z.pieces[KINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[KINDEX][turn][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo() - 2];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo() + 1];
+			grid[m.getTo()] = grid[m.getFrom()];
+			grid[m.getTo() + 1] = grid[m.getTo() - 2];
+			grid[m.getTo() - 2] = EMPTY;
+			break;
+		case ENPASSANT:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[PINDEX][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getTo()];
+			grid[m.getTo()] = grid[m.getFrom()];
+			grid[mHist[cturn - 1].getTo()] = EMPTY;
+			break;
 		case CAPTURE:
-			zkey ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
-			zkey ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getTo()];
-			grid[m.getTo()] = grid[m.getFrom()]; 
-			break; 
-		case NPROMOTE:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[NINDEX][turn][m.getTo()];
-			grid[m.getTo()] = (turn) ? KNIGHT	: -KNIGHT	; 
-			break; 
-		case BPROMOTE:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[BINDEX][turn][m.getTo()];
-			grid[m.getTo()] = (turn) ? BISHOP : -BISHOP;
-			break; 
-		case RPROMOTE:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo()];
-			grid[m.getTo()] = (turn) ? ROOK : -ROOK;
-			break; 
-		case QPROMOTE:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[QINDEX][turn][m.getTo()];
-			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
-			break; 
-		case NPROMOTEC:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
-			zkey ^= z.pieces[KINDEX][turn][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getFrom()]) % 100][turn][m.getTo()];
+			grid[m.getTo()] = grid[m.getFrom()];
+			break;
+		case NPROMOTE:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[NINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? KNIGHT : -KNIGHT;
-			break; 
-		case BPROMOTEC:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
-			zkey ^= z.pieces[BINDEX][turn][m.getTo()];
+			break;
+		case BPROMOTE:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[BINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? BISHOP : -BISHOP;
-			break; 
-		case RPROMOTEC:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
-			zkey ^= z.pieces[RINDEX][turn][m.getTo()];
+			break;
+		case RPROMOTE:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? ROOK : -ROOK;
-			break; 
-		case QPROMOTEC:	
-			zkey ^= z.pieces[PINDEX][turn][m.getFrom()];
-			zkey ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
-			zkey ^= z.pieces[QINDEX][turn][m.getTo()];
+			break;
+		case QPROMOTE:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[QINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
-			break; 
+			break;
+		case NPROMOTEC:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[KINDEX][turn][m.getTo()];
+			grid[m.getTo()] = (turn) ? KNIGHT : -KNIGHT;
+			break;
+		case BPROMOTEC:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[BINDEX][turn][m.getTo()];
+			grid[m.getTo()] = (turn) ? BISHOP : -BISHOP;
+			break;
+		case RPROMOTEC:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[RINDEX][turn][m.getTo()];
+			grid[m.getTo()] = (turn) ? ROOK : -ROOK;
+			break;
+		case QPROMOTEC:
+			zHist[cturn + 1] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			zHist[cturn + 1] ^= z.pieces[abs(grid[m.getTo()]) % 100][enemy][m.getTo()];
+			zHist[cturn + 1] ^= z.pieces[QINDEX][turn][m.getTo()];
+			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
+			break;
 		case FAIL: {return false; }
 		}
 		if (m.getFlags() != NULLMOVE) { grid[m.getFrom()] = EMPTY; }
-		for (uint8_t i = 0; i < SPACES; ++i) 
-			vHist[cturn] += grid[i];
+		for (uint8_t i = 0; i < SPACES; ++i) { vHist[cturn] += grid[i]; }
 		mHist[cturn] = m;
 		cturn++;
 		if (checkTurn()) { 
@@ -176,107 +176,70 @@ namespace Chess {
 
 	void board::unmovePiece() {//unmakes a move
 		turn = (turn) ? BLACK : WHITE;
+		zHist[cturn] = 0;
 		cturn--;
 		bool enemy = (turn) ? BLACK : WHITE;
 		switch (mHist[cturn].getFlags()) {
 		case STANDARD:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getFrom()]) % 100][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getFrom()]) % 100][turn][mHist[cturn].getFrom()];
 			break;
 		case DOUBLEPUSH:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break;
 		case KCASTLE:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn].getTo()] = EMPTY;
 			grid[mHist[cturn].getTo() + 1]= grid[mHist[cturn].getTo() - 1]; 
-			grid[mHist[cturn].getTo() - 1] = EMPTY; 
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getFrom()];
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo() - 1];
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo() + 1];
+			grid[mHist[cturn].getTo() - 1] = EMPTY;
 			break; 
 		case QCASTLE:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn].getTo()] = EMPTY;
 			grid[mHist[cturn].getTo() - 2]= grid[mHist[cturn].getTo() + 1]; 
-			grid[mHist[cturn].getTo() + 1] = EMPTY; 
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getFrom()];
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo() + 1];
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo() - 2];
+			grid[mHist[cturn].getTo() + 1] = EMPTY;
 			break; 
 		case CAPTURE:
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn].getTo()] = vHist[cturn - 1] - vHist[cturn];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getFrom()]) % 100][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getTo()]) % 100][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getFrom()]) % 100][turn][mHist[cturn].getFrom()];
 			break; 
 		case ENPASSANT:	
 			grid[mHist[cturn].getFrom()] = grid[mHist[cturn].getTo()];
 			grid[mHist[cturn - 1].getTo()] = (!turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case NPROMOTE:
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case BPROMOTE:
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[BINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case RPROMOTE:
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case QPROMOTE:
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = EMPTY;
-			zkey ^= z.pieces[QINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case NPROMOTEC: 
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = (turn) ? vHist[cturn - 1] - vHist[cturn] + KNIGHT - PAWN : vHist[cturn - 1] - vHist[cturn] - KNIGHT + PAWN;
-			zkey ^= z.pieces[KINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getTo()]) % 100][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case BPROMOTEC: 
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = (turn) ? vHist[cturn - 1] - vHist[cturn] + BISHOP - PAWN : vHist[cturn - 1] - vHist[cturn] - BISHOP + PAWN;
-			zkey ^= z.pieces[BINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getTo()]) % 100][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case RPROMOTEC: 
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = (turn) ? vHist[cturn - 1] - vHist[cturn] + ROOK - PAWN : vHist[cturn - 1] - vHist[cturn] - ROOK + PAWN;
-			zkey ^= z.pieces[RINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getTo()]) % 100][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break; 
 		case QPROMOTEC: 
 			grid[mHist[cturn].getFrom()] = (turn) ? PAWN : -PAWN;
 			grid[mHist[cturn].getTo()] = (turn) ? vHist[cturn - 1] - vHist[cturn] + QUEEN - PAWN : vHist[cturn - 1] - vHist[cturn] - QUEEN + PAWN;
-			zkey ^= z.pieces[QINDEX][turn][mHist[cturn].getTo()];
-			zkey ^= z.pieces[abs(grid[mHist[cturn].getTo()]) % 100][enemy][mHist[cturn].getTo()];
-			zkey ^= z.pieces[PINDEX][turn][mHist[cturn].getFrom()];
 			break;
 		}
 		check = checkTurn();
@@ -406,7 +369,7 @@ namespace Chess {
 		for (uint8_t from = 0; from < SPACES; ++from) {
 			if (grid[from]) { msum = (grid[from] > 0) ? msum + moveTotal(from) : msum - moveTotal(from); }
 		}
-		return (turn) ? vHist[cturn - 1] + 10*msum : -vHist[cturn - 1] - 10*msum; 
+		return (turn) ? vHist[cturn - 1] + 5*msum : -vHist[cturn - 1] - 5*msum; 
 	}
 
 	uint8_t board::moveTotal(uint8_t from) {//estimates mobility of one piece, omits king moves

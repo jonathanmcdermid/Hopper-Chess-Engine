@@ -6,8 +6,8 @@
 namespace Chess {
 	class board;
 	typedef struct line {
-		uint8_t cmove;
-		move movelink[MAXDEPTH];
+		uint8_t cmove = 0;
+		move movelink[MAXDEPTH] = { move() };
 	}line;
 	typedef struct limits {
 		 uint32_t time[2];
