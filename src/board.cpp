@@ -369,7 +369,7 @@ namespace Chess {
 		for (uint8_t from = 0; from < SPACES; ++from) {
 			if (grid[from]) { msum = (grid[from] > 0) ? msum + moveTotal(from) : msum - moveTotal(from); }
 		}
-		return (turn) ? vHist[cturn - 1] + 5*msum : -vHist[cturn - 1] - 5*msum; 
+		return (turn) ? vHist[cturn - 1] + 10*msum : -vHist[cturn - 1] - 10*msum; 
 	}
 
 	uint8_t board::moveTotal(uint8_t from) {//estimates mobility of one piece, omits king moves
@@ -380,8 +380,8 @@ namespace Chess {
 		case KING:
 			return mcount;
 		case PAWN:
-			direction = (turn) ? NORTH : SOUTH;
-			end = (turn) ? 0 : WIDTH - 1;
+			direction = (grid[from] > 0) ? NORTH : SOUTH;
+			end = (grid[from] > 0) ? 0 : WIDTH - 1;
 			if (!grid[from + direction]) {
 				mcount++;
 				if ((from - direction) / WIDTH == WIDTH - 1 - end && !grid[from + 2 * direction]) { mcount++; }
@@ -392,28 +392,28 @@ namespace Chess {
 			return mcount;
 		case KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from + 10 < SPACES){
-				if ((grid[from + 10] < 0 && grid[from]>0) || (grid[from + 10] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from + 10] <= 0 && grid[from] > 0) || (grid[from + 10] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from + 17 < SPACES){
-				if ((grid[from + 17] < 0 && grid[from]>0) || (grid[from + 17] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from + 17] <= 0 && grid[from] > 0) || (grid[from + 17] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from - 10 > 0){
-				if ((grid[from - 10] < 0 && grid[from]>0) || (grid[from - 10] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from - 10] <= 0 && grid[from] > 0) || (grid[from - 10] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from - 17 > 0){
-				if ((grid[from - 17] < 0 && grid[from]>0) || (grid[from - 17] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from - 17] <= 0 && grid[from] > 0) || (grid[from - 17] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			if ((from + 6)	% WIDTH > from % WIDTH && from + 6	< SPACES){
-				if ((grid[from + 6] < 0 && grid[from]>0) || (grid[from + 6] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from + 6] <= 0 && grid[from] > 0) || (grid[from + 6] >= 0 && grid[from] < 0)) { mcount++; }
 			}
-			if ((from + 15) % WIDTH > from % WIDTH && from + 15 < SPACES){
-				if ((grid[from + 15] < 0 && grid[from]>0) || (grid[from + 15] > 0 && grid[from] < 0)) { mcount++; }
+			if ((from + 15) % WIDTH < from % WIDTH && from + 15 < SPACES){
+				if ((grid[from + 15] <= 0 && grid[from] > 0) || (grid[from + 15] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			if ((from - 6)	% WIDTH < from % WIDTH && from - 6	> 0){
-				if ((grid[from - 6] < 0 && grid[from]>0) || (grid[from - 6] > 0 && grid[from] < 0)) { mcount++; }
+				if ((grid[from - 6] <= 0 && grid[from] > 0) || (grid[from - 6] >= 0 && grid[from] < 0)) { mcount++; }
 			}
-			if ((from - 15) % WIDTH < from % WIDTH && from - 15 > 0){
-				if ((grid[from - 15] < 0 && grid[from]>0) || (grid[from - 15] > 0 && grid[from] < 0)) { mcount++; }
+			if ((from - 15) % WIDTH > from % WIDTH && from - 15 > 0){
+				if ((grid[from - 15] <= 0 && grid[from] > 0) || (grid[from - 15] >= 0 && grid[from] < 0)) { mcount++; }
 			}
 			return mcount;
 		case QUEEN:

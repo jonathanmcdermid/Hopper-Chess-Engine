@@ -10,25 +10,34 @@ namespace Chess {
 		move movelink[MAXDEPTH] = { move() };
 	}line;
 	typedef struct limits {
-		 uint32_t time[2];
-		 uint32_t inc[2];
-		 uint8_t movesleft;
-		 uint8_t depth;
-		 uint8_t nodes;
-		 uint8_t perft;
-		 uint8_t mate;
-		 uint8_t movetime;
-		 bool infinite;
+		uint32_t time[2] = { 500000, 500000 };
+		uint32_t inc[2] = { 500000, 500000 };
+		uint32_t movetime = 0;
+		uint8_t movesleft = 0;
+		uint8_t depth = MAXDEPTH;
+		uint8_t nodes = 0;
+		uint8_t perft = 0;
+		uint8_t mate = 0;
+		bool infinite = false;
 	}limits;
+	typedef struct options {
+		uint16_t windowstart = 400;
+		uint16_t windowstepup = 200;
+		uint16_t windowstepdown = 50;
+		uint16_t windowfloor = 100;
+		uint16_t hashsize = HASHSIZE;
+		uint8_t timefactor = 50;
+	}options;
 	class bot{
 	public:
-		bot();
+		bot() { ; }
 		move getMove(board* b);
 		int16_t miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull);
 		static int16_t qSearch(board* b, int16_t alpha, int16_t beta);
 		limits lim;
+		options opt;
 	private:
-		hashtable table[HASHSIZE];
+		hashtable table[HASHSIZE] = { hashtable() };
 	};
 }
 

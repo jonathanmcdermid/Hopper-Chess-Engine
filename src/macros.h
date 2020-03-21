@@ -47,5 +47,5 @@
 #define BPROMOTEC	13
 #define RPROMOTEC	14
 #define QPROMOTEC	15
-#define MEMORY		512
+#define MEMORY		255
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

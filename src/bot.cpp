@@ -4,45 +4,28 @@
 
 namespace Chess {
 
-	bot::bot() {
-		for (uint16_t i = 0; i < HASHSIZE; i++) { table[i] = hashtable(); }
-		lim.time[WHITE] = 500000;
-		lim.time[BLACK] = 500000;
-		lim.inc[WHITE] = 0;
-		lim.inc[WHITE] = 0;
-		lim.depth = MAXDEPTH;
-		lim.movesleft = 0;
-		lim.nodes = 0;
-		lim.perft = 0;
-		lim.mate = 0;
-		lim.movetime = 0;
-		bool infinite = false;
-	}
-
 	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
-		int32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / 50: lim.time[BLACK] / 50;
+		int32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / opt.timefactor: lim.time[BLACK] / opt.timefactor;
 		auto start = std::chrono::high_resolution_clock::now();
 		int16_t score;
+		int16_t startscore = b->negaEval();
+		uint16_t window = opt.windowstart;
 		int16_t alpha = LOWERLIMIT;
 		int16_t beta = UPPERLIMIT;
-		uint16_t window = 400;
 		line pv;
-		pv.cmove = 0;
-		pv.movelink[0] = move();
 		for (pv.cmove = 1; pv.cmove < lim.depth; ++pv.cmove) {
-			pv.movelink[pv.cmove] = move();
 			score = miniMax(b, pv.cmove, alpha, beta, &pv, false);
 			if (score == -MATE) { break; }
 			else if (score <= alpha || score >= beta) {
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
 				pv.cmove--;
-				window += 200;
+				window += opt.windowstepup;
 			}
 			else {
 				alpha = score - window;
 				beta = score + window;
-				if (window > 100) { window -= 50; }
+				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 				auto stop = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 				if (duration.count() > timeallotted) { break; }
@@ -53,10 +36,7 @@ namespace Chess {
 	}
 
 	int16_t bot::miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
-		if (!depth) {
-			pline->cmove = 0;
-			return qSearch(b, alpha, beta);
-		}
+		if (!depth) { return qSearch(b, alpha, beta); }
 		line localline;
 		int16_t score;
 		if (notNull && depth > 3 && !b->getCheck()) {
@@ -67,8 +47,7 @@ namespace Chess {
 			if (score >= beta) { return score; }
 		}
 		bool stuck = true;
-		uint8_t index1;
-		uint8_t index2;
+		uint8_t index1, index2;
 		uint8_t flag = CAPTURE;
 		uint8_t cmove = 0;
 		uint16_t keyindex = b->getzHist(0) % HASHSIZE;
@@ -83,7 +62,7 @@ namespace Chess {
 		}
 		possiblemoves[cmove] = move();
 		index2 = 0;
-		while (pline->movelink[0].getFlags()!=FAIL) {
+		while (pline->movelink[0].getFlags() != FAIL) {
 			if (pline->movelink[0] == possiblemoves[index2]) {
 				possiblemoves[cmove + 1] = possiblemoves[0];
 				possiblemoves[0] = possiblemoves[index2];
