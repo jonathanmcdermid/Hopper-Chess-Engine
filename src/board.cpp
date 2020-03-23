@@ -15,32 +15,32 @@ namespace Chess {
 		uint8_t helper;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
-			case 'P': { grid[counter] = PAWN; counter++; break; }
-			case 'R': { grid[counter] = ROOK; counter++; break; }
-			case 'N': { grid[counter] = KNIGHT; counter++; break; }
-			case 'B': { grid[counter] = BISHOP; counter++; break; }
-			case 'Q': { grid[counter] = QUEEN; counter++; break; }
-			case 'K': { grid[counter] = KING; counter++; break; }
-			case 'p': { grid[counter] = -PAWN; counter++; break; }
-			case 'r': { grid[counter] = -ROOK; counter++; break; }
-			case 'n': { grid[counter] = -KNIGHT; counter++; break; }
-			case 'b': { grid[counter] = -BISHOP; counter++; break; }
-			case 'q': { grid[counter] = -QUEEN; counter++; break; }
-			case 'k': { grid[counter] = -KING; counter++; break; }
+			case 'P': { grid[counter] = PAWN; ++counter; break; }
+			case 'R': { grid[counter] = ROOK; ++counter; break; }
+			case 'N': { grid[counter] = KNIGHT; ++counter; break; }
+			case 'B': { grid[counter] = BISHOP; ++counter; break; }
+			case 'Q': { grid[counter] = QUEEN; ++counter; break; }
+			case 'K': { grid[counter] = KING; ++counter; break; }
+			case 'p': { grid[counter] = -PAWN; ++counter; break; }
+			case 'r': { grid[counter] = -ROOK; ++counter; break; }
+			case 'n': { grid[counter] = -KNIGHT; ++counter; break; }
+			case 'b': { grid[counter] = -BISHOP; ++counter; break; }
+			case 'q': { grid[counter] = -QUEEN; ++counter; break; }
+			case 'k': { grid[counter] = -KING; ++counter; break; }
 			case '/': { break; }
 			default:
 				helper = fs[index] - '0';
 				while (helper) {
 					grid[counter] = EMPTY;
-					counter++;
-					helper--;
+					++counter;
+					--helper;
 				}
 			}
-			index++;
+			++index;
 		}
-		index++;
+		++index;
 		turn = (fs[index] == 'w') ? WHITE : BLACK;
-		index++;
+		++index;
 		bool castled[4] = { true,true,true,true };
 		do{
 			switch (fs[index]) {
@@ -49,13 +49,13 @@ namespace Chess {
 			case 'k': {castled[1] = false; break; }
 			case 'q': {castled[0] = false; break; }
 			}
-			index++;
+			++index;
 		} while (fs[index] != ' ');
 		if (castled[0]) { mHist[cturn] = move(0, 0, NULLMOVE); cturn++; }
 		if (castled[1]) { mHist[cturn] = move(WIDTH-1, 0, NULLMOVE); cturn++; }
 		if (castled[2]) { mHist[cturn] = move(SPACES - WIDTH, 0, NULLMOVE); cturn++; }
 		if (castled[3]) { mHist[cturn] = move(SPACES - 1, 0, NULLMOVE); cturn++; }
-		index++;
+		++index;
 		if(fs[index]!='-'){
 			uint8_t from = (turn) ? fs[index] - '0' - WIDTH : fs[index] - '0' + WIDTH;
 			uint8_t to   = (turn) ? fs[index] - '0' + WIDTH : fs[index] - '0' - WIDTH;
@@ -63,7 +63,7 @@ namespace Chess {
 			cturn++;
 		}
 		check = checkTurn();
-		index++;
+		++index;
 		zHist[cturn] = z.newKey(this);
 	}
 
@@ -258,7 +258,7 @@ namespace Chess {
 				if (grid[to]) { return move(from, to, CAPTURE); }
 				else { return move(from, to, STANDARD); }
 			}
-			end = (!turn) ? 0 : WIDTH - 1;
+			end = (!turn) ? 0 : 7;
 			if (from % WIDTH == 4 && from / WIDTH == to / WIDTH && from / WIDTH == end && !check) {
 				if (from - 2 == to && !grid[from - 1] && !grid[from - 2] && !grid[from - 3]) {
 					for (i = 0; i < cturn; ++i) {
@@ -275,15 +275,15 @@ namespace Chess {
 			}
 			return move();
 		case PAWN:
-			if (abs(to % WIDTH - from % WIDTH) > 1 || abs(to / WIDTH - from / WIDTH) > 2 || to > from&& turn || to < from && !turn) { return move(); }
+			if (abs(to % WIDTH - from % WIDTH) > 1 || abs(to / WIDTH - from / WIDTH) > 2 || to > from && turn || to < from && !turn) { return move(); }
 			direction = (turn) ? NORTH : SOUTH;
-			end = (turn) ? 0 : WIDTH - 1;
+			end = (turn) ? 0 : 7;
 			if (!grid[from + direction] && to % WIDTH == from % WIDTH) {
 				if (from + direction == to) {
 					if (end == to / WIDTH) { return move(from, to, QPROMOTE); }
 					else { return move(from, to, STANDARD); }
 				}
-				else if ((from - direction) / WIDTH == WIDTH - 1 - end && !grid[to]) { return move(from, to, DOUBLEPUSH); }
+				else if ((from - direction) / WIDTH == 7 - end && !grid[to]) { return move(from, to, DOUBLEPUSH); }
 			}
 			else if (from % WIDTH && from + direction - 1 == to) {
 				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from - 1) { return move(from, to, ENPASSANT); }
@@ -292,7 +292,7 @@ namespace Chess {
 					else { return move(from, to, CAPTURE); }
 				}
 			}
-			else if (from % WIDTH != WIDTH - 1 && from + direction + 1 == to) {
+			else if (from % WIDTH != 7 && from + direction + 1 == to) {
 				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from + 1) { return move(from, to, ENPASSANT); }
 				else if (grid[to]) {
 					if (end == to / WIDTH) { return move(from, to, QPROMOTEC); }
@@ -313,7 +313,7 @@ namespace Chess {
 					if (from % WIDTH < to % WIDTH) { direction = EAST; }
 					else { direction = SOUTH; }
 				}
-				else if (from % WIDTH > to% WIDTH) { direction = WEST; }
+				else if (from % WIDTH > to % WIDTH) { direction = WEST; }
 				else { direction = NORTH; }
 				for (i = from + direction; i != to; i += direction) {
 					if (grid[i]) { return move(); }
@@ -323,10 +323,10 @@ namespace Chess {
 			}
 			else {
 				if (from < to) {
-					if (from % WIDTH > to% WIDTH) { direction = SOUTHWEST; }
+					if (from % WIDTH > to % WIDTH) { direction = SOUTHWEST; }
 					else { direction = SOUTHEAST; }
 				}
-				else if (from % WIDTH > to% WIDTH) { direction = NORTHWEST; }
+				else if (from % WIDTH > to % WIDTH) { direction = NORTHWEST; }
 				else { direction = NORTHEAST; }
 				for (i = from + direction; i != to; i += direction) {
 					if (grid[i]) { return move(); }
@@ -340,7 +340,7 @@ namespace Chess {
 				if (from % WIDTH < to % WIDTH) { direction = EAST; }
 				else { direction = SOUTH; }
 			}
-			else if (from % WIDTH > to% WIDTH) { direction = WEST; }
+			else if (from % WIDTH > to % WIDTH) { direction = WEST; }
 			else { direction = NORTH; }
 			for (i = from + direction; i != to; i += direction) {
 				if (grid[i]) { return move(); }
@@ -350,10 +350,10 @@ namespace Chess {
 		case BISHOP:
 			if (abs(from / WIDTH - to / WIDTH) != abs(from % WIDTH - to % WIDTH)) { return move(); }
 			if (from < to) {
-				if (from % WIDTH > to% WIDTH) { direction = SOUTHWEST; }
+				if (from % WIDTH > to % WIDTH) { direction = SOUTHWEST; }
 				else { direction = SOUTHEAST; }
 			}
-			else if (from % WIDTH > to% WIDTH) { direction = NORTHWEST; }
+			else if (from % WIDTH > to % WIDTH) { direction = NORTHWEST; }
 			else { direction = NORTHEAST; }
 			for (i = from + direction; i != to; i += direction) {
 				if (grid[i]) { return move(); }
@@ -372,178 +372,115 @@ namespace Chess {
 		return (turn) ? vHist[cturn - 1] + 10*msum : -vHist[cturn - 1] - 10*msum; 
 	}
 
-	uint8_t board::moveTotal(uint8_t from) {//estimates mobility of one piece, omits king moves
-		int8_t end, i;
-		int8_t direction;
+	uint8_t board::moveTotal(uint8_t from) {//estimates offensive mobility of one piece
+		int8_t i;
 		uint8_t mcount = 0;
 		switch (abs(grid[from])) {
 		case KING:
+			//if ((from + 9) % WIDTH > from % WIDTH && from < 55) { ++mcount; }
+			//if ((from + 1) % WIDTH > from % WIDTH) { ++mcount; }
+			//if ((from - 9) % WIDTH < from % WIDTH && from > 8) { ++mcount; }
+			//if ((from - 1) % WIDTH < from % WIDTH && from > 0) { ++mcount; }
+			//if ((from + 7) % WIDTH < from % WIDTH && from < 57) { ++mcount; }
+			//if (from < 56) { ++mcount; }
+			//if ((from - 7) % WIDTH > from % WIDTH && from > 6) { ++mcount; }
+			//if (from > 7) { ++mcount; }
 			return mcount;
 		case PAWN:
-			direction = (grid[from] > 0) ? NORTH : SOUTH;
-			end = (grid[from] > 0) ? 0 : WIDTH - 1;
-			if (!grid[from + direction]) {
-				mcount++;
-				if ((from - direction) / WIDTH == WIDTH - 1 - end && !grid[from + 2 * direction]) { mcount++; }
-			}
-			if (from % WIDTH && ((grid[from + direction - 1] > 0 && grid[from] < 0) || (grid[from + direction - 1] < 0 && grid[from] > 0))) { mcount++; }
-			if (from % WIDTH != WIDTH - 1 && ((grid[from + direction + 1] > 0 && grid[from] < 0) || (grid[from + direction + 1] < 0 && grid[from] > 0))) { mcount++; }
-			if (mHist[cturn - 1].getFlags() == DOUBLEPUSH&&((mHist[cturn - 1].getTo() == from + 1 || mHist[cturn - 1].getTo() == from - 1))) { mcount++; }
+			if (from % WIDTH) { ++mcount; }
+			if (from % WIDTH != 7) { ++mcount; }
 			return mcount;
 		case KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from + 10 < SPACES){
-				if ((grid[from + 10] <= 0 && grid[from] > 0) || (grid[from + 10] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from + 17) % WIDTH > from % WIDTH && from + 17 < SPACES){
-				if ((grid[from + 17] <= 0 && grid[from] > 0) || (grid[from + 17] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from - 10) % WIDTH < from % WIDTH && from - 10 > 0){
-				if ((grid[from - 10] <= 0 && grid[from] > 0) || (grid[from - 10] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from - 17) % WIDTH < from % WIDTH && from - 17 > 0){
-				if ((grid[from - 17] <= 0 && grid[from] > 0) || (grid[from - 17] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from + 6)	% WIDTH > from % WIDTH && from + 6	< SPACES){
-				if ((grid[from + 6] <= 0 && grid[from] > 0) || (grid[from + 6] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from + 15) % WIDTH < from % WIDTH && from + 15 < SPACES){
-				if ((grid[from + 15] <= 0 && grid[from] > 0) || (grid[from + 15] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from - 6)	% WIDTH < from % WIDTH && from - 6	> 0){
-				if ((grid[from - 6] <= 0 && grid[from] > 0) || (grid[from - 6] >= 0 && grid[from] < 0)) { mcount++; }
-			}
-			if ((from - 15) % WIDTH > from % WIDTH && from - 15 > 0){
-				if ((grid[from - 15] <= 0 && grid[from] > 0) || (grid[from - 15] >= 0 && grid[from] < 0)) { mcount++; }
-			}
+			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { ++mcount; }
+			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { ++mcount; }
+			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { ++mcount; }
+			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { ++mcount; }
+			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { ++mcount; }
+			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { ++mcount; }
+			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { ++mcount; }
+			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { ++mcount; }
 			return mcount;
 		case QUEEN:
-			for (i = from + NORTH; i > 0; i += NORTH) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
-			}
-			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
-			}
-			for (i = from + EAST; i % WIDTH; i += EAST) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
-			}
-			for (i = from + WEST; i % WIDTH != WIDTH - 1; i += WEST) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
-			}
-			for (i = from + NORTHEAST; i % WIDTH > from% WIDTH; i += NORTHEAST) {
+			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
 				if (i < 0) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
 				if (i < 0) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
-			for (i = from + SOUTHEAST; i % WIDTH > from% WIDTH; i += SOUTHEAST) {
-				if (i > SPACES) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
+				if (i >= SPACES) { break; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
-				if (i > SPACES) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				if (i >= SPACES) { break; }
+				++mcount;
+				if (grid[i]) { break; }
+			}
+			for (i = from + NORTH; i >= 0; i += NORTH) {
+				++mcount;
+				if (grid[i]) { break; }
+			}
+			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
+				++mcount;
+				if (grid[i]) { break; }
+			}
+			for (i = from + EAST; i % WIDTH; i += EAST) {
+				++mcount;
+				if (grid[i]) { break; }
+			}
+			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
+				if (i < 0) { break; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			return mcount;
 		case ROOK:
-			for (i = from + NORTH; i > 0; i += NORTH) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+			for (i = from + NORTH; i >= 0; i += NORTH) {
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
-			for (i = from + WEST; i % WIDTH != WIDTH - 1; i += WEST) {
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from]>0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
+				if (i < 0) { break; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			return mcount;
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
 				if (i < 0) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
 				if (i < 0) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
-				if (i > SPACES) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				if (i >= SPACES) { break; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
-				if (i > SPACES) { break; }
-				if (grid[i]) {
-					if ((grid[i] < 0 && grid[from] > 0) || (grid[i] > 0 && grid[from] < 0)) { mcount++; }
-					break;
-				}
-				else { mcount++; }
+				if (i >= SPACES) { break; }
+				++mcount;
+				if (grid[i]) { break; }
 			}
 			return mcount;
 		}
-		return mcount;
 	}
 
 	bool board::checkMate() {//looks for checkmate or draw
@@ -563,7 +500,7 @@ namespace Chess {
 		for (to = 0; to < SPACES; ++to) { if ((turn && grid[to] == KING) || (!turn && grid[to] == -KING)) { break; } }
 		turn = (turn) ? BLACK : WHITE;
 		for (uint8_t from = 0; from < SPACES; ++from) {
-			if (createMove(from, to).getFlags() != FAIL) { turn = (turn) ? 0 : 1; return true; }
+			if (createMove(from, to).getFlags() != FAIL) { turn = (turn) ? BLACK : WHITE; return true; }
 		}
 		turn = (turn) ? BLACK : WHITE;
 		return false;

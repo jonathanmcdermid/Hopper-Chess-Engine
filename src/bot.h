@@ -10,8 +10,8 @@ namespace Chess {
 		move movelink[MAXDEPTH] = { move() };
 	}line;
 	typedef struct limits {
-		uint32_t time[2] = { 500000, 500000 };
-		uint32_t inc[2] = { 500000, 500000 };
+		uint32_t time[2] = { 300000, 300000 };
+		uint32_t inc[2] = { 100000, 100000 };
 		uint32_t movetime = 0;
 		uint8_t movesleft = 0;
 		uint8_t depth = MAXDEPTH;

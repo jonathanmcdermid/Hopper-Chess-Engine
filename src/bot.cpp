@@ -19,7 +19,7 @@ namespace Chess {
 			else if (score <= alpha || score >= beta) {
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
-				pv.cmove--;
+				--pv.cmove;
 				window += opt.windowstepup;
 			}
 			else {
@@ -28,10 +28,10 @@ namespace Chess {
 				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 				auto stop = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-				if (duration.count() > timeallotted) { break; }
+				if (duration.count() > timeallotted || score - startscore > KNIGHT) { break; }
 			}
 		}
-		for (uint16_t i = 0; i < HASHSIZE; ++i) { table[i].chrono(); }
+		std::cout << "info depth " << (int) pv.cmove << " score cp " << (int) score << "\n";
 		return pv.movelink[0];
 	}
 
@@ -56,7 +56,7 @@ namespace Chess {
 			if ((b->getGrid(index1) > 0 && b->getTurn()) || (b->getGrid(index1) < 0 && !b->getTurn())) {
 				for (index2 = 0; index2 < SPACES; ++index2) {
 					possiblemoves[cmove] = b->createMove(index1, index2);
-					if (possiblemoves[cmove].getFlags() != FAIL) { cmove++; }
+					if (possiblemoves[cmove].getFlags() != FAIL) { ++cmove; }
 				}
 			}
 		}
@@ -74,7 +74,7 @@ namespace Chess {
 				index2 = 0;
 				break; 
 			}
-			index2++;
+			++index2;
 		}
 		if (table[keyindex].getBmove().getFlags() != FAIL) {
 			possiblemoves[cmove+1]=table[keyindex].getBmove();
@@ -83,7 +83,7 @@ namespace Chess {
 					possiblemoves[cmove + 1] = possiblemoves[index2];
 					possiblemoves[index2] = possiblemoves[index3];
 					possiblemoves[index3] = possiblemoves[cmove + 1];
-					index2++;
+					++index2;
 					break;
 				}
 			}
@@ -94,7 +94,7 @@ namespace Chess {
 					possiblemoves[cmove + 1] = possiblemoves[index2];
 					possiblemoves[index2] = possiblemoves[index1];
 					possiblemoves[index1] = possiblemoves[cmove + 1];
-					index2++;
+					++index2;
 				}
 			}
 			switch (flag) {
@@ -108,7 +108,8 @@ namespace Chess {
 		for (index1 = 0; index1 < cmove; ++index1) {
 			if (b->movePiece(possiblemoves[index1])) {
 				stuck = false;
-				score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true);
+				if (b->getzHist(0) == b->getzHist(4)) { score = 0; }
+				else { score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true); }
 				b->unmovePiece();
 				if (score > alpha) {
 					pline->movelink[0] = possiblemoves[index1];
@@ -117,13 +118,12 @@ namespace Chess {
 					alpha = score;
 				}
 				if (score >= beta) { 
-					if (table[keyindex].getDepth() < depth) { table[keyindex] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
 					return score; 
 				}
 			}
 		}
 		if (stuck) { alpha = (b->getCheck()) ? MATE : 0; }
-		else if (table[keyindex].getDepth() < depth) { table[keyindex] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
+		else { table[keyindex] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
 		return alpha;
 	}
 
