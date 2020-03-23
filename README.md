@@ -1,6 +1,6 @@
 # Chess-Engine
 
-This is an amateur chess engine, and still in development. UCI compatibility for Arena is currently limited to Player vs Engine. The engine runs smoothly locally, so an external program like Arena is not required to play. 
+This is an amateur chess engine, and still in development. UCI compatibility for Arena is limited, but functional for standard play. The engine runs smoothly locally, so an external program like Arena is not required to play. 
 
 ## Playing In Arena
 
