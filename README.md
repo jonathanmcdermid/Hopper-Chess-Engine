@@ -27,6 +27,6 @@ transposition tables
 zobrist keys
 null moves
 quiescent search
-dynamic alpha beta windows
+dynamic aspiration windows
 ```
 Better UCI compatibility, time management, FEN string saving, and a rare castling exception (king moves across attacked square) are at the top of the to do list.
