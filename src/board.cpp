@@ -52,9 +52,9 @@ namespace Chess {
 			++index;
 		} while (fs[index] != ' ');
 		if (castled[0]) { mHist[cturn] = move(0, 0, NULLMOVE); cturn++; }
-		if (castled[1]) { mHist[cturn] = move(WIDTH-1, 0, NULLMOVE); cturn++; }
+		if (castled[1]) { mHist[cturn] = move(7, 0, NULLMOVE); cturn++; }
 		if (castled[2]) { mHist[cturn] = move(SPACES - WIDTH, 0, NULLMOVE); cturn++; }
-		if (castled[3]) { mHist[cturn] = move(SPACES - 1, 0, NULLMOVE); cturn++; }
+		if (castled[3]) { mHist[cturn] = move(63, 0, NULLMOVE); cturn++; }
 		++index;
 		if(fs[index]!='-'){
 			uint8_t from = (turn) ? fs[index] - '0' - WIDTH : fs[index] - '0' + WIDTH;
@@ -65,6 +65,60 @@ namespace Chess {
 		check = checkTeam(turn);
 		++index;
 		zHist[cturn] = z.newKey(this);
+	}
+
+	std::string board::fenGet() {//returns FEN string of board state, no clock
+		std::string fen;
+		char counter = '0';
+		for (uint8_t index = 0; index < SPACES; ++index) {
+			switch (grid[index]) {
+			case PAWN: { fen += 'P'; break; }
+			case ROOK: { fen += 'R'; break; }
+			case KNIGHT: { fen += 'N'; break; }
+			case BISHOP: { fen += 'B'; break; }
+			case QUEEN: { fen += 'Q'; break; }
+			case KING: { fen += 'K'; break; }
+			case -PAWN: { fen += 'p'; break; }
+			case -ROOK: { fen += 'r'; break; }
+			case -KNIGHT: { fen += 'n'; break; }
+			case -BISHOP: { fen += 'b'; break; }
+			case -QUEEN: { fen += 'q'; break; }
+			case -KING: { fen += 'k'; break; }
+			default: 
+				while (!grid[index] && counter != '8') {
+					++index;
+					++counter;
+				}
+				--index;
+				fen += counter;
+				counter = '0';
+			}
+			if (index % WIDTH == 7) { fen += '/'; }
+		}
+		if (turn) { fen += " w "; }
+		else { fen += " b "; }
+		bool castles[] = { true,true,true,true };
+		for (uint8_t i = 0; i < cturn; ++i) {
+			if (mHist[i].getTo() == 63 || mHist[i].getFrom() == 63) { castles[1] = false; }
+			if (mHist[i].getTo() == 56 || mHist[i].getFrom() == 56) { castles[0] = false; }
+			if (mHist[i].getTo() == 60 || mHist[i].getFrom() == 60) {
+				castles[0] = false;
+				castles[1] = false;
+			}
+			if (mHist[i].getTo() == 7 || mHist[i].getFrom() == 7) { castles[3] = false; }
+			if (mHist[i].getTo() == 0 || mHist[i].getFrom() == 0) { castles[2] = false; }
+			if (mHist[i].getTo() == 4 || mHist[i].getFrom() == 4) {
+				castles[2] = false;
+				castles[3] = false;
+			}
+		}
+		if (castles[1]) { fen += 'K'; }
+		if (castles[0]) { fen += 'Q'; }
+		if (castles[3]) { fen += 'k'; }
+		if (castles[2]) { fen += 'q'; }
+		if (!castles[0] && !castles[1] && !castles[2] && !castles[3]) { fen += '-'; }
+		fen += " 0 1";
+		return fen;
 	}
 
 	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)

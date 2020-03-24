@@ -32,13 +32,13 @@ namespace Chess {
 		bool castles[] = { true,true,true,true };
 		for (uint8_t i = 0; i < count; ++i) {
 			m = b->getmHist(i);
-			if (m.getTo() == SPACES - 1		|| m.getFrom() == SPACES - 1) { castles[1] = false; }
-			if (m.getTo() == SPACES - WIDTH || m.getFrom() == SPACES - WIDTH) { castles[0] = false; }
-			if (m.getTo() == SPACES - 3		|| m.getFrom() == SPACES - 3) {
+			if (m.getTo() == 63	|| m.getFrom() == 63) { castles[1] = false; }
+			if (m.getTo() == 56 || m.getFrom() == 56) { castles[0] = false; }
+			if (m.getTo() == 60	|| m.getFrom() == 60) {
 				castles[0] = false;
 				castles[1] = false;
 			}
-			if (m.getTo() == WIDTH - 1 || m.getFrom() == WIDTH - 1) { castles[3] = false; }
+			if (m.getTo() == 7 || m.getFrom() == 7) { castles[3] = false; }
 			if (m.getTo() == 0 || m.getFrom() == 0) { castles[2] = false; }
 			if (m.getTo() == 4 || m.getFrom() == 4) {
 				castles[2] = false;
