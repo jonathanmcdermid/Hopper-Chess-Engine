@@ -9,7 +9,6 @@ namespace Chess {
 	public:
 		board();
 		void fenSet(std::string fs);
-		std::string fenGet();
 		bool checkMate();
 		move createMove(uint8_t from, uint8_t to);
 		bool movePiece(move m);

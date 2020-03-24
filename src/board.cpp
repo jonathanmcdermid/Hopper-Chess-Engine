@@ -67,60 +67,6 @@ namespace Chess {
 		zHist[cturn] = z.newKey(this);
 	}
 
-	std::string board::fenGet() {//returns FEN string of board state, no clock
-		std::string fen;
-		char counter = '0';
-		for (uint8_t index = 0; index < SPACES; ++index) {
-			switch (grid[index]) {
-			case PAWN: { fen += 'P'; break; }
-			case ROOK: { fen += 'R'; break; }
-			case KNIGHT: { fen += 'N'; break; }
-			case BISHOP: { fen += 'B'; break; }
-			case QUEEN: { fen += 'Q'; break; }
-			case KING: { fen += 'K'; break; }
-			case -PAWN: { fen += 'p'; break; }
-			case -ROOK: { fen += 'r'; break; }
-			case -KNIGHT: { fen += 'n'; break; }
-			case -BISHOP: { fen += 'b'; break; }
-			case -QUEEN: { fen += 'q'; break; }
-			case -KING: { fen += 'k'; break; }
-			default: 
-				while (!grid[index] && counter != '8') {
-					++index;
-					++counter;
-				}
-				--index;
-				fen += counter;
-				counter = '0';
-			}
-			if (index % WIDTH == 7) { fen += '/'; }
-		}
-		if (turn) { fen += " w "; }
-		else { fen += " b "; }
-		bool castles[] = { true,true,true,true };
-		for (uint8_t i = 0; i < cturn; ++i) {
-			if (mHist[i].getTo() == 63 || mHist[i].getFrom() == 63) { castles[1] = false; }
-			if (mHist[i].getTo() == 56 || mHist[i].getFrom() == 56) { castles[0] = false; }
-			if (mHist[i].getTo() == 60 || mHist[i].getFrom() == 60) {
-				castles[0] = false;
-				castles[1] = false;
-			}
-			if (mHist[i].getTo() == 7 || mHist[i].getFrom() == 7) { castles[3] = false; }
-			if (mHist[i].getTo() == 0 || mHist[i].getFrom() == 0) { castles[2] = false; }
-			if (mHist[i].getTo() == 4 || mHist[i].getFrom() == 4) {
-				castles[2] = false;
-				castles[3] = false;
-			}
-		}
-		if (castles[1]) { fen += 'K'; }
-		if (castles[0]) { fen += 'Q'; }
-		if (castles[3]) { fen += 'k'; }
-		if (castles[2]) { fen += 'q'; }
-		if (!castles[0] && !castles[1] && !castles[2] && !castles[3]) { fen += '-'; }
-		fen += " 0 1";
-		return fen;
-	}
-
 	bool board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
 		bool enemy = (turn) ? BLACK : WHITE;
 		zHist[cturn + 1] = zHist[cturn];
@@ -487,214 +433,119 @@ namespace Chess {
 
 	void board::threatenedSquares(uint8_t from) {//estimates offensive mobility of one piece, omits king moves for performance
 		int8_t i;
+		bool us = (grid[from] > 0) ? WHITE : BLACK;
 		switch (grid[from]) {
 		case KING:
+		case -KING:
 			return;
-			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[WHITE][from + SOUTHEAST]; }
-			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[WHITE][from + EAST]; }
-			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[WHITE][from + NORTHWEST]; }
-			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) { ++threatened[WHITE][from + WEST]; }
-			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) { ++threatened[WHITE][from + SOUTHWEST]; }
-			if (from < 56) { ++threatened[WHITE][from + SOUTH]; }
-			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) { ++threatened[WHITE][from + NORTHEAST]; }
-			if (from > 7) { ++threatened[WHITE][from + NORTH]; }
+			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[us][from + SOUTHEAST]; }
+			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[us][from + EAST]; }
+			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[us][from + NORTHWEST]; }
+			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) { ++threatened[us][from + WEST]; }
+			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) { ++threatened[us][from + SOUTHWEST]; }
+			if (from < 56) { ++threatened[us][from + SOUTH]; }
+			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) { ++threatened[us][from + NORTHEAST]; }
+			if (from > 7) { ++threatened[us][from + NORTH]; }
 			return;
 		case PAWN:
 			if (from % WIDTH) { ++threatened[WHITE][from + NORTHWEST]; }
 			if (from % WIDTH != 7) { ++threatened[WHITE][from + NORTHEAST]; }
 			return;
-		case KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { ++threatened[WHITE][from + 10]; }
-			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { ++threatened[WHITE][from + 17]; }
-			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { ++threatened[WHITE][from - 10]; }
-			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { ++threatened[WHITE][from - 17]; }
-			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { ++threatened[WHITE][from + 6]; }
-			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { ++threatened[WHITE][from + 15]; }
-			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { ++threatened[WHITE][from - 6]; }
-			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { ++threatened[WHITE][from - 15]; }
-			return;
-		case QUEEN:
-			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
-				if (i >= SPACES) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
-				if (i >= SPACES) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + NORTH; i >= 0; i += NORTH) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + EAST; i % WIDTH; i += EAST) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			return;
-		case ROOK:
-			for (i = from + NORTH; i >= 0; i += NORTH) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + EAST; i % WIDTH; i += EAST) {
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			return;
-		case BISHOP:
-			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
-				if (i < 0) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
-				if (i >= SPACES) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
-				if (i >= SPACES) { break; }
-				++threatened[WHITE][i];
-				if (grid[i]) { break; }
-			}
-			return;
-		case -KING:
-			return;
-			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[BLACK][from + SOUTHEAST]; }
-			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[BLACK][from + EAST]; }
-			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[BLACK][from + NORTHWEST]; }
-			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) { ++threatened[BLACK][from + WEST]; }
-			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) { ++threatened[BLACK][from + SOUTHWEST]; }
-			if (from < 56) { ++threatened[BLACK][from + SOUTH]; }
-			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) { ++threatened[BLACK][from + NORTHEAST]; }
-			if (from > 7) { ++threatened[BLACK][from + NORTH]; }
-			return;
 		case -PAWN:
 			if (from % WIDTH) { ++threatened[BLACK][from + SOUTHWEST]; }
 			if (from % WIDTH != 7) { ++threatened[BLACK][from + SOUTHEAST]; }
 			return;
+		case KNIGHT:
 		case -KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { ++threatened[BLACK][from + 10]; }
-			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { ++threatened[BLACK][from + 17]; }
-			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { ++threatened[BLACK][from - 10]; }
-			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { ++threatened[BLACK][from - 17]; }
-			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { ++threatened[BLACK][from + 6]; }
-			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { ++threatened[BLACK][from + 15]; }
-			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { ++threatened[BLACK][from - 6]; }
-			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { ++threatened[BLACK][from - 15]; }
+			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { ++threatened[us][from + 10]; }
+			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { ++threatened[us][from + 17]; }
+			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { ++threatened[us][from - 10]; }
+			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { ++threatened[us][from - 17]; }
+			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { ++threatened[us][from + 6]; }
+			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { ++threatened[us][from + 15]; }
+			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { ++threatened[us][from - 6]; }
+			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { ++threatened[us][from - 15]; }
 			return;
+		case QUEEN:
 		case -QUEEN:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
 				if (i >= SPACES) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
 				if (i >= SPACES) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + NORTH; i >= 0; i += NORTH) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			return;
+		case ROOK:
 		case -ROOK:
 			for (i = from + NORTH; i >= 0; i += NORTH) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + WEST; i % WIDTH != 7; i += WEST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			return;
+		case BISHOP:
 		case -BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH; i += NORTHEAST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH; i += NORTHWEST) {
 				if (i < 0) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH; i += SOUTHEAST) {
 				if (i >= SPACES) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH; i += SOUTHWEST) {
 				if (i >= SPACES) { break; }
-				++threatened[BLACK][i];
+				++threatened[us][i];
 				if (grid[i]) { break; }
 			}
 			return;

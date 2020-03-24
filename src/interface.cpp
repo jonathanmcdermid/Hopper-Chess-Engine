@@ -145,7 +145,6 @@ namespace Chess{
 				}
 			}
 		}
-		else if (input == "fenget") { std::cout << game.fenGet() << "\n"; }
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			game.fenSet(input);
