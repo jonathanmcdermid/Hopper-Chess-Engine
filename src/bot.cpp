@@ -73,7 +73,7 @@ namespace Chess {
 				index2 = 0;
 				break; 
 			}
-			++index2;
+			else { ++index2; }
 		}
 		if (table[keyindex].getBmove().getFlags() != FAIL) {
 			possiblemoves[cmove+1]=table[keyindex].getBmove();
@@ -107,7 +107,7 @@ namespace Chess {
 		for (index1 = 0; index1 < cmove; ++index1) {
 			if (b->movePiece(possiblemoves[index1])) {
 				stuck = false;
-				if (b->getzHist(0) == b->getzHist(4)) { score = 0; }
+				if (b->getzHist(0) == b->getzHist(4)) { score = CONTEMPT; }
 				else { score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true); }
 				b->unmovePiece();
 				if (score > alpha) {

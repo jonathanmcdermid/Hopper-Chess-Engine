@@ -53,7 +53,7 @@ namespace Chess {
 		} while (fs[index] != ' ');
 		if (castled[0]) { mHist[cturn] = move(0, 0, NULLMOVE); cturn++; }
 		if (castled[1]) { mHist[cturn] = move(7, 0, NULLMOVE); cturn++; }
-		if (castled[2]) { mHist[cturn] = move(SPACES - WIDTH, 0, NULLMOVE); cturn++; }
+		if (castled[2]) { mHist[cturn] = move(56, 0, NULLMOVE); cturn++; }
 		if (castled[3]) { mHist[cturn] = move(63, 0, NULLMOVE); cturn++; }
 		++index;
 		if(fs[index]!='-'){
@@ -215,7 +215,7 @@ namespace Chess {
 		if (m.getFlags() != NULLMOVE) { grid[m.getFrom()] = EMPTY; }
 		for (uint8_t i = 0; i < SPACES; ++i) { vHist[cturn] += grid[i]; }
 		mHist[cturn] = m;
-		cturn++;
+		++cturn;
 		allAttacked();
 		if (checkTeam(turn)) { 
 			turn = (turn) ? BLACK : WHITE;
@@ -232,7 +232,7 @@ namespace Chess {
 	void board::unmovePiece() {//unmakes a move
 		turn = (turn) ? BLACK : WHITE;
 		zHist[cturn] = 0;
-		cturn--;
+		--cturn;
 		bool enemy = (turn) ? BLACK : WHITE;
 		switch (mHist[cturn].getFlags()) {
 		case STANDARD:
@@ -305,66 +305,108 @@ namespace Chess {
 
 	move board::createMove(uint8_t from, uint8_t to) {//generates a pseudo legal move from start and endpoint (cannot create nullmove)
 		if ((turn && (grid[from] <= 0 || grid[to] > 0)) || (!turn && (grid[from] >= 0 || grid[to] < 0))) { return move(); }
-		uint8_t end, i;
+		uint8_t i;
 		int8_t direction;
-		switch (abs(grid[from])) {
+		switch (grid[from]) {
 		case KING:
-			if (abs(from / WIDTH - to / WIDTH) > 1 || abs(from % WIDTH - to % WIDTH) > 2 || threatened[!turn][to]) { return move(); }
+			if (abs(from / WIDTH - to / WIDTH) > 1 || abs(from % WIDTH - to % WIDTH) > 2 || threatened[BLACK][to]) { return move(); }
 			if (abs(from % WIDTH - to % WIDTH) < 2) {
 				if (grid[to]) { return move(from, to, CAPTURE); }
 				else { return move(from, to, STANDARD); }
 			}
-			end = (!turn) ? 0 : 7;
-			if (from % WIDTH == 4 && from / WIDTH == to / WIDTH && from / WIDTH == end && !check) {
-				if (from - 2 == to && !grid[from + WEST] && !grid[from - 2] && !grid[from - 3]) {
-					if (threatened[!turn][from + WEST]) { return move(); }
+			if (from == 60 && !check) {
+				if (to == 58 && !grid[59] && !grid[58] && !grid[57]) {
 					for (i = 0; i < cturn; ++i) {
-						if (mHist[i].getFrom() == from || mHist[i].getFrom() == from - 4 || mHist[i].getTo() == from - 4) { return move(); }
+						if (mHist[i].getFrom() == 60 || mHist[i].getFrom() == 56 || mHist[i].getTo() == 56) { return move(); }
 					}
-					if (i == cturn) { return move(from, to, QCASTLE); }
+					return move(from, to, QCASTLE);
 				}
-				else if (from + 2 == to && !grid[from + EAST] && !grid[from + 2]) {
-					if (threatened[!turn][from + EAST]) { return move(); }
+				else if (to == 63 && !grid[61] && !grid[62]) {
 					for (i = 0; i < cturn; ++i) {
-						if (mHist[i].getFrom() == from || mHist[i].getFrom() == from + 3 || mHist[i].getTo() == from + 3) { return move(); }
+						if (mHist[i].getFrom() == 60 || mHist[i].getFrom() == 63 || mHist[i].getTo() == 63) { return move(); }
 					}
-					if (i == cturn) { return move(from, to, KCASTLE); }
+					return move(from, to, KCASTLE);
+				}
+			}
+			return move();
+		case -KING:
+			if (abs(from / WIDTH - to / WIDTH) > 1 || abs(from % WIDTH - to % WIDTH) > 2 || threatened[WHITE][to]) { return move(); }
+			if (abs(from % WIDTH - to % WIDTH) < 2) {
+				if (grid[to]) { return move(from, to, CAPTURE); }
+				else { return move(from, to, STANDARD); }
+			}
+			if (from == 4 && !check) {
+				if (to == 2 && !grid[3] && !grid[2] && !grid[1]) {
+					for (i = 0; i < cturn; ++i) {
+						if (mHist[i].getFrom() == 4 || mHist[i].getFrom() == 0 || mHist[i].getTo() == 0) { return move(); }
+					}
+					return move(from, to, QCASTLE);
+				}
+				else if (to == 6 && !grid[5] && !grid[6]) {
+					for (i = 0; i < cturn; ++i) {
+						if (mHist[i].getFrom() == 4 || mHist[i].getFrom() == 7 || mHist[i].getTo() == 7) { return move(); }
+					}
+					return move(from, to, KCASTLE);
 				}
 			}
 			return move();
 		case PAWN:
-			if (abs(to % WIDTH - from % WIDTH) > 1 || abs(to / WIDTH - from / WIDTH) > 2 || to > from && turn || to < from && !turn) { return move(); }
-			direction = (turn) ? NORTH : SOUTH;
-			end = (turn) ? 0 : 7;
-			if (!grid[from + direction] && to % WIDTH == from % WIDTH) {
-				if (from + direction == to) {
-					if (end == to / WIDTH) { return move(from, to, QPROMOTE); }
+			if (abs(to % WIDTH - from % WIDTH) > 1 || abs(to / WIDTH - from / WIDTH) > 2 || to > from) { return move(); }
+			if (!grid[from + NORTH] && to % WIDTH == from % WIDTH) {
+				if (from + NORTH == to) {
+					if (to < WIDTH) { return move(from, to, QPROMOTE); }
 					else { return move(from, to, STANDARD); }
 				}
-				else if ((from - direction) / WIDTH == 7 - end && !grid[to]) { return move(from, to, DOUBLEPUSH); }
+				else if (from > 47 && !grid[to]) { return move(from, to, DOUBLEPUSH); }
 			}
-			else if (from % WIDTH && from + direction + WEST == to) {
+			else if (from % WIDTH && from + NORTHWEST == to) {
 				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from + WEST) { return move(from, to, ENPASSANT); }
 				else if (grid[to]) {
-					if (end == to / WIDTH) { return move(from, to, QPROMOTEC); }
+					if (to < WIDTH) { return move(from, to, QPROMOTEC); }
 					else { return move(from, to, CAPTURE); }
 				}
 			}
-			else if (from % WIDTH != 7 && from + direction + EAST == to) {
+			else if (from % WIDTH != 7 && from + NORTHEAST == to) {
 				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from + EAST) { return move(from, to, ENPASSANT); }
 				else if (grid[to]) {
-					if (end == to / WIDTH) { return move(from, to, QPROMOTEC); }
+					if (to < WIDTH) { return move(from, to, QPROMOTEC); }
+					else { return move(from, to, CAPTURE); }
+				}
+			}
+			return move();
+		case -PAWN:
+			if (abs(to % WIDTH - from % WIDTH) > 1 || abs(to / WIDTH - from / WIDTH) > 2 || to < from) { return move(); }
+			if (!grid[from + SOUTH] && to % WIDTH == from % WIDTH) {
+				if (from + SOUTH == to) {
+					if (to > 55) { return move(from, to, QPROMOTE); }
+					else { return move(from, to, STANDARD); }
+				}
+				else if ( from < 16 && !grid[to]) { return move(from, to, DOUBLEPUSH); }
+			}
+			else if (from % WIDTH && from + SOUTHWEST == to) {
+				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from + WEST) { return move(from, to, ENPASSANT); }
+				else if (grid[to]) {
+					if (to > 55) { return move(from, to, QPROMOTEC); }
+					else { return move(from, to, CAPTURE); }
+				}
+			}
+			else if (from % WIDTH != 7 && from + SOUTHEAST == to) {
+				if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && mHist[cturn - 1].getTo() == from + EAST) { return move(from, to, ENPASSANT); }
+				else if (grid[to]) {
+					if (to > 55) { return move(from, to, QPROMOTEC); }
 					else { return move(from, to, CAPTURE); }
 				}
 			}
 			return move();
 		case KNIGHT:
+		case -KNIGHT:
 			if ((abs(from / WIDTH - to / WIDTH) == 2 && abs(from % WIDTH - to % WIDTH) == 1 || abs(from / WIDTH - to / WIDTH) == 1 && abs(from % WIDTH - to % WIDTH) == 2)) {
 				if (grid[to]) { return move(from, to, CAPTURE); }
 				else { return move(from, to, STANDARD); }
 			}
 			return move();
 		case QUEEN:
+		case -QUEEN:
 			if (from / WIDTH != to / WIDTH && from % WIDTH != to % WIDTH && abs(from / WIDTH - to / WIDTH) != abs(from % WIDTH - to % WIDTH)) { return move(); }
 			if (from / WIDTH == to / WIDTH || from % WIDTH == to % WIDTH) {
 				if (from < to) {
@@ -393,6 +435,7 @@ namespace Chess {
 				else { return move(from, to, STANDARD); }
 			}
 		case ROOK:
+		case -ROOK:
 			if (from / WIDTH != to / WIDTH && from % WIDTH != to % WIDTH) { return move(); }
 			if (from < to) {
 				if (from % WIDTH < to % WIDTH) { direction = EAST; }
@@ -406,6 +449,7 @@ namespace Chess {
 			if (grid[to]) { return move(from, to, CAPTURE); }
 			else { return move(from, to, STANDARD); }
 		case BISHOP:
+		case -BISHOP:
 			if (abs(from / WIDTH - to / WIDTH) != abs(from % WIDTH - to % WIDTH)) { return move(); }
 			if (from < to) {
 				if (from % WIDTH > to % WIDTH) { direction = SOUTHWEST; }
@@ -425,11 +469,10 @@ namespace Chess {
 	int16_t board::negaEval() {//evaluates for negamax function
 		int8_t sum = 0;
 		for (uint8_t from = 0; from < SPACES; ++from) {
-			if (grid[from] && abs(grid[from]) != KING) {
-				sum = (grid[from] > 0) ? sum + (threatened[WHITE][from] - threatened[BLACK][from]) * grid[from] / 10 : sum + (threatened[BLACK][from] - threatened[WHITE][from]) * grid[from] / 10;
-			}
+			sum += threatened[WHITE][from];
+			sum -= threatened[BLACK][from];
 		}
-		return (turn) ? vHist[cturn - 1] + sum: -vHist[cturn - 1] - sum; 
+		return (turn) ? vHist[cturn - 1] + 10*sum: -vHist[cturn - 1] - 10*sum; 
 	}
 
 	void board::allAttacked() {
@@ -442,10 +485,11 @@ namespace Chess {
 		}
 	}
 
-	void board::threatenedSquares(uint8_t from) {//estimates offensive mobility of one piece
+	void board::threatenedSquares(uint8_t from) {//estimates offensive mobility of one piece, omits king moves for performance
 		int8_t i;
 		switch (grid[from]) {
 		case KING:
+			return;
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[WHITE][from + SOUTHEAST]; }
 			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[WHITE][from + EAST]; }
 			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[WHITE][from + NORTHWEST]; }
@@ -550,6 +594,7 @@ namespace Chess {
 			}
 			return;
 		case -KING:
+			return;
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[BLACK][from + SOUTHEAST]; }
 			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[BLACK][from + EAST]; }
 			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[BLACK][from + NORTHWEST]; }

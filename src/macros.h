@@ -6,6 +6,7 @@
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
 #define MATE		-10000
+#define CONTEMPT	-1000
 #define SPACES		64
 #define WIDTH		8
 #define NORTH		-8
