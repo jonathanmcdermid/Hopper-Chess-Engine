@@ -8,7 +8,6 @@ namespace Chess {
 		int32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / opt.timefactor: lim.time[BLACK] / opt.timefactor;
 		auto start = std::chrono::high_resolution_clock::now();
 		int16_t score;
-		int16_t startscore = b->negaEval();
 		uint16_t window = opt.windowstart;
 		int16_t alpha = LOWERLIMIT;
 		int16_t beta = UPPERLIMIT;
@@ -28,7 +27,7 @@ namespace Chess {
 				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 				auto stop = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-				if (duration.count() > timeallotted || score - startscore > KNIGHT) { break; }
+				if (duration.count() > timeallotted) { break; }
 			}
 		}
 		std::cout << "info depth " << (int) pv.cmove << " score cp " << (int) score << "\n";

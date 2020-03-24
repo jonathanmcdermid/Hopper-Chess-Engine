@@ -7,7 +7,7 @@ namespace Chess {
 	class board;
 	typedef struct line {
 		uint8_t cmove = 0;
-		move movelink[MAXDEPTH] = { move() };
+		move movelink[MAXDEPTH];
 	}line;
 	typedef struct limits {
 		uint32_t time[2] = { 300000, 300000 };
@@ -26,7 +26,7 @@ namespace Chess {
 		uint16_t windowstepdown = 50;
 		uint16_t windowfloor = 100;
 		uint16_t hashsize = HASHSIZE;
-		uint8_t timefactor = 50;
+		uint8_t timefactor = 40;
 	}options;
 	class bot{
 	public:
@@ -37,7 +37,7 @@ namespace Chess {
 		limits lim;
 		options opt;
 	private:
-		hashtable table[HASHSIZE] = { hashtable() };
+		hashtable table[HASHSIZE];
 	};
 }
 
