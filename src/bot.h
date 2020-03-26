@@ -21,10 +21,10 @@ namespace Chess {
 		bool infinite = false;
 	}limits;
 	typedef struct options {
-		uint16_t windowstart = 200;
+		uint16_t windowstart = 400;
 		uint16_t windowstepup = 200;
-		uint16_t windowstepdown = 20;
-		uint16_t windowfloor = 30;
+		uint16_t windowstepdown = 50;
+		uint16_t windowfloor = 100;
 		uint16_t hashsize = HASHSIZE;
 		uint8_t timefactor = 50;
 	}options;
