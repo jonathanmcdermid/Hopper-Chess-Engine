@@ -12,13 +12,13 @@ namespace Chess {
 		unsigned long long getzHist(int i) const { return (i > cturn) ? 0 : zHist[cturn - i]; }
 		move getmHist(int i) const { return (i > cturn) ? move() : mHist[i]; }
 		bool checkMate() { return (checkTeam(!turn) || !cmove) ? true : false; }
-		void drawBoard();
+		bool checkTeam(bool team) const { return (team) ? threatened[BLACK][kpos[WHITE]] : threatened[WHITE][kpos[BLACK]]; }
 		move createMove(int from, int to);
+		void drawBoard();
 		bool movePiece(move m);
 		void unmovePiece();
 		void generateMoves();
 		void pieceMoves(int from);
-		bool checkTeam(bool team);
 		int grid[SPACES];
 		bool turn;
 		bool endgame;
@@ -29,6 +29,7 @@ namespace Chess {
 		move currM;
 		move possiblemoves[MEMORY];
 	private:
+		int kpos[2];
 		int cturn;
 		int threatened[2][SPACES];
 		unsigned long long zHist[MEMORY];

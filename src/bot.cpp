@@ -199,9 +199,8 @@ namespace Chess {
 		line localline;
 		int score;
 		if (notNull && depth > 3 && !b.checkTeam(b.turn)) {
-			int R = depth / 2 - 2;
 			b.movePiece(move(0, 0, NULLMOVE));
-			score = -miniMax(b, R, -beta, -beta + 1, &localline, false);
+			score = -miniMax(b, depth / 2 - 2, -beta, -beta + 1, &localline, false);
 			b.unmovePiece();
 			if (score >= beta) { return beta; }
 		}

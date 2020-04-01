@@ -1,10 +1,6 @@
 #include "board.h"
 
 namespace Chess {
-#define CASTLEWK	(c) ((c) & 0x22)
-#define CASTLEWQ	(c) ((c) & 0x12)
-#define CASTLEBK	(c) ((c) & 0x0C)
-#define CASTLE BQ	(c) ((c) & 0x05
 
 	board::board() {//sets board to starting state
 		z = zobrist();
@@ -69,7 +65,6 @@ namespace Chess {
 		currM = (cturn) ? mHist[cturn - 1] : move();
 		generateMoves();
 	}
-
 	void board::drawBoard() {//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
@@ -244,7 +239,7 @@ namespace Chess {
 			unmovePiece();
 			return false; 
 		}
-		else {return true; }
+		else { return true; }
 	}
 
 	void board::unmovePiece() {//unmakes a move
@@ -317,6 +312,10 @@ namespace Chess {
 		currC = cHist[cturn];
 		currV = vHist[cturn - 1];
 		currM = mHist[cturn - 1];
+		zHist[cturn] = 0;
+		cHist[cturn] = 0;
+		vHist[cturn] = 0;
+		mHist[cturn] = 0;
 		generateMoves();
 	}
 
@@ -344,6 +343,7 @@ namespace Chess {
 		bool us = (grid[from] > 0) ? WHITE : BLACK;
 		switch (abs(grid[from])) {
 		case KING:
+			kpos[us] = from;
 			if (turn == us) {
 				if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) {
 					++threatened[us][from + SOUTHEAST];
@@ -369,7 +369,7 @@ namespace Chess {
 						++cmove;
 					}
 				}
-				if ((from + WEST) % WIDTH < from % WIDTH) {
+				if ((from + WEST) % WIDTH < from % WIDTH && from > 0) {
 					++threatened[us][from + WEST];
 					if (!threatened[!us][from + WEST] && ((us && grid[from + WEST] <= 0) || (!us && grid[from + WEST] >= 0))) {
 						if (!grid[from + WEST]) { possiblemoves[cmove] = move(from, from + WEST, STANDARD); }
@@ -778,13 +778,6 @@ namespace Chess {
 				}
 			}
 			return;
-		}
-	}
-	
-	bool board::checkTeam(bool team) {//looks for check
-		int target = (team) ? KING : -KING;
-		for (int to = 0; to < SPACES; ++to) {
-			if (grid[to] == target) { return (threatened[!team][to]) ? true : false; }
 		}
 	}
 }
