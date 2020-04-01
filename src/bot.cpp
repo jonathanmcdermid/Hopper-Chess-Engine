@@ -4,123 +4,299 @@
 
 namespace Chess {
 
-	move bot::getMove(board* b) {//calls minimax and controls depth, alpha beta windows, and time
-		int32_t timeallotted = (b->getTurn()) ? lim.time[WHITE] / opt.timefactor: lim.time[BLACK] / opt.timefactor;
+	static int WPAWNBIT[SPACES] = {
+		 0,  0,  0,  0,  0,  0,  0,  0,
+		50, 50, 50, 50, 50, 50, 50, 50,
+		10, 10, 20, 30, 30, 20, 10, 10,
+		 5,  5, 10, 25, 25, 10,  5,  5,
+		 0,  0,  0, 20, 20,  0,  0,  0,
+		 5, -5,-10,  0,  0,-10, -5,  5,
+		 5, 10, 10,-20,-20, 10, 10,  5,
+		 0,  0,  0,  0,  0,  0,  0,  0
+	};
+
+	static int BPAWNBIT[SPACES] = {
+		 0,  0,  0,  0,  0,  0,  0,  0,
+		 5, 10, 10,-20,-20, 10, 10,  5,
+		 5, -5,-10,  0,  0,-10, -5,  5,
+		 0,  0,  0, 20, 20,  0,  0,  0,
+		 5,  5, 10, 25, 25, 10,  5,  5,
+		10, 10, 20, 30, 30, 20, 10, 10,
+		50, 50, 50, 50, 50, 50, 50, 50,
+		 0,  0,  0,  0,  0,  0,  0,  0
+	};
+
+	static int WKNIGHTBIT[SPACES] = {
+		-50,-40,-30,-30,-30,-30,-40,-50,
+		-40,-20,  0,  0,  0,  0,-20,-40,
+		-30,  0, 10, 15, 15, 10,  0,-30,
+		-30,  5, 15, 20, 20, 15,  5,-30,
+		-30,  0, 15, 20, 20, 15,  0,-30,
+		-30,  5, 10, 15, 15, 10,  5,-30,
+		-40,-20,  0,  5,  5,  0,-20,-40,
+		-50,-40,-30,-30,-30,-30,-40,-50
+	};
+
+	static int BKNIGHTBIT[SPACES] = {
+		-50,-40,-30,-30,-30,-30,-40,-50,
+		-40,-20,  0,  5,  5,  0,-20,-40,
+		-30,  5, 10, 15, 15, 10,  5,-30,
+		-30,  0, 15, 20, 20, 15,  0,-30,
+		-30,  5, 15, 20, 20, 15,  5,-30,
+		-30,  0, 10, 15, 15, 10,  0,-30,
+		-40,-20,  0,  0,  0,  0,-20,-40,
+		-50,-40,-30,-30,-30,-30,-40,-50
+	};
+
+	static int WBISHOPBIT[SPACES] = {
+		-20,-10,-10,-10,-10,-10,-10,-20,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-10,  0,  5, 10, 10,  5,  0,-10,
+		-10,  5,  5, 10, 10,  5,  5,-10,
+		-10,  0, 10, 10, 10, 10,  0,-10,
+		-10, 10, 10, 10, 10, 10, 10,-10,
+		-10,  5,  0,  0,  0,  0,  5,-10,
+		-20,-10,-10,-10,-10,-10,-10,-20,
+	};
+
+	static int BBISHOPBIT[SPACES] = {
+		-20,-10,-10,-10,-10,-10,-10,-20,
+		-10,  5,  0,  0,  0,  0,  5,-10,
+		-10, 10, 10, 10, 10, 10, 10,-10,
+		-10,  0, 10, 10, 10, 10,  0,-10,
+		-10,  5,  5, 10, 10,  5,  5,-10,
+		-10,  0,  5, 10, 10,  5,  0,-10,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-20,-10,-10,-10,-10,-10,-10,-20
+	};
+
+	static int WROOKBIT[SPACES] = {
+		 0,  0,  0,  0,  0,  0,  0,  0,
+		 5, 10, 10, 10, 10, 10, 10,  5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		 0,  0,  0,  5,  5,  0,  0,  0
+	};
+
+	static int BROOKBIT[SPACES] = {
+		 0,  0,  0,  5,  5,  0,  0,  0,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		 5, 10, 10, 10, 10, 10, 10,  5,
+		 0,  0,  0,  0,  0,  0,  0,  0
+	};
+
+	static int WQUEENBIT[SPACES] = {
+		-20,-10,-10, -5, -5,-10,-10,-20,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-10,  0,  5,  5,  5,  5,  0,-10,
+		 -5,  0,  5,  5,  5,  5,  0, -5,
+		  0,  0,  5,  5,  5,  5,  0, -5,
+		-10,  5,  5,  5,  5,  5,  0,-10,
+		-10,  0,  5,  0,  0,  0,  0,-10,
+		-20,-10,-10, -5, -5,-10,-10,-20
+	};
+
+	static int BQUEENBIT[SPACES] = {
+		-20,-10,-10, -5, -5,-10,-10,-20,
+		-10,  0,  5,  0,  0,  0,  0,-10,
+		-10,  5,  5,  5,  5,  5,  0,-10,
+		  0,  0,  5,  5,  5,  5,  0, -5,
+		 -5,  0,  5,  5,  5,  5,  0, -5,
+		-10,  0,  5,  5,  5,  5,  0,-10,
+		-10,  0,  0,  0,  0,  0,  0,-10,
+		-20,-10,-10, -5, -5,-10,-10,-20
+	};
+
+	static int WKINGBIT[SPACES] = {
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-20,-30,-30,-40,-40,-30,-30,-20,
+		-10,-20,-20,-20,-20,-20,-20,-10,
+		 20, 20,  0,  0,  0,  0, 20, 20,
+		 20, 30, 10,  0,  0, 10, 30, 20
+	};
+
+	static int BKINGBIT[SPACES] = {
+		 20, 30, 10,  0,  0, 10, 30, 20,
+		 20, 20,  0,  0,  0,  0, 20, 20,
+		-10,-20,-20,-20,-20,-20,-20,-10,
+		-20,-30,-30,-40,-40,-30,-30,-20,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30,
+		-30,-40,-40,-50,-50,-40,-40,-30
+	};
+
+	static int WENDKINGBIT[SPACES] = {
+		-50,-40,-30,-20,-20,-30,-40,-50,
+		-30,-20,-10,  0,  0,-10,-20,-30,
+		-30,-10, 20, 30, 30, 20,-10,-30,
+		-30,-10, 30, 40, 40, 30,-10,-30,
+		-30,-10, 30, 40, 40, 30,-10,-30,
+		-30,-10, 20, 30, 30, 20,-10,-30,
+		-30,-30,  0,  0,  0,  0,-30,-30,
+		-50,-30,-30,-30,-30,-30,-30,-50
+	};
+
+	static int BENDKINGBIT[SPACES] = {
+		-50,-30,-30,-30,-30,-30,-30,-50,
+		-30,-30,  0,  0,  0,  0,-30,-30,
+		-30,-10, 20, 30, 30, 20,-10,-30,
+		-30,-10, 30, 40, 40, 30,-10,-30,
+		-30,-10, 30, 40, 40, 30,-10,-30,
+		-30,-10, 20, 30, 30, 20,-10,-30,
+		-30,-20,-10,  0,  0,-10,-20,-30,
+		-50,-40,-30,-20,-20,-30,-40,-50
+	};
+
+	void bot::makeMove(board& b) {//calls minimax and controls depth, alpha beta windows, and time
+		nodes = 0;
+		int timeallotted = (b.turn) ? lim.time[WHITE] / opt.timefactor: lim.time[BLACK] / opt.timefactor;
 		auto start = std::chrono::high_resolution_clock::now();
-		int16_t score = LOWERLIMIT;
-		uint16_t window = opt.windowstart;
-		int16_t alpha = LOWERLIMIT;
-		int16_t beta = UPPERLIMIT;
+		int window = opt.windowstart;
+		int score = LOWERLIMIT;
+		int alpha = LOWERLIMIT;
+		int beta = UPPERLIMIT;
 		line pv;
-		for (pv.cmove = 1; pv.cmove < lim.depth; ++pv.cmove) {
-			score = miniMax(b, pv.cmove, alpha, beta, &pv, false);
+		for (int depth = 1; depth < lim.depth; ++depth) {
+			score = miniMax(b, depth, alpha, beta, &pv, false);
+			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
+			for (int i = 0; i < pv.cmove; ++i) {
+				std::string message = { (char)(pv.movelink[i].getFrom() % WIDTH + 'a'), (char)(WIDTH - pv.movelink[i].getFrom() / WIDTH + '0'),' ',(char)(pv.movelink[i].getTo() % WIDTH + 'a'),(char)(WIDTH - pv.movelink[i].getTo() / WIDTH + '0') };
+				std::cout << message << " ";
+			}
+			std::cout << "\n";
 			if (score == -MATE) { break; }
-			else if (score <= alpha || score >= beta) {
+			if (score <= alpha || score >= beta) {
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
-				--pv.cmove;
+				--depth;
 				window += opt.windowstepup;
 			}
 			else {
-				alpha = score - window;
-				beta = score + window;
-				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 				auto stop = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 				if (duration.count() > timeallotted) { break; }
+				alpha = score - window;
+				beta = score + window;
+				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 			}
 		}
-		std::cout << "info depth " << (int) pv.cmove << " score cp " << (int) score << "\n";
-		return table[b->getzHist(0) % HASHSIZE].getBmove();
+		b.movePiece(pv.movelink[0]);
 	}
 
-	int16_t bot::miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
+	int bot::miniMax(board& b, int depth, int alpha, int beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
 		if (!depth) { return qSearch(b, alpha, beta); }
 		line localline;
-		int16_t score;
-		if (notNull && depth > 3 && !b->checkTeam(b->getTurn())) {
-			uint8_t R = depth / 2 - 2;
-			b->movePiece(move(0, 0, NULLMOVE));
+		int score;
+		if (notNull && depth > 3 && !b.checkTeam(b.turn)) {
+			int R = depth / 2 - 2;
+			b.movePiece(move(0, 0, NULLMOVE));
 			score = -miniMax(b, R, -beta, -beta + 1, &localline, false);
-			b->unmovePiece();
-			if (score >= beta) { return score; }
+			b.unmovePiece();
+			if (score >= beta) { return beta; }
 		}
-		uint8_t flag = CAPTURE;
 		bool stuck = true;
-		uint8_t index2 = 0;
+		int goodindex = 0;
+		int cmove = b.cmove;
+		int keyindex = b.currZ % HASHSIZE;
 		if (pline->movelink[0].getFlags() != FAIL) {
-			for (uint8_t i = 0; i < b->cmove; ++i) {
-				if (b->possiblemoves[i] == pline->movelink[0]) {
-					move tempMove = b->possiblemoves[0];
-					b->possiblemoves[0] = pline->movelink[0];
-					b->possiblemoves[i] = tempMove;
-					index2++;
-				}
-			}
-		}
-		if (table[b->getzHist(0) % HASHSIZE].getBmove().getFlags() != FAIL) {
-			move tempMove = table[b->getzHist(0) % HASHSIZE].getBmove();
-			for (uint8_t index1 = 0; index1 < b->cmove; ++index1) {
-				if (b->possiblemoves[index1] == tempMove) {
-					move tempMove2 = b->possiblemoves[index2];
-					b->possiblemoves[index2] = tempMove;
-					b->possiblemoves[index1] = tempMove2;
-					++index2;
+			for (int i = 0; i < cmove; ++i) {
+				if (b.possiblemoves[i] == pline->movelink[0]) {
+					move pvmove = b.possiblemoves[0];
+					b.possiblemoves[0] = pline->movelink[0];
+					b.possiblemoves[i] = pvmove;
+					++goodindex;
 					break;
 				}
 			}
 		}
-		while (flag != FAIL) {
-			for (uint8_t index1 = b->cmove - 1; index1 > index2; --index1) {
-				if (b->possiblemoves[index1].getFlags() == flag) {
-					move tempMove = b->possiblemoves[index2];
-					b->possiblemoves[index2] = b->possiblemoves[index1];
-					b->possiblemoves[index1] = tempMove;
-					++index2;
+		if (table[keyindex].getBmove().getFlags() != FAIL) {
+			move hashmove = table[keyindex].getBmove();
+			for (int i = 0; i < cmove; ++i) {
+				if (b.possiblemoves[i] == hashmove) {
+					move tempmove = b.possiblemoves[goodindex];
+					b.possiblemoves[goodindex] = hashmove;
+					b.possiblemoves[i] = tempmove;
+					++goodindex;
+					break;
 				}
 			}
-			switch (flag) {
-			case QPROMOTEC: {flag = QPROMOTE; break; }
-			case QPROMOTE: {flag = KCASTLE;  break; }
-			case KCASTLE: {flag = QCASTLE;  break; }
-			case QCASTLE: {flag = CAPTURE;  break; }
-			case CAPTURE: {flag = FAIL;	  break; }
+		}
+		for (int i = cmove - 1; i > goodindex; --i) {
+			if (b.possiblemoves[i].getFlags() & (1 << 2)) {
+				move tempmove = b.possiblemoves[goodindex];
+				b.possiblemoves[goodindex] = b.possiblemoves[i];
+				b.possiblemoves[i] = tempmove;
+				++goodindex;
 			}
 		}
-		for (uint8_t index1 = 0; index1 < b->cmove; ++index1) {
-			if (b->movePiece(b->possiblemoves[index1])) {
+		for (int i = 0; i < cmove; ++i) {
+			if (b.movePiece(b.possiblemoves[i])) {
+				++nodes;
 				stuck = false;
-				if (b->getzHist(0) == b->getzHist(4)) { score = CONTEMPT; }
+				if (b.currZ == b.getzHist(4)) { score = CONTEMPT; }
 				else { score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true); }
-				b->unmovePiece();
+				b.unmovePiece();
+				if (score >= beta) { return score; }
 				if (score > alpha) {
-					pline->movelink[0] = b->possiblemoves[index1];
-					for (uint8_t index2 = 1; index2 < depth; ++index2) { pline->movelink[index2] = localline.movelink[index2 - 1]; }
+					pline->movelink[0] = b.possiblemoves[i];
+					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
 					pline->cmove = localline.cmove + 1;
 					alpha = score;
 				}
-				if (score >= beta) { return score; }
 			}
 		}
-		if (stuck) { alpha = (b->checkTeam(b->getTurn())) ? MATE : 0; }
-		else { table[b->getzHist(0) % HASHSIZE] = hashtable(b->getzHist(0), depth, pline->movelink[0]); }
+		if (stuck) { return (b.checkTeam(b.turn)) ? -MATE : 0; }
+		else { table[keyindex] = hashtable(b.currZ, depth, pline->movelink[0]); }
 		return alpha;
 	}
 
-	int16_t bot::qSearch(board* b, int16_t alpha, int16_t beta) {//quiescent search
-		int16_t score = b->negaEval();
+	int bot::qSearch(board& b, int alpha, int beta) {//quiescent search
+		int score = negaEval(b);
 		if (score >= beta) { return score; }
 		if (score > alpha) { alpha = score; }
-		for (uint8_t index1 = 0; index1 < b->cmove; ++index1) {
-			if (b->possiblemoves[index1].getFlags() >= CAPTURE) {
-				if (b->movePiece(b->possiblemoves[index1])) {
-					score = -qSearch(b, -beta, -alpha);
-					b->unmovePiece();
-					if (score >= beta) { return score; }
-					if (score > alpha) { alpha = score; }
-				}
+		int mcount = b.cmove;
+		for (int i = 0; i < mcount; ++i) {
+			if (b.possiblemoves[i].getFlags() & (1 << 2) && b.movePiece(b.possiblemoves[i])) {
+				score = -qSearch(b, -beta, -alpha);
+				b.unmovePiece();
+				if (score >= beta) { return score; }
+				if (score > alpha) { alpha = score; }
 			}
 		}
 		return alpha;
 	}
+
+	int bot::negaEval(const board& b) {
+		int sum = 0;
+		for (int i = 0; i < SPACES; ++i) {
+			switch (b.grid[i]) {
+			case EMPTY:		break;
+			case PAWN:		sum += WPAWNBIT[i];		break;
+			case -PAWN:		sum -= BPAWNBIT[i];		break;
+			case KNIGHT:	sum += WKNIGHTBIT[i];	break;
+			case -KNIGHT:	sum -= BKNIGHTBIT[i];	break;
+			case BISHOP:	sum += WBISHOPBIT[i];	break;
+			case -BISHOP:	sum -= BBISHOPBIT[i];	break;
+			case ROOK:		sum += WROOKBIT[i];		break;
+			case -ROOK:		sum -= BROOKBIT[i];		break;
+			case QUEEN:		sum += WQUEENBIT[i];	break;
+			case -QUEEN:	sum -= BQUEENBIT[i];	break;
+			case KING:		sum = (b.endgame) ? sum + WENDKINGBIT[i] : sum + WKINGBIT[i]; break;
+			case -KING:		sum = (b.endgame) ? sum - BENDKINGBIT[i] : sum - BKINGBIT[i]; break;
+			}
+		}
+		return (b.turn) ? b.currV + sum : -b.currV - sum;
+	}
+
 }

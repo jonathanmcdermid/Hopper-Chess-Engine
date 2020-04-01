@@ -7,10 +7,10 @@ namespace Chess{
 	void interface::drawBoard() {//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (uint8_t i = 0; i < WIDTH; ++i) {
+		for (int i = 0; i < WIDTH; ++i) {
 			std::cout << "\n---------------------------------\n|";
-			for (uint8_t j = 0; j < WIDTH; ++j) {
-				switch (game.getGrid(i * WIDTH + j)) {
+			for (int j = 0; j < WIDTH; ++j) {
+				switch (game.grid[i * WIDTH + j]) {
 				case PAWN:		{ letter = 'P'; break; }
 				case ROOK:		{ letter = 'R'; break; }
 				case KNIGHT:	{ letter = 'N'; break; }
@@ -68,7 +68,6 @@ namespace Chess{
 	void interface::uci(int argc, char* argv[]) {//uci communication loop, some options non functioning
 		std::string word, cmd;
 		game = board();
-		ai = bot();
 		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
 		for (int i = 1; i < argc; ++i) { cmd += std::string(argv[i]) + " "; }
 		do {
@@ -100,7 +99,6 @@ namespace Chess{
 
 	void interface::local() {//for play without uci
 		game = board();
-		ai = bot();
 		std::string input;
 		interface::drawBoard();
 		while (1) {
@@ -119,8 +117,8 @@ namespace Chess{
 
 	bool interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {
-			uint8_t from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
-			uint8_t to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
+			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
+			int to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				m = game.createMove(from, to);
 				if (m.getFlags() != FAIL && m.getFlags() < PROMOTE) {
@@ -129,8 +127,8 @@ namespace Chess{
 			}
 		}
 		else if (input.length() == 5) {
-			uint8_t from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
-			uint8_t to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
+			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
+			int to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			char flags = input.c_str()[4];
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				m = game.createMove(from, to);
@@ -148,33 +146,34 @@ namespace Chess{
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			game.fenSet(input);
+			interface::drawBoard();
 		}
 		return false;
 	}
 
 	void interface::botMove() {//generates internal moves
-		m = ai.getMove(&game);
-		game.movePiece(m);
-		char message[] = { (int) WIDTH - m.getFrom() / WIDTH + '0', (int) m.getFrom() % WIDTH + 'a', (int) WIDTH - m.getTo() / WIDTH + '0', (int) m.getTo() % WIDTH + 'a' };
-		switch (m.getFlags()) {
+		ai.makeMove(game);
+		std::string message = { (char)(game.currM.getFrom() % WIDTH + 'a'), (char)(WIDTH - game.currM.getFrom() / WIDTH + '0'),(char)(game.currM.getTo() % WIDTH + 'a'),(char)(WIDTH - game.currM.getTo() / WIDTH + '0') };
+		std::cout << "bestmove " << message;
+		switch (game.currM.getFlags()) {
 		case NPROMOTE:
 		case NPROMOTEC:
-			std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2] << "n\n";
+			std::cout << "n\n";
 			break;
 		case BPROMOTE:
 		case BPROMOTEC:
-			std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2] << "b\n";
+			std::cout << "b\n";
 			break;
 		case RPROMOTE:
 		case RPROMOTEC:
-			std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2] << "r\n";
+			std::cout << "r\n";
 			break;
 		case QPROMOTE:
 		case QPROMOTEC:
-			std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2] << "q\n";
+			std::cout << "q\n";
 			break;
 		default:
-			std::cout << "bestmove " << message[1] << message[0] << message[3] << message[2] << "\n";
+			std::cout << "\n";
 		}
 	}
 }

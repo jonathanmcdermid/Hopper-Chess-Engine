@@ -6,13 +6,11 @@ namespace Chess {
 	class zobrist {
 	public:
 		zobrist();
-		uint64_t newKey(board* b);
-		uint64_t pieces[6][2][SPACES] = { 0 };
-	private:
-		uint64_t whitecastle[2] = { 0 };
-		uint64_t blackcastle[2] = { 0 };
-		uint64_t enpassant[SPACES] = { 0 };
-		uint64_t side = 0;
+		unsigned long long newKey(board* b);
+		unsigned long long pieces[6][2][SPACES] = { 0 };
+		unsigned long long castle[2][2] = { 0 };
+		unsigned long long enpassant[SPACES] = { 0 };
+		unsigned long long side = 0;
 	};
 }
 

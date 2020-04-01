@@ -9,48 +9,34 @@ namespace Chess {
 		std::mt19937_64 gen(rd());
 		std::uniform_int_distribution<std::uintmax_t> dis;
 		side = dis(gen);
-		for (uint8_t i = 0; i < 6; ++i) {
-			for (uint8_t j = 0; j < 2; ++j) {
-				for (uint8_t k = 0; k < SPACES; ++k) { pieces[i][j][k] = dis(gen); }
+		for (int i = 0; i < 6; ++i) {
+			for (int j = 0; j < 2; ++j) {
+				for (int k = 0; k < SPACES; ++k) { pieces[i][j][k] = dis(gen); }
 			}
 		}
-		for (uint8_t i = 0; i < SPACES; ++i) { enpassant[i] = dis(gen); }
-		for (uint8_t i = 0; i < 2; ++i) {
-			blackcastle[i] = dis(gen);
-			whitecastle[i] = dis(gen);
-		}
+		for (int i = 0; i < SPACES; ++i) { enpassant[i] = dis(gen); }
+		castle[WHITE][0] = dis(gen);
+		castle[WHITE][1] = dis(gen);
+		castle[BLACK][0] = dis(gen);
+		castle[BLACK][1] = dis(gen);
 	}
 
-	uint64_t zobrist::newKey(board* b) {//XORs random template with board state and returns zobrist key
-		uint64_t key = 0;
-		for (uint8_t i = 0; i < SPACES; ++i) {
-			if		(b->getGrid(i) > 0) { key ^= pieces[ b->getGrid(i) % 100][WHITE][i]; }
-			else if (b->getGrid(i) < 0) { key ^= pieces[-b->getGrid(i) % 100][BLACK][i]; }
+	unsigned long long zobrist::newKey(board* b) {//XORs random template with board state and returns zobrist key
+		unsigned long long key = 0;
+		for (int i = 0; i < SPACES; ++i) {
+			if (b->grid[i] > 0) { key ^= pieces[ b->grid[i] % 10][WHITE][i]; }
+			else if (b->grid[i] < 0) { key ^= pieces[-b->grid[i] % 10][BLACK][i]; }
 		}
-		move m = move();
-		uint8_t count = b->getCturn();
-		bool castles[] = { true,true,true,true };
-		for (uint8_t i = 0; i < count; ++i) {
-			m = b->getmHist(i);
-			if (m.getTo() == 63	|| m.getFrom() == 63) { castles[1] = false; }
-			if (m.getTo() == 56 || m.getFrom() == 56) { castles[0] = false; }
-			if (m.getTo() == 60	|| m.getFrom() == 60) {
-				castles[0] = false;
-				castles[1] = false;
-			}
-			if (m.getTo() == 7 || m.getFrom() == 7) { castles[3] = false; }
-			if (m.getTo() == 0 || m.getFrom() == 0) { castles[2] = false; }
-			if (m.getTo() == 4 || m.getFrom() == 4) {
-				castles[2] = false;
-				castles[3] = false;
-			}
+		if (b->currC & 1 << 2) {
+			if (b->currC & 1 << 0) { key ^= castle[WHITE][0]; }
+			if (b->currC & 1 << 1) { key ^= castle[WHITE][1]; }
 		}
-		if (!castles[0]) { key ^= whitecastle[0]; }
-		if (!castles[1]) { key ^= whitecastle[1]; }
-		if (!castles[2]) { key ^= blackcastle[0]; }
-		if (!castles[3]) { key ^= blackcastle[1]; }
-		if (m.getFlags() == DOUBLEPUSH) key ^= enpassant[m.getTo()];
-		if (b->getTurn()) key ^= side;
+		if (b->currC & 1 << 4) {
+			if (b->currC & 1 << 3) { key ^= castle[BLACK][0]; }
+			if (b->currC & 1 << 5) { key ^= castle[BLACK][1]; }
+		}
+		if (b->currM.getFlags() == DOUBLEPUSH) { key ^= enpassant[b->currM.getTo()]; }
+		if (b->turn) { key ^= side; }
 		return key;
 	}
 }

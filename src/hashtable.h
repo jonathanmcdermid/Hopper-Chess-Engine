@@ -11,18 +11,17 @@ namespace Chess {
             depth = 0; 
             bmove = move();
         }
-        hashtable(uint64_t z, uint8_t d, move b) { 
+        hashtable(unsigned long long z, int d, move b) { 
             zob = z; 
             depth = d; 
             bmove = b; 
         }
-        uint64_t getZobrist() { return zob;   }
-        uint8_t getDepth() { return depth; }
-        move getBmove() { return bmove; }
-        void chrono() { if (depth) { depth--; } else { bmove = move(); } }
+        unsigned long long getZobrist() const { return zob; }
+        int getDepth() const { return depth; }
+        move getBmove() const { return bmove; }
     private:
-        uint64_t zob;
-        uint8_t depth;
+        unsigned long long zob;
+        int depth;
         move bmove;
     };
 }

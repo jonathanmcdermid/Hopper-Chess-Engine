@@ -9,31 +9,33 @@ namespace Chess {
 	public:
 		board();
 		void fenSet(std::string fs);
-		bool checkMate();
-		move createMove(uint8_t from, uint8_t to);
+		unsigned long long getzHist(int i) const { return (i > cturn) ? 0 : zHist[cturn - i]; }
+		move getmHist(int i) const { return (i > cturn) ? move() : mHist[i]; }
+		bool checkMate() { return (checkTeam(!turn) || !cmove) ? true : false; }
+		void drawBoard();
+		move createMove(int from, int to);
 		bool movePiece(move m);
 		void unmovePiece();
-		int16_t negaEval();
 		void generateMoves();
-		void pieceMoves(uint8_t from);
-		uint8_t getCturn() { return cturn; }
-		int16_t getGrid(uint8_t i) { return grid[i]; }
-		int16_t getvHist(uint8_t i) { return vHist[cturn - i - 1]; }
-		move getmHist(uint8_t i) { return mHist[cturn - i - 1]; }
+		void pieceMoves(int from);
 		bool checkTeam(bool team);
-		bool getTurn() { return turn; }
-		uint64_t getzHist(uint8_t i) { return zHist[cturn - i]; }
-		move possiblemoves[MEMORY];
-		uint8_t cmove;
-	private:
-		zobrist z;
-		uint8_t threatened[2][SPACES];
-		uint8_t cturn;
-		int16_t grid[SPACES];
-		int16_t vHist[MEMORY];
-		uint64_t zHist[MEMORY];
-		move mHist[MEMORY];
+		int grid[SPACES];
 		bool turn;
+		bool endgame;
+		int cmove;
+		int currC;
+		int currV;
+		unsigned long long currZ;
+		move currM;
+		move possiblemoves[MEMORY];
+	private:
+		int cturn;
+		int threatened[2][SPACES];
+		unsigned long long zHist[MEMORY];
+		int cHist[MEMORY];
+		int vHist[MEMORY];
+		move mHist[MEMORY];
+		zobrist z;
 	};
 }
 

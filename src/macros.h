@@ -5,7 +5,7 @@
 #define HASHSIZE	30000
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
-#define MATE		-10000
+#define MATE		30000
 #define CONTEMPT	-1000
 #define SPACES		64
 #define WIDTH		8
@@ -17,7 +17,7 @@
 #define NORTHWEST	-9
 #define SOUTHEAST	9
 #define SOUTHWEST	7
-#define KING		10005
+#define KING		20005
 #define QUEEN		904
 #define ROOK		503
 #define BISHOP		322
@@ -37,7 +37,7 @@
 #define CAPTURE		4
 #define ENPASSANT	5
 #define NULLMOVE	6
-#define FAIL		7
+#define FAIL		7	
 #define PROMOTE		8
 #define NPROMOTE	8
 #define BPROMOTE	9

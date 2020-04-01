@@ -6,37 +6,38 @@
 namespace Chess {
 	class board;
 	typedef struct line {
-		uint8_t cmove = 0;
+		int cmove = 0;
 		move movelink[MAXDEPTH];
 	}line;
 	typedef struct limits {
-		uint32_t time[2] = { 300000, 300000 };
-		uint32_t inc[2] = { 100000, 100000 };
-		uint32_t movetime = 0;
-		uint8_t movesleft = 0;
-		uint8_t depth = MAXDEPTH;
-		uint8_t nodes = 0;
-		uint8_t perft = 0;
-		uint8_t mate = 0;
+		int time[2] = { 300000, 300000 };
+		int inc[2] = { 100000, 100000 };
+		int movetime = 0;
+		int movesleft = 0;
+		int depth = MAXDEPTH;
+		int nodes = 0;
+		int perft = 0;
+		int mate = 0;
 		bool infinite = false;
 	}limits;
 	typedef struct options {
-		uint16_t windowstart = 400;
-		uint16_t windowstepup = 200;
-		uint16_t windowstepdown = 50;
-		uint16_t windowfloor = 100;
-		uint16_t hashsize = HASHSIZE;
-		uint8_t timefactor = 50;
+		int windowstart = 100;
+		int windowstepup = 200;
+		int windowstepdown = 50;
+		int windowfloor = 100;
+		int hashsize = HASHSIZE;
+		int timefactor = 100;
 	}options;
 	class bot{
 	public:
-		bot() { ; }
-		move getMove(board* b);
-		int16_t miniMax(board* b, uint8_t depth, int16_t alpha, int16_t beta, line* pline, bool notNull);
-		static int16_t qSearch(board* b, int16_t alpha, int16_t beta);
+		void makeMove(board& b);
+		int miniMax(board& b, int depth, int alpha, int beta, line* pline, bool notNull);
+		int qSearch(board& b, int alpha, int beta);
+		int negaEval(const board& b);
 		limits lim;
 		options opt;
 	private:
+		int nodes;
 		hashtable table[HASHSIZE];
 	};
 }
