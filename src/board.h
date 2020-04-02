@@ -20,6 +20,7 @@ namespace Chess {
 		void generateMoves();
 		void pieceMoves(int from);
 		int grid[SPACES];
+		int threatened[2][SPACES];
 		bool turn;
 		bool endgame;
 		int cmove;
@@ -31,7 +32,6 @@ namespace Chess {
 	private:
 		int kpos[2];
 		int cturn;
-		int threatened[2][SPACES];
 		unsigned long long zHist[MEMORY];
 		int cHist[MEMORY];
 		int vHist[MEMORY];

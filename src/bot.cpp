@@ -175,7 +175,6 @@ namespace Chess {
 				std::cout << message << " ";
 			}
 			std::cout << "\n";
-			if (score == -MATE) { break; }
 			if (score <= alpha || score >= beta) {
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
@@ -185,7 +184,7 @@ namespace Chess {
 			else {
 				auto stop = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-				if (duration.count() > timeallotted) { break; }
+				if (duration.count() > timeallotted) { std::cout << "time " << (int)duration.count()<<"\n"; break; }
 				alpha = score - window;
 				beta = score + window;
 				if (window > opt.windowfloor) { window -= opt.windowstepdown; }
@@ -195,7 +194,7 @@ namespace Chess {
 	}
 
 	int bot::miniMax(board& b, int depth, int alpha, int beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
-		if (!depth) { return qSearch(b, alpha, beta); }
+		if (!depth) { return negaEval(b); }//return qSearch(b, alpha, beta); }
 		line localline;
 		int score;
 		if (notNull && depth > 3 && !b.checkTeam(b.turn)) {
@@ -208,12 +207,14 @@ namespace Chess {
 		int goodindex = 0;
 		int cmove = b.cmove;
 		int keyindex = b.currZ % HASHSIZE;
+		move moves[MEMORY];
+		for (int i = 0; i < cmove; ++i) { moves[i] = b.possiblemoves[i]; }
 		if (pline->movelink[0].getFlags() != FAIL) {
 			for (int i = 0; i < cmove; ++i) {
-				if (b.possiblemoves[i] == pline->movelink[0]) {
-					move pvmove = b.possiblemoves[0];
-					b.possiblemoves[0] = pline->movelink[0];
-					b.possiblemoves[i] = pvmove;
+				if (moves[i] == pline->movelink[0]) {
+					move pvmove = moves[0];
+					moves[0] = pline->movelink[0];
+					moves[i] = pvmove;
 					++goodindex;
 					break;
 				}
@@ -222,25 +223,25 @@ namespace Chess {
 		if (table[keyindex].getBmove().getFlags() != FAIL) {
 			move hashmove = table[keyindex].getBmove();
 			for (int i = 0; i < cmove; ++i) {
-				if (b.possiblemoves[i] == hashmove) {
-					move tempmove = b.possiblemoves[goodindex];
-					b.possiblemoves[goodindex] = hashmove;
-					b.possiblemoves[i] = tempmove;
+				if (moves[i] == hashmove) {
+					move tempmove = moves[goodindex];
+					moves[goodindex] = hashmove;
+					moves[i] = tempmove;
 					++goodindex;
 					break;
 				}
 			}
 		}
 		for (int i = cmove - 1; i > goodindex; --i) {
-			if (b.possiblemoves[i].getFlags() & (1 << 2)) {
-				move tempmove = b.possiblemoves[goodindex];
-				b.possiblemoves[goodindex] = b.possiblemoves[i];
-				b.possiblemoves[i] = tempmove;
+			if (moves[i].getFlags() & (1 << 2)) {
+				move tempmove = moves[goodindex];
+				moves[goodindex] = moves[i];
+				moves[i] = tempmove;
 				++goodindex;
 			}
 		}
 		for (int i = 0; i < cmove; ++i) {
-			if (b.movePiece(b.possiblemoves[i])) {
+			if (b.movePiece(moves[i])) {
 				++nodes;
 				stuck = false;
 				if (b.currZ == b.getzHist(4)) { score = CONTEMPT; }
@@ -248,14 +249,14 @@ namespace Chess {
 				b.unmovePiece();
 				if (score >= beta) { return score; }
 				if (score > alpha) {
-					pline->movelink[0] = b.possiblemoves[i];
+					pline->movelink[0] = moves[i];
 					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
 					pline->cmove = localline.cmove + 1;
 					alpha = score;
 				}
 			}
 		}
-		if (stuck) { return (b.checkTeam(b.turn)) ? -MATE : 0; }
+		if (stuck) { return (b.checkTeam(b.turn)) ? -MATE - depth : 0; }
 		else { table[keyindex] = hashtable(b.currZ, depth, pline->movelink[0]); }
 		return alpha;
 	}
@@ -264,9 +265,17 @@ namespace Chess {
 		int score = negaEval(b);
 		if (score >= beta) { return score; }
 		if (score > alpha) { alpha = score; }
-		int mcount = b.cmove;
-		for (int i = 0; i < mcount; ++i) {
-			if (b.possiblemoves[i].getFlags() & (1 << 2) && b.movePiece(b.possiblemoves[i])) {
+		move moves[SPACES];
+		int cmove = 0;
+		int goodindex = 0;
+		for (int i = 0; i < b.cmove; ++i) {
+			if (b.possiblemoves[i].getFlags() & (1 << 2)) { 
+				moves[cmove] = b.possiblemoves[i]; 
+				++cmove;
+			}
+		}
+		for (int i = 0; i < cmove; ++i) {
+			if (b.movePiece(moves[i])) {
 				score = -qSearch(b, -beta, -alpha);
 				b.unmovePiece();
 				if (score >= beta) { return score; }

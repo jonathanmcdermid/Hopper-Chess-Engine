@@ -5,7 +5,7 @@
 #define HASHSIZE	30000
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
-#define MATE		20000
+#define MATE		25000
 #define CONTEMPT	-1000
 #define SPACES		64
 #define WIDTH		8
@@ -49,4 +49,4 @@
 #define RPROMOTEC	14
 #define QPROMOTEC	15
 #define MEMORY		255
-#define STARTFEN	"r2qkbnr/1pp3p1/p1n1b2p/4pp1B/4P3/2N1B3/PPPN1PPP/R2Q1RK1 b kq - 3 11"
+#define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

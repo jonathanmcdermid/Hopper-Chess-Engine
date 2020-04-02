@@ -26,7 +26,7 @@ namespace Chess {
 		int windowstepdown = 50;
 		int windowfloor = 100;
 		int hashsize = HASHSIZE;
-		int timefactor = 100;
+		int timefactor = 40;
 	}options;
 	class bot{
 	public:

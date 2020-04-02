@@ -20,13 +20,13 @@ namespace Chess {
 			case 'N': { grid[counter] = KNIGHT; ++counter; break; }
 			case 'B': { grid[counter] = BISHOP; ++counter; break; }
 			case 'Q': { grid[counter] = QUEEN; ++counter; break; }
-			case 'K': { grid[counter] = KING; ++counter; break; }
+			case 'K': { grid[counter] = KING; ++counter; kpos[WHITE] = counter; break; }
 			case 'p': { grid[counter] = -PAWN; ++counter; break; }
 			case 'r': { grid[counter] = -ROOK; ++counter; break; }
 			case 'n': { grid[counter] = -KNIGHT; ++counter; break; }
 			case 'b': { grid[counter] = -BISHOP; ++counter; break; }
 			case 'q': { grid[counter] = -QUEEN; ++counter; break; }
-			case 'k': { grid[counter] = -KING; ++counter; break; }
+			case 'k': { grid[counter] = -KING; ++counter; kpos[BLACK] = counter; break; }
 			case '/': { break; }
 			default:
 				helper = fs[index] - '0';
@@ -65,6 +65,7 @@ namespace Chess {
 		currM = (cturn) ? mHist[cturn - 1] : move();
 		generateMoves();
 	}
+
 	void board::drawBoard() {//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
@@ -312,10 +313,6 @@ namespace Chess {
 		currC = cHist[cturn];
 		currV = vHist[cturn - 1];
 		currM = mHist[cturn - 1];
-		zHist[cturn] = 0;
-		cHist[cturn] = 0;
-		vHist[cturn] = 0;
-		mHist[cturn] = 0;
 		generateMoves();
 	}
 
@@ -333,7 +330,11 @@ namespace Chess {
 			threatened[WHITE][i] = 0;
 			threatened[BLACK][i] = 0;
 		}
-		for (int from = 0; from < SPACES; ++from) {
+		int lim = kpos[turn];
+		for (int from = 0; from < lim; ++from) {
+			if (grid[from]) { pieceMoves(from); }
+		}
+		for (int from = 63; from >= lim; --from) {
 			if (grid[from]) { pieceMoves(from); }
 		}
 	}
