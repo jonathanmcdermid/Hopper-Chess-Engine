@@ -1,28 +1,31 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-#include "move.h"
+#include "hashentry.h"
+#include "board.h"
 
 namespace Chess {
+    typedef struct line {
+		int cmove = 0;
+		move movelink[MAXDEPTH];
+	}line;
     class hashtable {
     public:
-        hashtable() {
-            zob = 0;  
-            depth = 0; 
-            bmove = move();
+        hashtable() { 
+            for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); } 
+            master = true;
         }
-        hashtable(unsigned long long z, int d, move b) { 
-            zob = z; 
-            depth = d; 
-            bmove = b; 
+        void clean() {
+            for (int i = (master) ? 1 : 0; i < HASHSIZE; i += 2) { table[i] = hashentry(); }
+            master = (master) ? false : true;
         }
-        unsigned long long getZobrist() const { return zob; }
-        int getDepth() const { return depth; }
-        move getBmove() const { return bmove; }
+        void newEntry(int index, hashentry h) { table[index] = h; }
+        U64 getZobrist(int index)const { return table[index].getZobrist(); }
+        move getMove(int index)const { return table[index].getMove(); }
+        int getDepth(int index)const { return table[index].getDepth(); }
     private:
-        unsigned long long zob;
-        int depth;
-        move bmove;
+        hashentry table[HASHSIZE];
+        bool master;
     };
 }
 

@@ -5,10 +5,6 @@
 
 namespace Chess {
 	class board;
-	typedef struct line {
-		int cmove = 0;
-		move movelink[MAXDEPTH];
-	}line;
 	typedef struct limits {
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 100000, 100000 };
@@ -38,7 +34,7 @@ namespace Chess {
 		options opt;
 	private:
 		int nodes;
-		hashtable table[HASHSIZE];
+		hashtable ht;
 	};
 }
 

@@ -9,8 +9,7 @@ namespace Chess {
 	public:
 		board();
 		void fenSet(std::string fs);
-		unsigned long long getzHist(int i) const { return (i > cturn) ? 0 : zHist[cturn - i]; }
-		move getmHist(int i) const { return (i > cturn) ? move() : mHist[i]; }
+		bool twofoldRep() const { return (cturn > 3 && zHist[cturn - 4] == currZ) ? true : false; }
 		bool checkMate() { return (checkTeam(!turn) || !cmove) ? true : false; }
 		bool checkTeam(bool team) const { return (team) ? threatened[BLACK][kpos[WHITE]] : threatened[WHITE][kpos[BLACK]]; }
 		move createMove(int from, int to);
@@ -26,13 +25,13 @@ namespace Chess {
 		int cmove;
 		int currC;
 		int currV;
-		unsigned long long currZ;
+		U64 currZ;
 		move currM;
 		move possiblemoves[MEMORY];
 	private:
 		int kpos[2];
 		int cturn;
-		unsigned long long zHist[MEMORY];
+		U64 zHist[MEMORY];
 		int cHist[MEMORY];
 		int vHist[MEMORY];
 		move mHist[MEMORY];

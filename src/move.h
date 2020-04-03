@@ -5,6 +5,7 @@
 #include <iostream>
 
 namespace Chess {
+	typedef unsigned long long U64;
 	class move {
 		public:
 			move(int from, int to, int flags) { m = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f); }

@@ -21,8 +21,8 @@ namespace Chess {
 		castle[BLACK][1] = dis(gen);
 	}
 
-	unsigned long long zobrist::newKey(board* b) {//XORs random template with board state and returns zobrist key
-		unsigned long long key = 0;
+	U64 zobrist::newKey(board* b) {//XORs random template with board state and returns zobrist key
+		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
 			if (b->grid[i] > 0) { key ^= pieces[ b->grid[i] % 10][WHITE][i]; }
 			else if (b->grid[i] < 0) { key ^= pieces[-b->grid[i] % 10][BLACK][i]; }
