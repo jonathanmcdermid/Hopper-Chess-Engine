@@ -160,7 +160,7 @@ namespace Chess {
 
 	void bot::makeMove(board& b) {//calls minimax and controls depth, alpha beta windows, and time
 		nodes = 0;
-		int timeallotted = (b.turn) ? lim.time[WHITE] / opt.timefactor: lim.time[BLACK] / opt.timefactor;
+		int timeallotted = (b.turn) ? lim.time[WHITE] / (lim.movesleft + 20): lim.time[BLACK] / (lim.movesleft + 20);
 		auto start = std::chrono::high_resolution_clock::now();
 		int window = opt.windowstart;
 		int score = LOWERLIMIT;
@@ -195,41 +195,50 @@ namespace Chess {
 	}
 
 	int bot::miniMax(board& b, int depth, int alpha, int beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
-		if (!depth) { return qSearch(b, alpha, beta); }
+		if (!depth) { return qSearch(b, alpha, beta);}
 		line localline;
 		int score;
-		if (notNull && depth > 3 && !b.checkTeam(b.turn)) {
+		int cmove = b.cmove;
+		if (!cmove) { return (b.checkTurn()) ? -MATE - depth : 0; }
+		if (notNull && depth > 3 && !b.checkTurn()) {
 			b.movePiece(move(0, 0, NULLMOVE));
 			score = -miniMax(b, depth / 2 - 2, -beta, -beta + 1, &localline, false);
 			b.unmovePiece();
-			if (score >= beta) { return beta; }
+			if (score >= beta) { return score; }
 		}
-		bool stuck = true;
-		int goodindex = 0;
-		int cmove = b.cmove;
 		int keyindex = b.currZ % HASHSIZE;
+		move hashmove = ht.getMove(keyindex);
+		if (ht.getZobrist(keyindex) == b.currZ && ht.getDepth(keyindex) >= depth) {
+			int hasheval = ht.getEval(keyindex);
+			int hashflags = ht.getFlags(keyindex);
+			if (hashflags == HASHEXACT || (hashflags == HASHBETA && hasheval >= beta) || (hashflags == HASHALPHA && hasheval <= alpha)) {
+				pline->movelink[0] = hashmove;
+				pline->cmove = 1;
+				return hasheval;
+			}
+		}
+		int goodindex = 0;
 		move moves[MEMORY];
 		for (int i = 0; i < cmove; ++i) { moves[i] = b.possiblemoves[i]; }
 		if (pline->movelink[0].getFlags() != FAIL) {
 			for (int i = 0; i < cmove; ++i) {
 				if (moves[i] == pline->movelink[0]) {
 					if (!i) { break; }
-					move pvmove = moves[0];
+					move temp = moves[0];
 					moves[0] = pline->movelink[0];
-					moves[i] = pvmove;
+					moves[i] = temp;
 					++goodindex;
 					break;
 				}
 			}
 		}
-		if (ht.getZobrist(keyindex) == b.currZ) {
-			move hashmove = ht.getMove(keyindex);
+		if (hashmove.getFlags() != FAIL) {
 			for (int i = 0; i < cmove; ++i) {
 				if (moves[i] == hashmove) {
 					if (!i) { break; }
-					move tempmove = moves[goodindex];
+					move temp = moves[goodindex];
 					moves[goodindex] = hashmove;
-					moves[i] = tempmove;
+					moves[i] = temp;
 					++goodindex;
 					break;
 				}
@@ -237,37 +246,41 @@ namespace Chess {
 		}
 		for (int i = cmove - 1; i > goodindex; --i) {
 			if (moves[i].getFlags() & (1 << 2)) {
-				move tempmove = moves[goodindex];
+				move temp = moves[goodindex];
 				moves[goodindex] = moves[i];
-				moves[i] = tempmove;
+				moves[i] = temp;
 				++goodindex;
 			}
 		}
+		int evaltype = NONE;
 		for (int i = 0; i < cmove; ++i) {
-			if (b.movePiece(moves[i])) {
-				++nodes;
-				stuck = false;
-				if (b.twofoldRep()) { score = CONTEMPT; }
-				else { score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true); }
-				b.unmovePiece();
-				if (score >= beta) { return beta; }
-				if (score > alpha) {
-					pline->movelink[0] = moves[i];
-					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
-					pline->cmove = localline.cmove + 1;
-					alpha = score;
-				}
+			b.movePiece(moves[i]);
+			++nodes;
+			if (b.twofoldRep()) { score = CONTEMPT; }
+			else { score = -miniMax(b, depth - 1, -beta, -alpha, &localline, true); }
+			b.unmovePiece();
+			if (score >= beta) {
+				ht.newEntry(keyindex, hashentry(b.currZ, depth, score, HASHBETA, moves[i]));
+				return score;
 			}
+			if (score > alpha) {
+				evaltype = HASHEXACT;
+				pline->movelink[0] = moves[i];
+				for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
+				pline->cmove = localline.cmove + 1;
+				alpha = score;
+			}
+			else { evaltype = HASHALPHA; }
 		}
-		if (stuck) { return (b.checkTeam(b.turn)) ? -MATE - depth : 0; }
-		else if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b.currZ, depth, pline->movelink[0])); }
+		if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b.currZ, depth, alpha, evaltype, pline->movelink[0])); }
 		return alpha;
 	}
 
 	int bot::qSearch(board& b, int alpha, int beta) {//quiescent search
 		int score = negaEval(b);
-		if (score >= beta) { return beta; }
+		if (score >= beta) { return score; }
 		if (score > alpha) { alpha = score; }
+		if (!b.cmove) { return (b.checkTurn()) ? -MATE : 0; }
 		move moves[SPACES];
 		int cmove = 0;
 		int goodindex = 0;
@@ -294,12 +307,11 @@ namespace Chess {
 			}
 		}
 		for (int i = 0; i < cmove; ++i) {
-			if (b.movePiece(moves[i])) {
-				score = -qSearch(b, -beta, -alpha);
-				b.unmovePiece();
-				if (score >= beta) { return beta; }
-				if (score > alpha) { alpha = score; }
-			}
+			b.movePiece(moves[i]);
+			score = -qSearch(b, -beta, -alpha);
+			b.unmovePiece();
+			if (score >= beta) { return score; }
+			if (score > alpha) { alpha = score; }
 		}
 		return alpha;
 	}

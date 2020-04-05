@@ -98,7 +98,6 @@ namespace Chess{
 	}
 
 	void interface::local() {//for play without uci
-		game = board();
 		std::string input;
 		interface::drawBoard();
 		while (1) {
@@ -122,7 +121,8 @@ namespace Chess{
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				m = game.createMove(from, to);
 				if (m.getFlags() != FAIL && m.getFlags() < PROMOTE) {
-					if (game.movePiece(m)) { return true; }
+					game.movePiece(m);
+					return true;
 				}
 			}
 		}
@@ -139,7 +139,8 @@ namespace Chess{
 					case 'r': { m = (m.getFlags() == QPROMOTEC) ? move(m.getFrom(), m.getTo(), RPROMOTEC) : move(m.getFrom(), m.getTo(), RPROMOTE); break; }
 					case 'q': { m = (m.getFlags() == QPROMOTEC) ? move(m.getFrom(), m.getTo(), QPROMOTEC) : move(m.getFrom(), m.getTo(), QPROMOTE); break; }
 					}
-					if (game.movePiece(m)) { return true; }
+					game.movePiece(m); 
+					return true;
 				}
 			}
 		}

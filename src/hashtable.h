@@ -20,9 +20,12 @@ namespace Chess {
             master = (master) ? false : true;
         }
         void newEntry(int index, hashentry h) { table[index] = h; }
-        U64 getZobrist(int index)const { return table[index].getZobrist(); }
-        move getMove(int index)const { return table[index].getMove(); }
-        int getDepth(int index)const { return table[index].getDepth(); }
+        U64 getZobrist(int index) const { return table[index].getZobrist(); }
+        hashentry getEntry(int index) const { return table[index]; }
+        move getMove(int index) const { return table[index].getMove(); }
+        int getDepth(int index) const { return table[index].getDepth(); }
+        int getEval(int index) const { return table[index].getEval(); }
+        int getFlags(int index) const { return table[index].getFlags(); }
     private:
         hashentry table[HASHSIZE];
         bool master;

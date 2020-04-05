@@ -10,13 +10,15 @@ namespace Chess {
 		board();
 		void fenSet(std::string fs);
 		bool twofoldRep() const { return (cturn > 3 && zHist[cturn - 4] == currZ) ? true : false; }
-		bool checkMate() { return (checkTeam(!turn) || !cmove) ? true : false; }
-		bool checkTeam(bool team) const { return (team) ? threatened[BLACK][kpos[WHITE]] : threatened[WHITE][kpos[BLACK]]; }
+		bool checkMate() { return (!cmove) ? true : false; }
+		bool checkTurn() const { return (cpos == NOCHECK) ? false : true; }
 		move createMove(int from, int to);
 		void drawBoard();
-		bool movePiece(move m);
+		bool validateMove(move m);
+		void movePiece(move m);
 		void unmovePiece();
 		void generateMoves();
+		void pinnedPieces();
 		void pieceMoves(int from);
 		int grid[SPACES];
 		int threatened[2][SPACES];
@@ -29,6 +31,7 @@ namespace Chess {
 		move currM;
 		move possiblemoves[MEMORY];
 	private:
+		int cpos;
 		int kpos[2];
 		int cturn;
 		U64 zHist[MEMORY];

@@ -9,7 +9,7 @@ namespace Chess {
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 100000, 100000 };
 		int movetime = 0;
-		int movesleft = 0;
+		int movesleft = 40;
 		int depth = MAXDEPTH;
 		int nodes = 0;
 		int perft = 0;
@@ -17,12 +17,11 @@ namespace Chess {
 		bool infinite = false;
 	}limits;
 	typedef struct options {
-		int windowstart = 100;
-		int windowstepup = 200;
-		int windowstepdown = 50;
-		int windowfloor = 100;
+		int windowstart = 225;
+		int windowstepup = 50;
+		int windowstepdown = 25;
+		int windowfloor = 30;
 		int hashsize = HASHSIZE;
-		int timefactor = 40;
 	}options;
 	class bot{
 	public:
@@ -33,7 +32,7 @@ namespace Chess {
 		limits lim;
 		options opt;
 	private:
-		int nodes;
+		int nodes = 0;
 		hashtable ht;
 	};
 }
