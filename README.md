@@ -1,6 +1,6 @@
 # Chess-Engine
 
-This is an amateur chess engine, and still in development. UCI compatibility for Arena is limited, but functional for standard play. The engine runs smoothly locally, so an external program like Arena is not required to play. 
+This is an amateur chess engine, and still in development. It has an ELO of ~ 2000. UCI compatibility for Arena is limited, but functional for standard play. The engine can run locally, so an external program like Arena is not required to play. 
 
 ## Playing In Arena
 
@@ -19,7 +19,7 @@ negamax algorithm
 forsyth–edwards notation
 material evaluation
 mobility evaluation
-pruning
+alpha-beta pruning
 iterative deepening 
 principle variations
 hashing
@@ -28,5 +28,6 @@ zobrist keys
 null moves
 quiescent search
 dynamic aspiration windows
+pinned piece detection
 ```
 Better UCI compatibility, killer moves, and time management are at the top of the to do list.
