@@ -1,5 +1,4 @@
 #pragma once
-#define NONE		0
 #define BLACK		0
 #define WHITE		1
 #define NOCHECK		-1
@@ -55,9 +54,12 @@
 #define RPROMOTEC	14
 #define QPROMOTEC	15
 #define MEMORY		255
+#define GENHASH		0
+#define GENCAPS		1
+#define GENKILLS	2
+#define GENNONCAPS	3
+#define GENEND		4
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-//#define STARTFEN	"r5k1/p4p1p/bp4p1/4PpB1/3P4/P6P/1Q4q1/R1K5 b - - 7 41"
-//#define STARTFEN	"8/1R2Pk2/6P1/4b3/r7/4B3/4K3/8 b - - 0 57"
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % SOUTHWEST && ((to) - (from)) % NORTHEAST) ? false : true
 #define NWSEslide(from, to) (((to) - (from)) % SOUTHEAST && ((to) - (from)) % NORTHWEST) ? false : true

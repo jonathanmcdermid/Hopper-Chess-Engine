@@ -4,34 +4,6 @@
 
 namespace Chess{
 
-	void interface::drawBoard() {//prints board in cmd
-		char letter;
-		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (int i = 0; i < WIDTH; ++i) {
-			std::cout << "\n---------------------------------\n|";
-			for (int j = 0; j < WIDTH; ++j) {
-				switch (game.grid[i * WIDTH + j]) {
-				case PAWN:		{ letter = 'P'; break; }
-				case ROOK:		{ letter = 'R'; break; }
-				case KNIGHT:	{ letter = 'N'; break; }
-				case BISHOP:	{ letter = 'B'; break; }
-				case QUEEN:		{ letter = 'Q'; break; }
-				case KING:		{ letter = 'K'; break; }
-				case -PAWN:		{ letter = 'p'; break; }
-				case -ROOK:		{ letter = 'r'; break; }
-				case -KNIGHT:	{ letter = 'n'; break; }
-				case -BISHOP:	{ letter = 'b'; break; }
-				case -QUEEN:	{ letter = 'q'; break; }
-				case -KING:		{ letter = 'k'; break; }
-				default:		{ letter = ' '; }
-				}
-				std::cout << " " << letter << " |";
-			}
-			std::cout << " " << WIDTH - i;
-		}
-		std::cout << "\n---------------------------------\n";
-	}
-
 	void interface::go(std::istringstream& is) {//most options are not implemented yet
 		std::string word;
 		while (is >> word) {
@@ -83,7 +55,7 @@ namespace Chess{
 			else if (word == "position")			{ position(is); }
 			else if (word == "ucinewgame")			{ game = board(); }
 			else if (word == "isready")				{ std::cout << "readyok\n"; }
-			else if (word == "print")				{ drawBoard(); }
+			else if (word == "print")				{ game.drawBoard(); }
 		} while (word != "quit" && argc == 1);
 	}
 
@@ -99,15 +71,15 @@ namespace Chess{
 
 	void interface::local() {//for play without uci
 		std::string input;
-		interface::drawBoard();
+		game.board::drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
 				while (!playerMove(input)) { std::getline(std::cin, input); }
-				interface::drawBoard();
+				game.board::drawBoard();
 				if (game.checkMate()) { break; }
 				interface::botMove();
-				interface::drawBoard();
+				game.board::drawBoard();
 				if (game.checkMate()) { break; }
 			}
 		}
@@ -147,7 +119,7 @@ namespace Chess{
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			game.fenSet(input);
-			interface::drawBoard();
+			game.board::drawBoard();
 		}
 		return false;
 	}

@@ -39,6 +39,9 @@
     <ClInclude Include="..\src\hashentry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\killers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\board.cpp">

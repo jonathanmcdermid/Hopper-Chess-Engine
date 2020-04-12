@@ -2,6 +2,7 @@
 #define BOT_H
 
 #include "hashtable.h"
+#include "killers.h"
 
 namespace Chess {
 	class board;
@@ -15,26 +16,32 @@ namespace Chess {
 		int perft = 0;
 		int mate = 0;
 		bool infinite = false;
-	}limits;
+	} limits;
 	typedef struct options {
-		int windowstart = 225;
+		int windowstart = 45;
 		int windowstepup = 50;
-		int windowstepdown = 25;
+		int windowstepdown = 20;
 		int windowfloor = 30;
 		int hashsize = HASHSIZE;
-	}options;
-	class bot{
+	} options;
+	typedef struct{
+		int indexA;
+		int valueB;
+	} wrapper;
+	class bot {
 	public:
 		void makeMove(board& b);
-		int miniMax(board& b, int depth, int alpha, int beta, line* pline, bool notNull);
+		int miniMax(board& b, int depth, int ply, int alpha, int beta, line* pline, bool notNull);
+		int perft(board& b, int depth);
 		int qSearch(board& b, int alpha, int beta);
 		int negaEval(const board& b);
 		limits lim;
 		options opt;
 	private:
+		killers k;
+		int historyMoves[SPACES][SPACES];
 		int nodes = 0;
 		hashtable ht;
 	};
 }
-
 #endif

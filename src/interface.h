@@ -15,7 +15,6 @@ namespace Chess {
 		bool playerMove(std::string input);
 		void botMove();
 		void getChoice();
-		void drawBoard();
 		void promote();
 		void checkBoth();
 	private:
