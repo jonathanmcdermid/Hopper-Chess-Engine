@@ -161,16 +161,11 @@ namespace Chess {
 	void bot::makeMove(board& b) {//calls minimax and controls depth, alpha beta windows, and time
 		auto start = std::chrono::high_resolution_clock::now();
 		int timeallotted = (b.turn) ? lim.time[WHITE] / (lim.movesleft + 20) : lim.time[BLACK] / (lim.movesleft + 20);
-		int window = opt.windowstart;
+		int window = 45;
 		int score = LOWERLIMIT;
 		int alpha = LOWERLIMIT;
 		int beta = UPPERLIMIT;
 		nodes = 0;
-		for (int i = 0; i < SPACES; ++i) {
-			for (int j = 0; j < SPACES; ++j) {
-				historyMoves[i][j]=0;
-			}
-		}
 		line pv;
 		//for (int depth = 1; depth < lim.depth; ++depth) {
 		//	int n = perft(b, depth);
@@ -191,12 +186,10 @@ namespace Chess {
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
 				--depth;
-				//window += opt.windowstepup;
 			}
 			else {
 				alpha = score - window;
 				beta = score + window;
-				//if (window > opt.windowfloor) { window -= opt.windowstepdown; }
 			}
 		}
 		b.movePiece(pv.movelink[0]);
@@ -204,127 +197,85 @@ namespace Chess {
 		k.chrono();
 	}
 
-	int bot::miniMax(board& b, int depth, int ply, int alpha, int beta, line* pline, bool notNull) {//negamax and move ordering, includes principle variations, nullmoves, and hash moves
+	int bot::miniMax(board& b, int depth, int ply, int alpha, int beta, line* pline, bool notNull) {//negamax
 		if (!depth) { return qSearch(b, alpha, beta); }
 		int keyindex = b.currZ % HASHSIZE;
-		move hashmove = ht.getMove(keyindex);
 		if (ht.getZobrist(keyindex) == b.currZ && ht.getDepth(keyindex) >= depth) {
 			if (ht.getFlags(keyindex) == HASHEXACT || (ht.getFlags(keyindex) == HASHBETA && ht.getEval(keyindex) >= beta) || (ht.getFlags(keyindex) == HASHALPHA && ht.getEval(keyindex) <= alpha)) {
-				pline->movelink[0] = hashmove;
+				pline->movelink[0] = ht.getMove(keyindex);
 				pline->cmove = 1;
 				return ht.getEval(keyindex);
 			}
 		}
 		line localline;
 		int score;
-		if (notNull && depth > 3 && !b.checkTurn()) {
+		if (ply && notNull && depth > 3 && !b.checkTurn()) {
 			b.movePiece(move(0, 0, NULLMOVE));
 			score = -miniMax(b, depth / 2 - 2, ply + 1, -beta, -beta + 1, &localline, false);
 			b.unmovePiece();
 			if (score >= beta) { return score; }
 		}
-		move moves[MEMORY];
-		int genstate = GENHASH;
 		int evaltype = HASHALPHA;
 		int cmove = 0;
 		int index = 0;
-		int goodindex;
-		move killer;
-		while (genstate != GENEND) {
+		move moves[MEMORY];
+		move pvmove = pline->movelink[0];
+		move killermove = k.getPrimary(ply);;
+		move hashmove = ht.getMove(keyindex);
+		for (int genstate = GENPV; genstate != GENEND; ++genstate) {
 			switch (genstate) {
-			case GENHASH:
-				if (b.validateMove(pline->movelink[0])) {
-					moves[cmove] = pline->movelink[0];
+			case GENPV:
+				if (b.validateMove(pvmove)) {
+					moves[cmove] = pvmove;
 					++cmove;
+					if (hashmove == pvmove) { hashmove = move(); }
+					if (killermove == pvmove) { killermove = move(); }
+					goto branch;
 				}
-				if (hashmove != moves[0] && b.validateMove(hashmove)) {
+				else { continue; }
+			case GENHASH:
+				if (b.validateMove(hashmove)) {
 					moves[cmove] = hashmove;
 					++cmove;
+					if (killermove == hashmove) { killermove = move(); }
+					goto branch;
 				}
-				else { hashmove = move(); }
-				break;
+				else { continue; }
 			case GENCAPS:
 				cmove += b.genAllCaps(&moves[index]);
-				if (hashmove != move() || pline->movelink[0] != move()) {
-					for (int i = index; i < cmove; ++i) {
-						if (moves[i] == hashmove || moves[i] == pline->movelink[0]) {
-							--cmove;
-							moves[i] = moves[cmove];
-							--i;
-						}
-					}
-				}
-				goodindex = index;
-				for (int i = cmove - 1; i > goodindex; --i) {
-					if (!b.threatened[!b.turn][moves[i].getTo()]) {
-						move tempmove = moves[goodindex];
-						moves[goodindex] = moves[i];
-						moves[i] = tempmove;
-						++goodindex;
-					}
-				}
-				for (int i = cmove - 1; i > goodindex; --i) {
-					if (abs(b.grid[moves[i].getFrom()]) < abs(b.grid[moves[i].getTo()])) {
-						move tempmove = moves[goodindex];
-						moves[goodindex] = moves[i];
-						moves[i] = tempmove;
-						++goodindex;
-					}
-				}
 				break;
 			case GENKILLS:
-				killer = k.getPrimary(ply);
-				if (b.validateMove(killer)) {
-					if (killer != pline->movelink[0] && killer != hashmove) {
-						moves[cmove] = killer;
-						++cmove;
-					}
+				if (b.validateMove(killermove)) {
+					moves[cmove] = killermove;
+					++cmove;
+					goto branch;
 				}
-				else { killer = move(); }
-				break;
+				else { continue; }
 			case GENNONCAPS:
 				cmove += b.genAllNonCaps(&moves[index]);
-				if (hashmove != move() || pline->movelink[0] != move() || killer != move()) {
-					for (int i = index; i < cmove; ++i) {
-						if (moves[i] == hashmove || moves[i] == pline->movelink[0] || moves[i] == killer) {
-							--cmove;
-							moves[i] = moves[cmove];
-							--i;
-						}
-					}
-				}
-				goodindex = index;
-				for (int i = cmove - 1; i > goodindex; --i) {
-					if (!b.threatened[!b.turn][moves[i].getTo()]) {
-						move tempmove = moves[goodindex];
-						moves[goodindex] = moves[i];
-						moves[i] = tempmove;
-						++goodindex;
-					}
-				}
-				break;
 			}
 			while (index < cmove) {
+			branch:
 				b.movePiece(moves[index]);
 				++nodes;
 				if (b.twofoldRep()) { score = CONTEMPT; }
 				else { score = -miniMax(b, depth - 1, ply + 1, -beta, -alpha, &localline, true); }
 				b.unmovePiece();
-				if (score >= beta) {
-					if (moves[index].getFlags() ^ 1 << 2) { k.cutoff(moves[index], ply); }
-					ht.newEntry(keyindex, hashentry(b.currZ, depth, score, HASHBETA, moves[index]));
-					return score;
-				}
-				else if (score > alpha) {
-					evaltype = HASHEXACT;
+				if (score > alpha) {
 					pline->movelink[0] = moves[index];
+					if (score >= beta) {
+						pline->cmove = 1;
+						if (moves[index].getFlags() ^ 1 << 2) { k.cutoff(moves[index], ply); }
+						ht.newEntry(keyindex, hashentry(b.currZ, depth, score, HASHBETA, moves[index]));
+						return score;
+					}
 					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
 					pline->cmove = localline.cmove + 1;
+					evaltype = HASHEXACT;
 					alpha = score;
 				}
 				++index;
 			}
-			++genstate;
 		}
 		if (!index) { return (b.checkTurn()) ? -MATE - depth : -CONTEMPT; }
 		else if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b.currZ, depth, alpha, evaltype, pline->movelink[0])); }

@@ -54,11 +54,12 @@
 #define RPROMOTEC	14
 #define QPROMOTEC	15
 #define MEMORY		255
-#define GENHASH		0
-#define GENCAPS		1
-#define GENKILLS	2
-#define GENNONCAPS	3
-#define GENEND		4
+#define GENPV		0
+#define GENHASH		1
+#define GENCAPS		2
+#define GENKILLS	3
+#define GENNONCAPS	4
+#define GENEND		5
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % SOUTHWEST && ((to) - (from)) % NORTHEAST) ? false : true

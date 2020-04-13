@@ -17,17 +17,6 @@ namespace Chess {
 		int mate = 0;
 		bool infinite = false;
 	} limits;
-	typedef struct options {
-		int windowstart = 45;
-		int windowstepup = 50;
-		int windowstepdown = 20;
-		int windowfloor = 30;
-		int hashsize = HASHSIZE;
-	} options;
-	typedef struct{
-		int indexA;
-		int valueB;
-	} wrapper;
 	class bot {
 	public:
 		void makeMove(board& b);
@@ -36,10 +25,8 @@ namespace Chess {
 		int qSearch(board& b, int alpha, int beta);
 		int negaEval(const board& b);
 		limits lim;
-		options opt;
 	private:
 		killers k;
-		int historyMoves[SPACES][SPACES];
 		int nodes = 0;
 		hashtable ht;
 	};

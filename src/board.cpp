@@ -119,7 +119,7 @@ namespace Chess {
 			currZ ^= z.enpassant[m.getTo()];
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case KCASTLE:
 			currZ ^= z.pieces[KINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[KINDEX][turn][m.getTo()];
@@ -150,7 +150,7 @@ namespace Chess {
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[currM.getTo()] = EMPTY;
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case CAPTURE:
 			currV -= grid[m.getTo()];
 			currZ ^= z.pieces[abs(grid[m.getFrom()]) % 10][turn][m.getFrom()];
@@ -166,28 +166,28 @@ namespace Chess {
 			currZ ^= z.pieces[NINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? KNIGHT : -KNIGHT;
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case BPROMOTE:
 			currV += (turn) ? - PAWN + BISHOP : PAWN - BISHOP;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[BINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? BISHOP : -BISHOP;
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case RPROMOTE:
 			currV += (turn) ? - PAWN + ROOK : PAWN - ROOK;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[RINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? ROOK : -ROOK;
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case QPROMOTE:
 			currV += (turn) ? - PAWN + QUEEN : PAWN - QUEEN;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[QINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
 			grid[m.getFrom()] = EMPTY;
-			break;
+			goto nocastle;
 		case NPROMOTEC:
 			currV += (turn) ? - PAWN + KNIGHT - grid[m.getTo()] : PAWN - KNIGHT - grid[m.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
@@ -219,9 +219,9 @@ namespace Chess {
 			currZ ^= z.pieces[QINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
 			grid[m.getFrom()] = EMPTY;
-			break;
+		case NULLMOVE:
+			goto nocastle;
 		}
-		if (currM.getFlags() == DOUBLEPUSH) { currZ ^= z.enpassant[currM.getTo()]; }
 		if (currC & 1 << 2) {
 			if (m.getFrom() == 60) {
 				currC &= ~(1 << 2);
@@ -240,6 +240,8 @@ namespace Chess {
 			else if ((currC & 1 << 3) && (m.getTo() == 7 || m.getFrom() == 7)) { currC &= ~(1 << 3); currZ ^= z.castle[BLACK][0]; }
 			else if ((currC & 1 << 5) && (m.getTo() == 0 || m.getFrom() == 0)) { currC &= ~(1 << 5); currZ ^= z.castle[BLACK][1]; }
 		}
+	nocastle:
+		if (currM.getFlags() == DOUBLEPUSH) { currZ ^= z.enpassant[currM.getTo()]; }
 		currZ ^= z.side;
 		vHist[cturn] = currV;
 		mHist[cturn] = m;
@@ -358,39 +360,36 @@ namespace Chess {
 	}
 
 	int board::removeIllegal(move* m, int cmove) {
-		bool undo = false;
+		int checktype;
 		for (int i = 0; i < cpins; ++i) {
 			for (int j = 0; j < cmove; ++j) {
 				if (m[j].getFrom() == pins[i][0]) {
 					switch (pins[i][1]) {
 					case SOUTH:
 					case NORTH:
-						if (!(NSslide(m[j].getFrom(), m[j].getTo()))) { undo = true; }
-						break;
+						if (!(NSslide(m[j].getFrom(), m[j].getTo()))) { goto remove; }
+						else { continue; }
 					case WEST:
 					case EAST:
-						if (!(EWslide(m[j].getFrom(), m[j].getTo()))) { undo = true; }
-						break;
+						if (!(EWslide(m[j].getFrom(), m[j].getTo()))) { goto remove; }
+						else { continue; }
 					case NORTHEAST:
 					case SOUTHWEST:
-						if (!(NESWslide(m[j].getFrom(), m[j].getTo()))) { undo = true; }
-						break;
+						if (!(NESWslide(m[j].getFrom(), m[j].getTo()))) { goto remove; }
+						else { continue; }
 					case NORTHWEST:
 					case SOUTHEAST:
-						if (!(NWSEslide(m[j].getFrom(), m[j].getTo()))) { undo = true; }
-						break;
+						if (!(NWSEslide(m[j].getFrom(), m[j].getTo()))) { goto remove; }
+						else { continue; }
 					}
-					if (undo) {
-						undo = false;
-						--cmove;
-						m[j] = m[cmove];
-						--j;
-					}
+				remove:
+					--cmove;
+					m[j] = m[cmove];
+					--j;
 				}
 			}
 		}
 		for (int i = 0; i < 2 && cpos[i] != NOCHECK; ++i) {
-			int checktype;
 			if (abs(grid[cpos[i]]) <= KNIGHT) { checktype = LEAP; }
 			else if (NSslide(cpos[i], kpos[turn])) { checktype = (cpos[i] > kpos[turn]) ? NORTH : SOUTH; }
 			else if (EWslide(cpos[i], kpos[turn])) { checktype = (cpos[i] > kpos[turn]) ? WEST : EAST; }
@@ -523,7 +522,7 @@ namespace Chess {
 			return cmove;
 		case PAWN:
 			i = (turn) ? NORTH : SOUTH;
-			if (from % WIDTH && (turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0)) {
+			if (from % WIDTH && ((turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0))) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
 					m[cmove] = move(from, from + i + WEST, CAPTURE);
 					++cmove;
@@ -539,7 +538,7 @@ namespace Chess {
 					++cmove;
 				}
 			}
-			if (from % WIDTH != 7 && (turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0)) {
+			if (from % WIDTH != 7 && ((turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0))) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
 					m[cmove] = move(from, from + i + EAST, CAPTURE);
 					++cmove;
@@ -1243,13 +1242,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = NORTH;
 						for (j = i + NORTH; j != kpos[turn]; j += NORTH) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failN; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failN:
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1257,13 +1257,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = SOUTH;
 						for (j = i + SOUTH; j != kpos[turn]; j += SOUTH) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failS; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failS:
 			for (i = from + EAST; i % WIDTH; i += EAST) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1271,13 +1272,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = EAST;
 						for (j = i + EAST; j != kpos[turn]; j += EAST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failE; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failE:
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1285,13 +1287,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = WEST;
 						for (j = i + WEST; j != kpos[turn]; j += WEST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failW; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failW:
 			if (abs(grid[from]) != QUEEN) { break; }
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
@@ -1301,13 +1304,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = NORTHEAST;
 						for (j = i + NORTHEAST; j != kpos[turn]; j += NORTHEAST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failNE; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failNE:
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1315,13 +1319,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = NORTHWEST;
 						for (j = i + NORTHWEST; j != kpos[turn]; j += NORTHWEST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failNW; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failNW:
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1329,13 +1334,14 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = SOUTHEAST;
 						for (j = i + SOUTHEAST; j != kpos[turn]; j += SOUTHEAST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failSE; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failSE:
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
 				++threatened[us][i];
 				if (grid[i]) {
@@ -1343,13 +1349,15 @@ namespace Chess {
 						pins[cpins][0] = i;
 						pins[cpins][1] = SOUTHWEST;
 						for (j = i + SOUTHWEST; j != kpos[turn]; j += SOUTHWEST) {
-							if (grid[j]) { break; }
+							if (grid[j]) { goto failSW; }
 						}
-						if (j == kpos[turn]) { ++cpins; }
+						++cpins;
 					}
 					break;
 				}
 			}
+		failSW:
+			break;
 		}
 		if (threatened[!turn][kpos[turn]] && cpos[threatened[!turn][kpos[turn]] - 1] == NOCHECK) { cpos[threatened[!turn][kpos[turn]] - 1] = from; }
 	}

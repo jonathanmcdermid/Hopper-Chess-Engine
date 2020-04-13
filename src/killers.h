@@ -49,10 +49,10 @@ namespace Chess {
 			}
 		}
 	private:
-		int max = 0;
+		int primaryindex[MAXDEPTH] = { 0 };
 		move m[MAXDEPTH][MEMORY];
 		int s[MAXDEPTH][MEMORY];
-		int primaryindex[MAXDEPTH];
+		int max = 0;
 	};
 }
 #endif
