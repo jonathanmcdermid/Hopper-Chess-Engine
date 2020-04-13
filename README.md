@@ -29,5 +29,6 @@ null moves
 quiescent search
 dynamic aspiration windows
 pinned piece detection
+killer moves
 ```
-Better UCI compatibility, killer moves, and time management are at the top of the to do list.
+Better UCI compatibility, and time management, and history heuristics are at the top of the to do list. Groundwork for history heuristic has been made, but I need to find an efficient method of sorting one array based on the contents of another before it can be implemented.
