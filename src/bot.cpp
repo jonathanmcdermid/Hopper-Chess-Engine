@@ -160,13 +160,13 @@ namespace Chess {
 
 	void bot::makeMove(board& b) {//calls minimax and controls depth, alpha beta windows, and time
 		auto start = std::chrono::high_resolution_clock::now();
-		int timeallotted = (b.turn) ? lim.time[WHITE] / (lim.movesleft + 20) : lim.time[BLACK] / (lim.movesleft + 20);
+		int timeallotted = (b.turn) ? lim.time[WHITE] / (lim.movesleft + 5) : lim.time[BLACK] / (lim.movesleft + 5);
 		int window = 45;
 		int score = LOWERLIMIT;
 		int alpha = LOWERLIMIT;
 		int beta = UPPERLIMIT;
-		nodes = 0;
 		line pv;
+		nodes = 0;
 		//for (int depth = 1; depth < lim.depth; ++depth) {
 		//	int n = perft(b, depth);
 		//	auto stop = std::chrono::high_resolution_clock::now();
@@ -175,6 +175,7 @@ namespace Chess {
 		//}
 		for (int depth = 1; depth < lim.depth; ++depth) {
 			score = miniMax(b, depth, 0, alpha, beta, &pv, false);
+			ht.extractPV(b, &pv);
 			std::string message;
 			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
 			for (int i = 0; i < pv.cmove; ++i) { message += { (char)(pv.movelink[i].getFrom() % WIDTH + 'a'), (char)(WIDTH - pv.movelink[i].getFrom() / WIDTH + '0'), (char)(pv.movelink[i].getTo() % WIDTH + 'a'), (char)(WIDTH - pv.movelink[i].getTo() / WIDTH + '0'), (char)' ' }; }
@@ -220,7 +221,7 @@ namespace Chess {
 		int index = 0;
 		move moves[MEMORY];
 		move pvmove = pline->movelink[0];
-		move killermove = k.getPrimary(ply);;
+		move killermove = k.getPrimary(ply);
 		move hashmove = ht.getMove(keyindex);
 		for (int genstate = GENPV; genstate != GENEND; ++genstate) {
 			switch (genstate) {
@@ -259,6 +260,11 @@ namespace Chess {
 				b.movePiece(moves[index]);
 				++nodes;
 				if (b.twofoldRep()) { score = CONTEMPT; }
+				else if (index) {
+					if (genstate > GENHASH && depth > 2  && !b.checkTurn()) { score = -miniMax(b, depth - 2, ply + 1, -alpha - 1, -alpha, &localline, true); }
+					else { score = -miniMax(b, depth - 1, ply + 1, -alpha - 1, -alpha, &localline, true); }
+					if (score > alpha && score < beta) { score = -miniMax(b, depth - 1, ply + 1, -beta, -alpha, &localline, true); }
+				}
 				else { score = -miniMax(b, depth - 1, ply + 1, -beta, -alpha, &localline, true); }
 				b.unmovePiece();
 				if (score > alpha) {
@@ -308,15 +314,7 @@ namespace Chess {
 		}
 		int goodindex = 0;
 		for (int i = cmove - 1; i > goodindex; --i) {
-			if (!b.threatened[!b.turn][moves[i].getTo()]) {
-				move tempmove = moves[goodindex];
-				moves[goodindex] = moves[i];
-				moves[i] = tempmove;
-				++goodindex;
-			}
-		}
-		for (int i = cmove - 1; i > goodindex; --i) {
-			if (abs(b.grid[moves[i].getFrom()]) < abs(b.grid[moves[i].getTo()])) {
+			if (!b.threatened[!b.turn][moves[i].getTo()] || abs(b.grid[moves[i].getFrom()]) < abs(b.grid[moves[i].getTo()])) {
 				move tempmove = moves[goodindex];
 				moves[goodindex] = moves[i];
 				moves[i] = tempmove;
