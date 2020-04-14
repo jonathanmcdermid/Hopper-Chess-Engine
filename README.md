@@ -30,5 +30,6 @@ quiescent search
 dynamic aspiration windows
 pinned piece detection
 killer moves
+principal variation search
 ```
-Better UCI compatibility, time management, static exchange evaluation, and history heuristics are at the top of the to do list. Groundwork for history heuristic has been made, but I need to find an efficient method of sorting one array based on the contents of another before it can be implemented.
+Better UCI compatibility, time management, static exchange evaluation, and history heuristics are at the top of the to do list.
