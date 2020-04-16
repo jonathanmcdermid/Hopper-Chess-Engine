@@ -30,7 +30,8 @@ quiescent search
 dynamic aspiration windows
 pinned piece detection
 killer moves
+perft
 principal variation search
 static exchange evaluation
 ```
-Better UCI compatibility and history heuristics are at the top of the to do list.
+Better UCI compatibility and history heuristics are at the top of the to do list. The code commented out in bot.cpp getMove function runs perft. From the tests I've run, the move generation for perft is perfect, but if you find an error please let me know!
