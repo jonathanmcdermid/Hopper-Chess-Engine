@@ -6,26 +6,25 @@
 
 namespace Chess {
     typedef struct line {
-		int cmove = 0;
-		move movelink[MAXDEPTH];
-	}line;
+        int cmove = 0;
+        move movelink[MAXDEPTH];
+    }line;
     class hashtable {
     public:
-        hashtable() { 
-            for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); } 
+        hashtable() {
+            for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); }
             master = true;
         }
         void clean() {
-            for (int i = (master) ? 1 : 0; i < HASHSIZE; i += 2) { table[i] = hashentry(); }
-            master = (master) ? false : true;
+            for (int i = master; i < HASHSIZE; i += 2) { table[i] = hashentry(); }
+            master = !master;
         }
-        void extractPV(board&b, line* l) {
+        void extractPV(board& b, line* l) {
             move m;
-            int index = 0;
-            int depth = getDepth(b.currZ % HASHSIZE);
+            int index = 0, depth = getDepth(b.currZ % HASHSIZE);
             for (int i = 0; i < depth; ++i) {
                 m = getMove(b.currZ % HASHSIZE);
-                if (b.currZ != getZobrist(b.currZ % HASHSIZE) || !b.validateMove(m)) { break; }
+                if (!b.validateMove(m)) { break; }
                 l->movelink[index] = m;
                 b.movePiece(m);
                 ++index;

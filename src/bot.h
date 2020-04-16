@@ -23,6 +23,7 @@ namespace Chess {
 		int miniMax(board& b, int depth, int ply, int alpha, int beta, line* pline, bool notNull);
 		int perft(board& b, int depth);
 		int qSearch(board& b, int alpha, int beta);
+		bool see(board& b, move m, int threshold);
 		int negaEval(const board& b);
 		limits lim;
 	private:

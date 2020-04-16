@@ -9,9 +9,9 @@ namespace Chess {
 	public:
 		board();
 		void fenSet(std::string fs);
-		bool twofoldRep() const { return (cturn > 3 && zHist[cturn - 4] == currZ) ? true : false; }
+		bool twofoldRep() const { return zHist[cturn - 4] == currZ; }
 		bool checkMate();
-		bool checkTurn() const { return (cpos[0] == NOCHECK) ? false : true; }
+		bool checkTurn() const { return cpos[0] != NOCHECK; }
 		move createMove(int from, int to);
 		void drawBoard();
 		void movePiece(move m);
@@ -34,9 +34,9 @@ namespace Chess {
 		int currV;
 		U64 currZ;
 		move currM;
-	private:
 		int pins[5][2];
 		int cpins;
+	private:
 		int cpos[2];
 		int kpos[2];
 		int cturn;

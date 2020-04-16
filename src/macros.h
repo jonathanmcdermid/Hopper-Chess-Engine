@@ -56,10 +56,13 @@
 #define MEMORY		255
 #define GENPV		0
 #define GENHASH		1
-#define GENCAPS		2
+#define GENWINCAPS	2
 #define GENKILLS	3
 #define GENNONCAPS	4
-#define GENEND		5
+#define GENLOSECAPS	5
+#define GENEND		6
+//#define STARTFEN	"r3k2r/p2qnppp/1pPb1nb1/4p3/B1P1P3/4BN1P/PP3PP1/R2Q1RK1 b kq - 0 16" Nc6
+//#define STARTFEN	"rr6/2p2ppp/4qk2/pp1n1n2/1b1P2N1/3B3P/PPQ2PP1/R1B3KR b - - 3 23" f6g6
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % SOUTHWEST && ((to) - (from)) % NORTHEAST) ? false : true

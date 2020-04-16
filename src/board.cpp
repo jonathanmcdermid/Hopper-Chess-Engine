@@ -10,9 +10,7 @@ namespace Chess {
 	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string, no 50 move rule implementation
 		for (int i = 0; i < MEMORY; ++i) { mHist[i] = move(); vHist[i] = 0; zHist[i] = 0; cHist[i] = 0; }
 		cturn = 0;
-		int index = 0;
-		int counter = 0;
-		int helper;
+		int index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
 			case 'P': { grid[counter] = PAWN; ++counter; break; }
@@ -39,7 +37,7 @@ namespace Chess {
 			++index;
 		}
 		++index;
-		turn = (fs[index] == 'w') ? WHITE : BLACK;
+		turn = fs[index] == 'w';
 		++index;
 		currC = 0;
 		do {
@@ -247,12 +245,12 @@ namespace Chess {
 		mHist[cturn] = m;
 		currM = m;
 		++cturn;
-		turn = (turn) ? BLACK : WHITE;
+		turn = !turn;
 		allThreats();
 	}
 
 	void board::unmovePiece() {//unmakes a move
-		turn = (turn) ? BLACK : WHITE;
+		turn = !turn;
 		--cturn;
 		switch (currM.getFlags()) {
 		case STANDARD:
@@ -383,9 +381,7 @@ namespace Chess {
 						else { continue; }
 					}
 				remove:
-					--cmove;
-					m[j] = m[cmove];
-					--j;
+					m[j--] = m[--cmove];
 				}
 			}
 		}
@@ -399,23 +395,10 @@ namespace Chess {
 				int to = m[j].getTo();
 				int from = m[j].getFrom();
 				if (from != kpos[turn]) {
-					if (checktype != LEAP && ((to - cpos[i]) % checktype || (to < cpos[i] && to < kpos[turn]) || (to > cpos[i] && to > kpos[turn]))) {
-						--cmove;
-						m[j] = m[cmove];
-						--j;
-
-					}
-					else if (checktype == LEAP && to != cpos[i] && m[j].getFlags() != ENPASSANT) {
-						--cmove;
-						m[j] = m[cmove];
-						--j;
-					}
+					if (checktype != LEAP && ((to - cpos[i]) % checktype || (to < cpos[i] && to < kpos[turn]) || (to > cpos[i] && to > kpos[turn]))) { m[j--] = m[--cmove]; }
+					else if (checktype == LEAP && to != cpos[i] && m[j].getFlags() != ENPASSANT) { m[j--] = m[--cmove]; }
 				}
-				else if (checktype != LEAP && to - from == checktype) {
-					--cmove;
-					m[j] = m[cmove];
-					--j;
-				}
+				else if (checktype != LEAP && to - from == checktype) { m[j--] = m[--cmove]; }
 			}
 		}
 		return cmove;
@@ -483,114 +466,86 @@ namespace Chess {
 	}
 
 	int board::pieceCapMoves(move* m, int from) {//generates all pseudo legal moves for one piece
-		int i;
-		int cmove = 0;
+		int i, cmove = 0;
 		switch (abs(grid[from])) {
 		case KING:
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && ((turn && grid[from + SOUTHEAST] < 0) || (!turn && grid[from + SOUTHEAST] > 0))) {
-				m[cmove] = move(from, from + SOUTHEAST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTHEAST, CAPTURE);
 			}
 			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && ((turn && grid[from + EAST] < 0) || (!turn && grid[from + EAST] > 0))) {
-				m[cmove] = move(from, from + EAST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + EAST, CAPTURE);
 			}
 			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && ((turn && grid[from + NORTHWEST] < 0) || (!turn && grid[from + NORTHWEST] > 0))) {
-				m[cmove] = move(from, from + NORTHWEST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + NORTHWEST, CAPTURE);
 			}
 			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && ((turn && grid[from + WEST] < 0) || (!turn && grid[from + WEST] > 0))) {
-				m[cmove] = move(from, from + WEST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + WEST, CAPTURE);
 			}
 			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && ((turn && grid[from + SOUTHWEST] < 0) || (!turn && grid[from + SOUTHWEST] > 0))) {
-				m[cmove] = move(from, from + SOUTHWEST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTHWEST, CAPTURE);
 			}
 			if (from < 56 && !threatened[!turn][from + SOUTH] && ((turn && grid[from + SOUTH] < 0) || (!turn && grid[from + SOUTH] > 0))) {
-				m[cmove] = move(from, from + SOUTH, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTH, CAPTURE);
 			}
 			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && ((turn && grid[from + NORTHEAST] < 0) || (!turn && grid[from + NORTHEAST] > 0))) {
-				m[cmove] = move(from, from + NORTHEAST, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + NORTHEAST, CAPTURE);
 			}
 			if (from > 7 && !threatened[!turn][from + NORTH] && ((turn && grid[from + NORTH] < 0) || (!turn && grid[from + NORTH] > 0))) {
-				m[cmove] = move(from, from + NORTH, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + NORTH, CAPTURE);
 			}
 			return cmove;
 		case PAWN:
 			i = (turn) ? NORTH : SOUTH;
 			if (from % WIDTH && ((turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0))) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove] = move(from, from + i + WEST, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + i + WEST, CAPTURE);
 				}
 				else {
-					m[cmove] = move(from, from + i + WEST, NPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + WEST, BPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + WEST, RPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + WEST, QPROMOTEC);
-					++cmove;
+					m[cmove++] = move(from, from + i + WEST, NPROMOTEC);
+					m[cmove++] = move(from, from + i + WEST, BPROMOTEC);
+					m[cmove++] = move(from, from + i + WEST, RPROMOTEC);
+					m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 				}
 			}
 			if (from % WIDTH != 7 && ((turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0))) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove] = move(from, from + i + EAST, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + i + EAST, CAPTURE);
 				}
 				else {
-					m[cmove] = move(from, from + i + EAST, NPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + EAST, BPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + EAST, RPROMOTEC);
-					++cmove;
-					m[cmove] = move(from, from + i + EAST, QPROMOTEC);
-					++cmove;
+					m[cmove++] = move(from, from + i + EAST, NPROMOTEC);
+					m[cmove++] = move(from, from + i + EAST, BPROMOTEC);
+					m[cmove++] = move(from, from + i + EAST, RPROMOTEC);
+					m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 				}
 			}
 			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) {
-				m[cmove] = move(from, currM.getTo() + i, ENPASSANT);
-				++cmove;
+				m[cmove++] = move(from, currM.getTo() + i, ENPASSANT);
 			}
 			return cmove;
 		case KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0))) {
-				m[cmove] = move(from, from + 10, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + 10, CAPTURE);
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0))) {
-				m[cmove] = move(from, from + 17, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + 17, CAPTURE);
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0))) {
-				m[cmove] = move(from, from - 10, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from - 10, CAPTURE);
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0))) {
-				m[cmove] = move(from, from - 17, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from - 17, CAPTURE);
 			}
 			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0))) {
-				m[cmove] = move(from, from + 6, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + 6, CAPTURE);
 			}
 			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0))) {
-				m[cmove] = move(from, from + 15, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from + 15, CAPTURE);
 			}
 			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0))) {
-				m[cmove] = move(from, from - 6, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from - 6, CAPTURE);
 			}
 			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0))) {
-				m[cmove] = move(from, from - 15, CAPTURE);
-				++cmove;
+				m[cmove++] = move(from, from - 15, CAPTURE);
 			}
 			return cmove;
 		case QUEEN:
@@ -598,8 +553,7 @@ namespace Chess {
 			for (i = from + NORTH; i >= 0; i += NORTH) {
 				if(grid[i]){
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -607,8 +561,7 @@ namespace Chess {
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
 				if(grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -616,8 +569,7 @@ namespace Chess {
 			for (i = from + EAST; i % WIDTH; i += EAST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -625,8 +577,7 @@ namespace Chess {
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -636,8 +587,7 @@ namespace Chess {
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -645,8 +595,7 @@ namespace Chess {
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -654,8 +603,7 @@ namespace Chess {
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -663,8 +611,7 @@ namespace Chess {
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -674,63 +621,50 @@ namespace Chess {
 	}
 
 	int board::pieceNonCapMoves(move* m, int from) {//generates all pseudo legal moves for one piece
-		int i;
-		int cmove = 0;
+		int i, cmove = 0;
 		switch (abs(grid[from])) {
 		case KING:
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && !grid[from + SOUTHEAST]) {
-				m[cmove] = move(from, from + SOUTHEAST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTHEAST, STANDARD);
 			}
 			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && !grid[from + EAST]) {
-				m[cmove] = move(from, from + EAST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + EAST, STANDARD);
 			}
 			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && !grid[from + NORTHWEST]) {
-				m[cmove] = move(from, from + NORTHWEST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + NORTHWEST, STANDARD);
 			}
 			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && !grid[from + WEST]) {
-				m[cmove] = move(from, from + WEST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + WEST, STANDARD);
 			}
 			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && !grid[from + SOUTHWEST]) {
-				m[cmove] = move(from, from + SOUTHWEST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTHWEST, STANDARD);
 			}
 			if (from < 56 && !threatened[!turn][from + SOUTH] && !grid[from + SOUTH]) {
-				m[cmove] = move(from, from + SOUTH, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + SOUTH, STANDARD);
 			}
 			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && !grid[from + NORTHEAST]) {
-				m[cmove] = move(from, from + NORTHEAST, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + NORTHEAST, STANDARD);
 			}
 			if (from > 7 && !threatened[!turn][from + NORTH] && !grid[from + NORTH]) {
-				m[cmove] = move(from, from + NORTH, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + NORTH, STANDARD);
 			}
 			if (turn) {
 				if (from == 60 && !threatened[BLACK][60] && (currC & 1 << 2)) {
 					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (currC & 1 << 0)) {
-						m[cmove] = move(60, 62, KCASTLE);
-						++cmove;
+						m[cmove++] = move(60, 62, KCASTLE);
 					}
 					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (currC & 1 << 1)) {
-						m[cmove] = move(60, 58, QCASTLE);
-						++cmove;
+						m[cmove++] = move(60, 58, QCASTLE);
 					}
 				}
 			}
 			else {
 				if (from == 4 && !threatened[WHITE][4] && (currC & 1 << 4)) {
 					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (currC & 1 << 3)) {
-						m[cmove] = move(4, 6, KCASTLE);
-						++cmove;
+						m[cmove++] = move(4, 6, KCASTLE);
 					}
 					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (currC & 1 << 5)) {
-						m[cmove] = move(4, 2, QCASTLE);
-						++cmove;
+						m[cmove++] = move(4, 2, QCASTLE);
 					}
 				}
 			}
@@ -739,88 +673,70 @@ namespace Chess {
 			i = (turn) ? NORTH : SOUTH;
 			if (!grid[from + i]) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove] = move(from, from + i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + i, STANDARD);
 					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) {
-						m[cmove] = move(from, from + 2 * i, DOUBLEPUSH);
-						++cmove;
-						return cmove;
+						m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH);
+						return cmove++;
 					}
 				}
 				else {
-					m[cmove] = move(from, from + i, NPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, BPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, RPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, QPROMOTE);
-					++cmove;
-					return cmove;
+					m[cmove++] = move(from, from + i, NPROMOTE);
+					m[cmove++] = move(from, from + i, BPROMOTE);
+					m[cmove++] = move(from, from + i, RPROMOTE);
+					m[cmove++] = move(from, from + i, QPROMOTE);
+					return cmove++;
 				}
 			}
 			return cmove;
 		case KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && !grid[from + 10]) {
-				m[cmove] = move(from, from + 10, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + 10, STANDARD);
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && !grid[from + 17]) {
-				m[cmove] = move(from, from + 17, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + 17, STANDARD);
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && !grid[from - 10]) {
-				m[cmove] = move(from, from - 10, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from - 10, STANDARD);
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && !grid[from - 17]) {
-				m[cmove] = move(from, from - 17, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from - 17, STANDARD);
 			}
 			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && !grid[from + 6]) {
-				m[cmove] = move(from, from + 6, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + 6, STANDARD);
 			}
 			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && !grid[from + 15]) {
-				m[cmove] = move(from, from + 15, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from + 15, STANDARD);
 			}
 			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && !grid[from - 6]) {
-				m[cmove] = move(from, from - 6, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from - 6, STANDARD);
 			}
 			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && !grid[from - 15]) {
-				m[cmove] = move(from, from - 15, STANDARD);
-				++cmove;
+				m[cmove++] = move(from, from - 15, STANDARD);
 			}
 			return cmove;
 		case QUEEN:
 		case ROOK:
 			for (i = from + NORTH; i >= 0; i += NORTH) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
@@ -828,29 +744,25 @@ namespace Chess {
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else { break; }
 			}
@@ -859,87 +771,74 @@ namespace Chess {
 	}
 
 	int board::pieceMoves(move* m, int from) {//generates all pseudo legal moves for one piece
-		int i;
-		int cmove = 0;
+		int i, cmove = 0;
 		switch (abs(grid[from])) {
 		case KING:
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) {
 				if (!threatened[!turn][from + SOUTHEAST] && ((turn && grid[from + SOUTHEAST] <= 0) || (!turn && grid[from + SOUTHEAST] >= 0))) {
-					if (!grid[from + SOUTHEAST]) { m[cmove] = move(from, from + SOUTHEAST, STANDARD); }
-					else { m[cmove] = move(from, from + SOUTHEAST, CAPTURE); }
-					++cmove;
+					if (!grid[from + SOUTHEAST]) { m[cmove++] = move(from, from + SOUTHEAST, STANDARD); }
+					else { m[cmove++] = move(from, from + SOUTHEAST, CAPTURE); }
 				}
 			}
 			if ((from + EAST) % WIDTH > from % WIDTH) {
 				if (!threatened[!turn][from + EAST] && ((turn && grid[from + EAST] <= 0) || (!turn && grid[from + EAST] >= 0))) {
-					if (!grid[from + EAST]) { m[cmove] = move(from, from + EAST, STANDARD); }
-					else { m[cmove] = move(from, from + EAST, CAPTURE); }
-					++cmove;
+					if (!grid[from + EAST]) { m[cmove++] = move(from, from + EAST, STANDARD); }
+					else { m[cmove++] = move(from, from + EAST, CAPTURE); }
 				}
 			}
 			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) {
 				if (!threatened[!turn][from + NORTHWEST] && ((turn && grid[from + NORTHWEST] <= 0) || (!turn && grid[from + NORTHWEST] >= 0))) {
-					if (!grid[from + NORTHWEST]) { m[cmove] = move(from, from + NORTHWEST, STANDARD); }
-					else { m[cmove] = move(from, from + NORTHWEST, CAPTURE); }
-					++cmove;
+					if (!grid[from + NORTHWEST]) { m[cmove++] = move(from, from + NORTHWEST, STANDARD); }
+					else { m[cmove++] = move(from, from + NORTHWEST, CAPTURE); }
 				}
 			}
 			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) {
 				if (!threatened[!turn][from + WEST] && ((turn && grid[from + WEST] <= 0) || (!turn && grid[from + WEST] >= 0))) {
-					if (!grid[from + WEST]) { m[cmove] = move(from, from + WEST, STANDARD); }
-					else { m[cmove] = move(from, from + WEST, CAPTURE); }
-					++cmove;
+					if (!grid[from + WEST]) { m[cmove++] = move(from, from + WEST, STANDARD); }
+					else { m[cmove++] = move(from, from + WEST, CAPTURE); }
 				}
 			}
 			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) {
 				if (!threatened[!turn][from + SOUTHWEST] && ((turn && grid[from + SOUTHWEST] <= 0) || (!turn && grid[from + SOUTHWEST] >= 0))) {
-					if (!grid[from + SOUTHWEST]) { m[cmove] = move(from, from + SOUTHWEST, STANDARD); }
-					else { m[cmove] = move(from, from + SOUTHWEST, CAPTURE); }
-					++cmove;
+					if (!grid[from + SOUTHWEST]) { m[cmove++] = move(from, from + SOUTHWEST, STANDARD); }
+					else { m[cmove++] = move(from, from + SOUTHWEST, CAPTURE); }
 				}
 			}
 			if (from < 56) {
 				if (!threatened[!turn][from + SOUTH] && ((turn && grid[from + SOUTH] <= 0) || (!turn && grid[from + SOUTH] >= 0))) {
-					if (!grid[from + SOUTH]) { m[cmove] = move(from, from + SOUTH, STANDARD); }
-					else { m[cmove] = move(from, from + SOUTH, CAPTURE); }
-					++cmove;
+					if (!grid[from + SOUTH]) { m[cmove++] = move(from, from + SOUTH, STANDARD); }
+					else { m[cmove++] = move(from, from + SOUTH, CAPTURE); }
 				}
 			}
 			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) {
 				if (!threatened[!turn][from + NORTHEAST] && ((turn && grid[from + NORTHEAST] <= 0) || (!turn && grid[from + NORTHEAST] >= 0))) {
-					if (!grid[from + NORTHEAST]) { m[cmove] = move(from, from + NORTHEAST, STANDARD); }
-					else { m[cmove] = move(from, from + NORTHEAST, CAPTURE); }
-					++cmove;
+					if (!grid[from + NORTHEAST]) { m[cmove++] = move(from, from + NORTHEAST, STANDARD); }
+					else { m[cmove++] = move(from, from + NORTHEAST, CAPTURE); }
 				}
 			}
 			if (from > 7) {
 				if (!threatened[!turn][from + NORTH] && ((turn && grid[from + NORTH] <= 0) || (!turn && grid[from + NORTH] >= 0))) {
-					if (!grid[from + NORTH]) { m[cmove] = move(from, from + NORTH, STANDARD); }
-					else { m[cmove] = move(from, from + NORTH, CAPTURE); }
-					++cmove;
+					if (!grid[from + NORTH]) { m[cmove++] = move(from, from + NORTH, STANDARD); }
+					else { m[cmove++] = move(from, from + NORTH, CAPTURE); }
 				}
 			}
 			if (turn) {
 				if (from == 60 && !threatened[BLACK][60] && (currC & 1 << 2)) {
 					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (currC & 1 << 0)) {
-						m[cmove] = move(60, 62, KCASTLE);
-						++cmove;
+						m[cmove++] = move(60, 62, KCASTLE);
 					}
 					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (currC & 1 << 1)) {
-						m[cmove] = move(60, 58, QCASTLE);
-						++cmove;
+						m[cmove++] = move(60, 58, QCASTLE);
 					}
 				}
 			}
 			else {
 				if (from == 4 && !threatened[WHITE][4] && (currC & 1 << 4)) {
 					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (currC & 1 << 3)) {
-						m[cmove] = move(4, 6, KCASTLE);
-						++cmove;
+						m[cmove++] = move(4, 6, KCASTLE);
 					}
 					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (currC & 1 << 5)) {
-						m[cmove] = move(4, 2, QCASTLE);
-						++cmove;
+						m[cmove++] = move(4, 2, QCASTLE);
 					}
 				}
 			}
@@ -949,145 +848,112 @@ namespace Chess {
 			if (from % WIDTH) {
 				if ((turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0)) {
 					if ((turn && from > 15) || (!turn && from < 48)) {
-						m[cmove] = move(from, from + i + WEST, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, from + i + WEST, CAPTURE);
 					}
 					else {
-						m[cmove] = move(from, from + i + WEST, NPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + WEST, BPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + WEST, RPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + WEST, QPROMOTEC);
-						++cmove;
+						m[cmove++] = move(from, from + i + WEST, NPROMOTEC);
+						m[cmove++] = move(from, from + i + WEST, BPROMOTEC);
+						m[cmove++] = move(from, from + i + WEST, RPROMOTEC);
+						m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 					}
 				}
 			}
 			if (from % WIDTH != 7) {
 				if ((turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0)) {
 					if ((turn && from > 15) || (!turn && from < 48)) {
-						m[cmove] = move(from, from + i + EAST, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, from + i + EAST, CAPTURE);
 					}
 					else {
-						m[cmove] = move(from, from + i + EAST, NPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + EAST, BPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + EAST, RPROMOTEC);
-						++cmove;
-						m[cmove] = move(from, from + i + EAST, QPROMOTEC);
-						++cmove;
+						m[cmove++] = move(from, from + i + EAST, NPROMOTEC);
+						m[cmove++] = move(from, from + i + EAST, BPROMOTEC);
+						m[cmove++] = move(from, from + i + EAST, RPROMOTEC);
+						m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 					}
 				}
 			}
 			if (!grid[from + i]) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove] = move(from, from + i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + i, STANDARD);
 					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) {
-						m[cmove] = move(from, from + 2 * i, DOUBLEPUSH);
-						++cmove;
-						return cmove;
+						m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH);
+						return cmove++;
 					}
 				}
 				else {
-					m[cmove] = move(from, from + i, NPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, BPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, RPROMOTE);
-					++cmove;
-					m[cmove] = move(from, from + i, QPROMOTE);
-					++cmove;
-					return cmove;
+					m[cmove++] = move(from, from + i, NPROMOTE);
+					m[cmove++] = move(from, from + i, BPROMOTE);
+					m[cmove++] = move(from, from + i, RPROMOTE);
+					m[cmove++] = move(from, from + i, QPROMOTE);
+					return cmove++;
 				}
 			}
 			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) {
-				m[cmove] = move(from, currM.getTo() + i, ENPASSANT);
-				++cmove;
+				m[cmove++] = move(from, currM.getTo() + i, ENPASSANT);
 			}
 			return cmove;
 		case KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54) {
 				if (!grid[from + 10]) {
-					m[cmove] = move(from, from + 10, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + 10, STANDARD);
 				}
 				else if ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)) {
-					m[cmove] = move(from, from + 10, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + 10, CAPTURE);
 				}
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47) {
 				if (!grid[from + 17]) {
-					m[cmove] = move(from, from + 17, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + 17, STANDARD);
 				}
 				else if ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0)) {
-					m[cmove] = move(from, from + 17, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + 17, CAPTURE);
 				}
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from > 9) {
 				if (!grid[from - 10]) {
-					m[cmove] = move(from, from - 10, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from - 10, STANDARD);
 				}
 				else if ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0)) {
-					m[cmove] = move(from, from - 10, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from - 10, CAPTURE);
 				}
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from > 16) {
 				if (!grid[from - 17]) {
-					m[cmove] = move(from, from - 17, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from - 17, STANDARD);
 				}
 				else if ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0)) {
-					m[cmove] = move(from, from - 17, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from - 17, CAPTURE);
 				}
 			}
 			if ((from + 6) % WIDTH < from % WIDTH && from < 58) {
 				if (!grid[from + 6]) {
-					m[cmove] = move(from, from + 6, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + 6, STANDARD);
 				}
 				else if ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0)) {
-					m[cmove] = move(from, from + 6, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + 6, CAPTURE);
 				}
 			}
 			if ((from + 15) % WIDTH < from % WIDTH && from < 49) {
 				if (!grid[from + 15]) {
-					m[cmove] = move(from, from + 15, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from + 15, STANDARD);
 				}
 				else if (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0)) {
-					m[cmove] = move(from, from + 15, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from + 15, CAPTURE);
 				}
 			}
 			if ((from - 6) % WIDTH > from % WIDTH && from > 5) {
 				if (!grid[from - 6]) {
-					m[cmove] = move(from, from - 6, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from - 6, STANDARD);
 				}
 				else if ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0)) {
-					m[cmove] = move(from, from - 6, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from - 6, CAPTURE);
 				}
 			}
 			if ((from - 15) % WIDTH > from % WIDTH && from > 14) {
 				if (!grid[from - 15]) {
-					m[cmove] = move(from, from - 15, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, from - 15, STANDARD);
 				}
 				else if ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0)) {
-					m[cmove] = move(from, from - 15, CAPTURE);
-					++cmove;
+					m[cmove++] = move(from, from - 15, CAPTURE);
 				}
 			}
 			return cmove;
@@ -1095,52 +961,44 @@ namespace Chess {
 		case ROOK:
 			for (i = from + NORTH; i >= 0; i += NORTH) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
@@ -1149,52 +1007,44 @@ namespace Chess {
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
 				if (!grid[i]) {
-					m[cmove] = move(from, i, STANDARD);
-					++cmove;
+					m[cmove++] = move(from, i, STANDARD);
 				}
 				else {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove] = move(from, i, CAPTURE);
-						++cmove;
+						m[cmove++] = move(from, i, CAPTURE);
 					}
 					break;
 				}
