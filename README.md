@@ -31,5 +31,6 @@ dynamic aspiration windows
 pinned piece detection
 killer moves
 principal variation search
+static exchange evaluation
 ```
-Better UCI compatibility, time management, static exchange evaluation, and history heuristics are at the top of the to do list.
+Better UCI compatibility and history heuristics are at the top of the to do list.
