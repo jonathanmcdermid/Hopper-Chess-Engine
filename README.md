@@ -29,6 +29,8 @@ null moves
 quiescent search
 dynamic aspiration windows
 pinned piece detection
+double check detection
+threatened squares
 killer moves
 perft
 principal variation search
