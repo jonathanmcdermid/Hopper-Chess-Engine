@@ -25,7 +25,8 @@ principle variations
 hashing
 transposition tables
 zobrist keys
-null moves
+null moves 
+zugswang detection
 quiescent search
 dynamic aspiration windows
 pinned piece detection
