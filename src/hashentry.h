@@ -32,6 +32,7 @@ namespace Chess {
         int getEval() const { return eval; }
         int getFlags() const { return flags; }
         move getMove() const { return m; }
+        void setDepth(int d) { depth = d; }
     private:
         U64 zob;
         int depth;

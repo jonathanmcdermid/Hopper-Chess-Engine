@@ -8,6 +8,7 @@ namespace Chess {
 	class interface {
 	public:
 		interface(int argc, char* argv[]);
+		void drawBoard();
 		void uci(int argc, char* argv[]);
 		void go(std::istringstream& is);
 		void position(std::istringstream& is);
@@ -18,9 +19,9 @@ namespace Chess {
 		void promote();
 		void checkBoth();
 	private:
-		board game = board();
-		bot ai;
-		move m = move();
+		board game;
+		bot ai = bot(&game);
+		move m;
 	};
 }
 

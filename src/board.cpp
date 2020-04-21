@@ -1,14 +1,12 @@
 #include "board.h"
 
 namespace Chess {
-
 	board::board() {//sets board to starting state
 		z = zobrist();
 		fenSet(STARTFEN);
 	}
 
-	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string, no 50 move rule implementation
-		for (int i = 0; i < MEMORY; ++i) { mHist[i] = move(); vHist[i] = 0; zHist[i] = 0; cHist[i] = 0; }
+	void board::fenSet(std::string fs) {//sets board to state outlined in FEN string
 		cturn = 0;
 		int index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
@@ -18,45 +16,39 @@ namespace Chess {
 			case 'N': { grid[counter] = KNIGHT; ++counter; break; }
 			case 'B': { grid[counter] = BISHOP; ++counter; break; }
 			case 'Q': { grid[counter] = QUEEN; ++counter; break; }
-			case 'K': { grid[counter] = KING; kpos[WHITE] = counter; ++counter; break; }
+			case 'K': { grid[counter] = KING; kpos[WHITE] = counter++; break; }
 			case 'p': { grid[counter] = -PAWN; ++counter; break; }
 			case 'r': { grid[counter] = -ROOK; ++counter; break; }
 			case 'n': { grid[counter] = -KNIGHT; ++counter; break; }
 			case 'b': { grid[counter] = -BISHOP; ++counter; break; }
 			case 'q': { grid[counter] = -QUEEN; ++counter; break; }
-			case 'k': { grid[counter] = -KING; kpos[BLACK] = counter; ++counter; break; }
+			case 'k': { grid[counter] = -KING; kpos[BLACK] = counter++; break; }
 			case '/': { break; }
 			default:
 				helper = fs[index] - '0';
-				while (helper) {
-					grid[counter] = EMPTY;
-					++counter;
-					--helper;
-				}
+				while (helper--) { grid[counter++] = EMPTY; }
 			}
 			++index;
 		}
-		++index;
-		turn = fs[index] == 'w';
+		turn = fs[++index] == 'w';
 		++index;
 		currC = 0;
 		do {
-			switch (fs[index]) {
+			switch (fs[index++]) {
 			case 'K': {currC |= 1 << 0; currC |= 1 << 2; break; }
 			case 'Q': {currC |= 1 << 1; currC |= 1 << 2; break; }
 			case 'k': {currC |= 1 << 3; currC |= 1 << 4; break; }
 			case 'q': {currC |= 1 << 5; currC |= 1 << 4; break; }
 			}
-			++index;
 		} while (fs[index] != ' ');
-		++index;
-		if (fs[index] != '-') {
+		if (fs[++index] != '-') {
 			int from = (turn) ? fs[index] - '0' - WIDTH : fs[index] - '0' + WIDTH;
 			int to = (turn) ? fs[index] - '0' + WIDTH : fs[index] - '0' - WIDTH;
 			mHist[cturn] = move(from, to, DOUBLEPUSH);
 			++cturn;
 		}
-		++index;
+		index += 2;
+		fmr = fs[index] - '0';
 		currV = 0;
 		for (int i = 0; i < SPACES; ++i) { currV += grid[i]; }
 		currZ = z.newKey(this);
@@ -64,45 +56,69 @@ namespace Chess {
 		allThreats();
 	}
 
-	bool board::checkMate() {
-		move m[MEMORY];
-		int cmove = genAll(m);
-		cmove = removeIllegal(m, cmove);
-		if (!cmove) { return true; }
+	bool board::isCheckMate() {
+		if (isDraw()) { return true; }
+		move m[28];
+		int cmove;
+		if (turn) {
+			for (int i = 0; i < SPACES; ++i) {
+				if (grid[i] > 0) {
+					cmove = pieceMoves(m, i);
+					if (cmove) {
+						cmove = removeIllegal(m, cmove);
+						if (cmove) { return false; }
+					}
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < SPACES; ++i) {
+				if (grid[i] < 0) {
+					cmove = pieceMoves(m, i);
+					if (cmove) {
+						cmove = removeIllegal(m, cmove);
+						if (cmove) { return false; }
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	bool board::isDraw() { 
+		if (fmr >= 100) { return true; }
+		for (int i = 4; i < fmr; i+=4) {
+			if (zHist[cturn - i] == zHist[cturn]) { return true; }
+		}
 		return false;
 	}
 
-	void board::drawBoard() {//prints board in cmd
-		char letter;
-		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (int i = 0; i < WIDTH; ++i) {
-			std::cout << "\n---------------------------------\n|";
-			for (int j = 0; j < WIDTH; ++j) {
-				switch (grid[i * WIDTH + j]) {
-				case PAWN: { letter = 'P'; break; }
-				case ROOK: { letter = 'R'; break; }
-				case KNIGHT: { letter = 'N'; break; }
-				case BISHOP: { letter = 'B'; break; }
-				case QUEEN: { letter = 'Q'; break; }
-				case KING: { letter = 'K'; break; }
-				case -PAWN: { letter = 'p'; break; }
-				case -ROOK: { letter = 'r'; break; }
-				case -KNIGHT: { letter = 'n'; break; }
-				case -BISHOP: { letter = 'b'; break; }
-				case -QUEEN: { letter = 'q'; break; }
-				case -KING: { letter = 'k'; break; }
-				default: { letter = ' '; }
-				}
-				std::cout << " " << letter << " |";
-			}
-			std::cout << " " << WIDTH - i;
+	bool board::validateMove(move m) {//validates a single move
+		move temp[28];
+		int cmove;
+		if ((turn && grid[m.getFrom()] > 0) || (!turn && grid[m.getFrom()] < 0)) { cmove = pieceMoves(temp, m.getFrom()); }
+		else { return false; }
+		cmove = removeIllegal(temp, cmove);
+		for (int i = 0; i < cmove; ++i) {
+			if (temp[i] == m) { return true; }
 		}
-		std::cout << "\n---------------------------------\n";
+		return false;
+	}
+
+	move board::createMove(int from, int to) {
+		move temp[28];
+		int cmove = pieceMoves(temp, from);
+		cmove = removeIllegal(temp, cmove);
+		for (int i = 0; i < cmove; ++i) {
+			if (temp[i].getFrom() == from && temp[i].getTo() == to) { return temp[i]; }
+		}
+		return move();
 	}
 
 	void board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
 		zHist[cturn] = currZ;
 		cHist[cturn] = currC;
+		fHist[cturn] = fmr;
 		switch (m.getFlags()) {
 		case STANDARD:
 			currZ = (turn) ? currZ ^ z.pieces[grid[m.getFrom()] % 10][WHITE][m.getFrom()] : currZ ^ z.pieces[-grid[m.getFrom()] % 10][BLACK][m.getFrom()];
@@ -141,7 +157,7 @@ namespace Chess {
 			kpos[turn] = m.getTo();
 			break;
 		case ENPASSANT:
-			currV += (turn) ? PAWN : - PAWN;
+			currV += (turn) ? PAWN : -PAWN;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[PINDEX][!turn][currM.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getTo()];
@@ -159,35 +175,35 @@ namespace Chess {
 			if (abs(grid[m.getTo()]) == KING) { kpos[turn] = m.getTo(); }
 			break;
 		case NPROMOTE:
-			currV += (turn) ? - PAWN + KNIGHT : PAWN - KNIGHT;
+			currV += (turn) ? -PAWN + KNIGHT : PAWN - KNIGHT;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[NINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? KNIGHT : -KNIGHT;
 			grid[m.getFrom()] = EMPTY;
 			goto nocastle;
 		case BPROMOTE:
-			currV += (turn) ? - PAWN + BISHOP : PAWN - BISHOP;
+			currV += (turn) ? -PAWN + BISHOP : PAWN - BISHOP;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[BINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? BISHOP : -BISHOP;
 			grid[m.getFrom()] = EMPTY;
 			goto nocastle;
 		case RPROMOTE:
-			currV += (turn) ? - PAWN + ROOK : PAWN - ROOK;
+			currV += (turn) ? -PAWN + ROOK : PAWN - ROOK;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[RINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? ROOK : -ROOK;
 			grid[m.getFrom()] = EMPTY;
 			goto nocastle;
 		case QPROMOTE:
-			currV += (turn) ? - PAWN + QUEEN : PAWN - QUEEN;
+			currV += (turn) ? -PAWN + QUEEN : PAWN - QUEEN;
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[QINDEX][turn][m.getTo()];
 			grid[m.getTo()] = (turn) ? QUEEN : -QUEEN;
 			grid[m.getFrom()] = EMPTY;
 			goto nocastle;
 		case NPROMOTEC:
-			currV += (turn) ? - PAWN + KNIGHT - grid[m.getTo()] : PAWN - KNIGHT - grid[m.getTo()];
+			currV += (turn) ? -PAWN + KNIGHT - grid[m.getTo()] : PAWN - KNIGHT - grid[m.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
 			currZ ^= z.pieces[NINDEX][turn][m.getTo()];
@@ -195,7 +211,7 @@ namespace Chess {
 			grid[m.getFrom()] = EMPTY;
 			break;
 		case BPROMOTEC:
-			currV += (turn) ? - PAWN + BISHOP - grid[m.getTo()] : PAWN - BISHOP - grid[m.getTo()];
+			currV += (turn) ? -PAWN + BISHOP - grid[m.getTo()] : PAWN - BISHOP - grid[m.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
 			currZ ^= z.pieces[BINDEX][turn][m.getTo()];
@@ -203,7 +219,7 @@ namespace Chess {
 			grid[m.getFrom()] = EMPTY;
 			break;
 		case RPROMOTEC:
-			currV += (turn) ? - PAWN + ROOK - grid[m.getTo()] : PAWN - ROOK - grid[m.getTo()];
+			currV += (turn) ? -PAWN + ROOK - grid[m.getTo()] : PAWN - ROOK - grid[m.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
 			currZ ^= z.pieces[RINDEX][turn][m.getTo()];
@@ -211,7 +227,7 @@ namespace Chess {
 			grid[m.getFrom()] = EMPTY;
 			break;
 		case QPROMOTEC:
-			currV += (turn) ? - PAWN + QUEEN - grid[m.getTo()] : + PAWN - QUEEN - grid[m.getTo()];
+			currV += (turn) ? -PAWN + QUEEN - grid[m.getTo()] : +PAWN - QUEEN - grid[m.getTo()];
 			currZ ^= z.pieces[PINDEX][turn][m.getFrom()];
 			currZ ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
 			currZ ^= z.pieces[QINDEX][turn][m.getTo()];
@@ -240,6 +256,7 @@ namespace Chess {
 		}
 	nocastle:
 		if (currM.getFlags() == DOUBLEPUSH) { currZ ^= z.enpassant[currM.getTo()]; }
+		fmr = (m.getFlags() == STANDARD && abs(grid[m.getTo()]) != PAWN) ? ++fmr : 0;
 		currZ ^= z.side;
 		vHist[cturn] = currV;
 		mHist[cturn] = m;
@@ -319,6 +336,7 @@ namespace Chess {
 			grid[currM.getTo()] = (turn) ? vHist[cturn - 1] - currV + QUEEN - PAWN : vHist[cturn - 1] - currV - QUEEN + PAWN;
 			break;
 		}
+		fmr = fHist[cturn];
 		currZ = zHist[cturn];
 		currC = cHist[cturn];
 		currV = vHist[cturn - 1];
@@ -326,34 +344,16 @@ namespace Chess {
 		allThreats();
 	}
 
-	move board::createMove(int from, int to) {
-		move m[MEMORY];
-		int cmove = genAll(m);
-		cmove = removeIllegal(m, cmove);
-		for (int i = 0; i < cmove; ++i) {
-			if (m[i].getFrom() == from && m[i].getTo() == to) { return m[i]; }
-		}
-		return move();
-	}
-
 	void board::allThreats() {
 		cpins = 0;
 		endgame = true;
-		cpos[0] = NOCHECK;
-		cpos[1] = NOCHECK;
+		zugswang = true;
 		for (int i = 0; i < SPACES; ++i) {
-			threatened[WHITE][i] = 0;
 			threatened[BLACK][i] = 0;
+			threatened[WHITE][i] = 0;
 		}
-		if (turn) {
-			for (int from = 0; from < SPACES; ++from) {
-				if (grid[from] < 0) { pieceThreats(from); }
-			}
-		}
-		else {
-			for (int from = 0; from < SPACES; ++from) {
-				if (grid[from] > 0) { pieceThreats(from); }
-			}
+		for (int from = 0; from < SPACES; ++from) {
+			if (grid[from]) { pieceThreats(from); }
 		}
 	}
 
@@ -385,36 +385,23 @@ namespace Chess {
 				}
 			}
 		}
-		for (int i = 0; i < 2 && cpos[i] != NOCHECK; ++i) {
-			if (abs(grid[cpos[i]]) <= KNIGHT) { checktype = LEAP; }
-			else if (NSslide(cpos[i], kpos[turn])) { checktype = (cpos[i] > kpos[turn]) ? NORTH : SOUTH; }
-			else if (EWslide(cpos[i], kpos[turn])) { checktype = (cpos[i] > kpos[turn]) ? WEST : EAST; }
-			else if (NESWslide(cpos[i], kpos[turn])) { checktype = (cpos[i] > kpos[turn]) ? NORTHEAST : SOUTHWEST; }
-			else { checktype = (cpos[i] > kpos[turn]) ? NORTHWEST : SOUTHEAST; }
+		for (int i = 0; i < threatened[!turn][kpos[turn]]; ++i) {
+			if (abs(grid[attackers[!turn][i][kpos[turn]]]) <= KNIGHT) { checktype = LEAP; }
+			else if (NSslide(attackers[!turn][i][kpos[turn]], kpos[turn])) { checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? NORTH : SOUTH; }
+			else if (EWslide(attackers[!turn][i][kpos[turn]], kpos[turn])) { checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? WEST : EAST; }
+			else if (NESWslide(attackers[!turn][i][kpos[turn]], kpos[turn])) { checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? NORTHEAST : SOUTHWEST; }
+			else { checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? NORTHWEST : SOUTHEAST; }
 			for (int j = 0; j < cmove; ++j) {
 				int to = m[j].getTo();
 				int from = m[j].getFrom();
 				if (from != kpos[turn]) {
-					if (checktype != LEAP && ((to - cpos[i]) % checktype || (to < cpos[i] && to < kpos[turn]) || (to > cpos[i] && to > kpos[turn]))) { m[j--] = m[--cmove]; }
-					else if (checktype == LEAP && to != cpos[i] && m[j].getFlags() != ENPASSANT) { m[j--] = m[--cmove]; }
+					if (checktype != LEAP && ((to - attackers[!turn][i][kpos[turn]]) % checktype || (to < attackers[!turn][i][kpos[turn]] && to < kpos[turn]) || (to > attackers[!turn][i][kpos[turn]] && to > kpos[turn]))) { m[j--] = m[--cmove]; }
+					else if (checktype == LEAP && to != attackers[!turn][i][kpos[turn]] && m[j].getFlags() != ENPASSANT) { m[j--] = m[--cmove]; }
 				}
 				else if (checktype != LEAP && to - from == checktype) { m[j--] = m[--cmove]; }
 			}
 		}
 		return cmove;
-	}
-
-	bool board::validateMove(move m) {//validates a single move
-		if (m == move()) { return false; }
-		move temp[28];
-		int cmove;
-		if ((turn && grid[m.getFrom()] > 0) || (!turn && grid[m.getFrom()] < 0)) { cmove = pieceMoves(temp, m.getFrom()); }
-		else { return false; }
-		cmove = removeIllegal(temp, cmove);
-		for (int i = 0; i < cmove; ++i) { 
-			if (temp[i] == m) { return true; }
-		}
-		return false;
 	}
 
 	int board::genAll(move* m) {//generates all legal moves
@@ -449,7 +436,7 @@ namespace Chess {
 		return cmove;
 	}
 
-	int board::genAllNonCaps(move * m) {
+	int board::genAllNonCaps(move* m) {
 		int cmove = 0;
 		if (turn) {
 			for (int from = 0; from < SPACES; ++from) {
@@ -465,120 +452,74 @@ namespace Chess {
 		return cmove;
 	}
 
-	int board::pieceCapMoves(move* m, int from) {//generates all pseudo legal moves for one piece
+	int board::pieceCapMoves(move* m, int from) {//generates all pseudo legal capture moves for one piece
 		int i, cmove = 0;
 		switch (abs(grid[from])) {
 		case KING:
-			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && ((turn && grid[from + SOUTHEAST] < 0) || (!turn && grid[from + SOUTHEAST] > 0))) {
-				m[cmove++] = move(from, from + SOUTHEAST, CAPTURE);
-			}
-			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && ((turn && grid[from + EAST] < 0) || (!turn && grid[from + EAST] > 0))) {
-				m[cmove++] = move(from, from + EAST, CAPTURE);
-			}
-			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && ((turn && grid[from + NORTHWEST] < 0) || (!turn && grid[from + NORTHWEST] > 0))) {
-				m[cmove++] = move(from, from + NORTHWEST, CAPTURE);
-			}
-			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && ((turn && grid[from + WEST] < 0) || (!turn && grid[from + WEST] > 0))) {
-				m[cmove++] = move(from, from + WEST, CAPTURE);
-			}
-			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && ((turn && grid[from + SOUTHWEST] < 0) || (!turn && grid[from + SOUTHWEST] > 0))) {
-				m[cmove++] = move(from, from + SOUTHWEST, CAPTURE);
-			}
-			if (from < 56 && !threatened[!turn][from + SOUTH] && ((turn && grid[from + SOUTH] < 0) || (!turn && grid[from + SOUTH] > 0))) {
-				m[cmove++] = move(from, from + SOUTH, CAPTURE);
-			}
-			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && ((turn && grid[from + NORTHEAST] < 0) || (!turn && grid[from + NORTHEAST] > 0))) {
-				m[cmove++] = move(from, from + NORTHEAST, CAPTURE);
-			}
-			if (from > 7 && !threatened[!turn][from + NORTH] && ((turn && grid[from + NORTH] < 0) || (!turn && grid[from + NORTH] > 0))) {
-				m[cmove++] = move(from, from + NORTH, CAPTURE);
-			}
+			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && ((turn && grid[from + SOUTHEAST] < 0) || (!turn && grid[from + SOUTHEAST] > 0))) { m[cmove++] = move(from, from + SOUTHEAST, CAPTURE); }
+			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && ((turn && grid[from + EAST] < 0) || (!turn && grid[from + EAST] > 0))) { m[cmove++] = move(from, from + EAST, CAPTURE); }
+			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && ((turn && grid[from + NORTHWEST] < 0) || (!turn && grid[from + NORTHWEST] > 0))) { m[cmove++] = move(from, from + NORTHWEST, CAPTURE); }
+			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && ((turn && grid[from + WEST] < 0) || (!turn && grid[from + WEST] > 0))) { m[cmove++] = move(from, from + WEST, CAPTURE); }
+			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && ((turn && grid[from + SOUTHWEST] < 0) || (!turn && grid[from + SOUTHWEST] > 0))) { m[cmove++] = move(from, from + SOUTHWEST, CAPTURE); }
+			if (from < 56 && !threatened[!turn][from + SOUTH] && ((turn && grid[from + SOUTH] < 0) || (!turn && grid[from + SOUTH] > 0))) { m[cmove++] = move(from, from + SOUTH, CAPTURE); }
+			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && ((turn && grid[from + NORTHEAST] < 0) || (!turn && grid[from + NORTHEAST] > 0))) { m[cmove++] = move(from, from + NORTHEAST, CAPTURE); }
+			if (from > 7 && !threatened[!turn][from + NORTH] && ((turn && grid[from + NORTH] < 0) || (!turn && grid[from + NORTH] > 0))) { m[cmove++] = move(from, from + NORTH, CAPTURE); }
 			return cmove;
 		case PAWN:
 			i = (turn) ? NORTH : SOUTH;
 			if (from % WIDTH && ((turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0))) {
-				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove++] = move(from, from + i + WEST, CAPTURE);
-				}
+				if ((turn && from > 15) || (!turn && from < 48)) { m[cmove++] = move(from, from + i + WEST, CAPTURE); }
 				else {
+					m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 					m[cmove++] = move(from, from + i + WEST, NPROMOTEC);
 					m[cmove++] = move(from, from + i + WEST, BPROMOTEC);
 					m[cmove++] = move(from, from + i + WEST, RPROMOTEC);
-					m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 				}
 			}
 			if (from % WIDTH != 7 && ((turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0))) {
-				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove++] = move(from, from + i + EAST, CAPTURE);
-				}
+				if ((turn && from > 15) || (!turn && from < 48)) { m[cmove++] = move(from, from + i + EAST, CAPTURE); }
 				else {
+					m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 					m[cmove++] = move(from, from + i + EAST, NPROMOTEC);
 					m[cmove++] = move(from, from + i + EAST, BPROMOTEC);
 					m[cmove++] = move(from, from + i + EAST, RPROMOTEC);
-					m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 				}
 			}
-			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) {
-				m[cmove++] = move(from, currM.getTo() + i, ENPASSANT);
-			}
+			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) { m[cmove++] = move(from, currM.getTo() + i, ENPASSANT); }
 			return cmove;
 		case KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0))) {
-				m[cmove++] = move(from, from + 10, CAPTURE);
-			}
-			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0))) {
-				m[cmove++] = move(from, from + 17, CAPTURE);
-			}
-			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0))) {
-				m[cmove++] = move(from, from - 10, CAPTURE);
-			}
-			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0))) {
-				m[cmove++] = move(from, from - 17, CAPTURE);
-			}
-			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0))) {
-				m[cmove++] = move(from, from + 6, CAPTURE);
-			}
-			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0))) {
-				m[cmove++] = move(from, from + 15, CAPTURE);
-			}
-			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0))) {
-				m[cmove++] = move(from, from - 6, CAPTURE);
-			}
-			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0))) {
-				m[cmove++] = move(from, from - 15, CAPTURE);
-			}
+			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0))) { m[cmove++] = move(from, from + 10, CAPTURE); }
+			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0))) { m[cmove++] = move(from, from + 17, CAPTURE); }
+			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0))) { m[cmove++] = move(from, from - 10, CAPTURE); }
+			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0))) { m[cmove++] = move(from, from - 17, CAPTURE); }
+			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0))) { m[cmove++] = move(from, from + 6, CAPTURE); }
+			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0))) { m[cmove++] = move(from, from + 15, CAPTURE); }
+			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0))) { m[cmove++] = move(from, from - 6, CAPTURE); }
+			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0))) { m[cmove++] = move(from, from - 15, CAPTURE); }
 			return cmove;
 		case QUEEN:
 		case ROOK:
 			for (i = from + NORTH; i >= 0; i += NORTH) {
-				if(grid[i]){
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+				if (grid[i]) {
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				if(grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+				if (grid[i]) {
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
@@ -586,33 +527,25 @@ namespace Chess {
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
 				if (grid[i]) {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
@@ -620,34 +553,100 @@ namespace Chess {
 		return cmove;
 	}
 
-	int board::pieceNonCapMoves(move* m, int from) {//generates all pseudo legal moves for one piece
+	int board::pieceNonCapMoves(move* m, int from) {//generates all pseudo legal non capture moves for one piece
 		int i, cmove = 0;
 		switch (abs(grid[from])) {
 		case KING:
-			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && !grid[from + SOUTHEAST]) {
-				m[cmove++] = move(from, from + SOUTHEAST, STANDARD);
+			if (turn) {
+				if (from == 60 && !threatened[BLACK][60] && (currC & 1 << 2)) {
+					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (currC & 1 << 0)) { m[cmove++] = move(60, 62, KCASTLE); }
+					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (currC & 1 << 1)) { m[cmove++] = move(60, 58, QCASTLE); }
+				}
 			}
-			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && !grid[from + EAST]) {
-				m[cmove++] = move(from, from + EAST, STANDARD);
+			else {
+				if (from == 4 && !threatened[WHITE][4] && (currC & 1 << 4)) {
+					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (currC & 1 << 3)) { m[cmove++] = move(4, 6, KCASTLE); }
+					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (currC & 1 << 5)) { m[cmove++] = move(4, 2, QCASTLE); }
+				}
 			}
-			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && !grid[from + NORTHWEST]) {
-				m[cmove++] = move(from, from + NORTHWEST, STANDARD);
+			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + SOUTHEAST] && !grid[from + SOUTHEAST]) { m[cmove++] = move(from, from + SOUTHEAST, STANDARD); }
+			if ((from + EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + EAST] && !grid[from + EAST]) { m[cmove++] = move(from, from + EAST, STANDARD); }
+			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + NORTHWEST] && !grid[from + NORTHWEST]) { m[cmove++] = move(from, from + NORTHWEST, STANDARD); }
+			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && !grid[from + WEST]) { m[cmove++] = move(from, from + WEST, STANDARD); }
+			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && !grid[from + SOUTHWEST]) { m[cmove++] = move(from, from + SOUTHWEST, STANDARD); }
+			if (from < 56 && !threatened[!turn][from + SOUTH] && !grid[from + SOUTH]) { m[cmove++] = move(from, from + SOUTH, STANDARD); }
+			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && !grid[from + NORTHEAST]) { m[cmove++] = move(from, from + NORTHEAST, STANDARD); }
+			if (from > 7 && !threatened[!turn][from + NORTH] && !grid[from + NORTH]) { m[cmove++] = move(from, from + NORTH, STANDARD); }
+			return cmove;
+		case PAWN:
+			i = (turn) ? NORTH : SOUTH;
+			if (!grid[from + i]) {
+				if ((turn && from > 15) || (!turn && from < 48)) {
+					m[cmove++] = move(from, from + i, STANDARD);
+					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) { m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH); }
+				}
+				else {
+					m[cmove++] = move(from, from + i, QPROMOTE);
+					m[cmove++] = move(from, from + i, NPROMOTE);
+					m[cmove++] = move(from, from + i, BPROMOTE);
+					m[cmove++] = move(from, from + i, RPROMOTE);
+				}
 			}
-			if ((from + WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + WEST] && !grid[from + WEST]) {
-				m[cmove++] = move(from, from + WEST, STANDARD);
+			return cmove;
+		case KNIGHT:
+			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && !grid[from + 10]) { m[cmove++] = move(from, from + 10, STANDARD); }
+			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && !grid[from + 17]) { m[cmove++] = move(from, from + 17, STANDARD); }
+			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && !grid[from - 10]) { m[cmove++] = move(from, from - 10, STANDARD); }
+			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && !grid[from - 17]) { m[cmove++] = move(from, from - 17, STANDARD); }
+			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && !grid[from + 6]) { m[cmove++] = move(from, from + 6, STANDARD); }
+			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && !grid[from + 15]) { m[cmove++] = move(from, from + 15, STANDARD); }
+			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && !grid[from - 6]) { m[cmove++] = move(from, from - 6, STANDARD); }
+			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && !grid[from - 15]) { m[cmove++] = move(from, from - 15, STANDARD); }
+			return cmove;
+		case QUEEN:
+		case ROOK:
+			for (i = from + NORTH; i >= 0; i += NORTH) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
 			}
-			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + SOUTHWEST] && !grid[from + SOUTHWEST]) {
-				m[cmove++] = move(from, from + SOUTHWEST, STANDARD);
+			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
 			}
-			if (from < 56 && !threatened[!turn][from + SOUTH] && !grid[from + SOUTH]) {
-				m[cmove++] = move(from, from + SOUTH, STANDARD);
+			for (i = from + EAST; i % WIDTH; i += EAST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
 			}
-			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + NORTHEAST] && !grid[from + NORTHEAST]) {
-				m[cmove++] = move(from, from + NORTHEAST, STANDARD);
+			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
 			}
-			if (from > 7 && !threatened[!turn][from + NORTH] && !grid[from + NORTH]) {
-				m[cmove++] = move(from, from + NORTH, STANDARD);
+			if (abs(grid[from]) != QUEEN) { return cmove; }
+		case BISHOP:
+			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
 			}
+			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
+			}
+			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
+			}
+			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
+				else { break; }
+			}
+		}
+		return cmove;
+	}
+
+	int board::pieceMoves(move* m, int from) {//generates all pseudo legal moves for one piece
+		int i, cmove = 0;
+		switch (abs(grid[from])) {
+		case KING:
 			if (turn) {
 				if (from == 60 && !threatened[BLACK][60] && (currC & 1 << 2)) {
 					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (currC & 1 << 0)) {
@@ -668,112 +667,6 @@ namespace Chess {
 					}
 				}
 			}
-			return cmove;
-		case PAWN:
-			i = (turn) ? NORTH : SOUTH;
-			if (!grid[from + i]) {
-				if ((turn && from > 15) || (!turn && from < 48)) {
-					m[cmove++] = move(from, from + i, STANDARD);
-					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) {
-						m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH);
-						return cmove++;
-					}
-				}
-				else {
-					m[cmove++] = move(from, from + i, NPROMOTE);
-					m[cmove++] = move(from, from + i, BPROMOTE);
-					m[cmove++] = move(from, from + i, RPROMOTE);
-					m[cmove++] = move(from, from + i, QPROMOTE);
-					return cmove++;
-				}
-			}
-			return cmove;
-		case KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && !grid[from + 10]) {
-				m[cmove++] = move(from, from + 10, STANDARD);
-			}
-			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && !grid[from + 17]) {
-				m[cmove++] = move(from, from + 17, STANDARD);
-			}
-			if ((from - 10) % WIDTH < from % WIDTH && from > 9 && !grid[from - 10]) {
-				m[cmove++] = move(from, from - 10, STANDARD);
-			}
-			if ((from - 17) % WIDTH < from % WIDTH && from > 16 && !grid[from - 17]) {
-				m[cmove++] = move(from, from - 17, STANDARD);
-			}
-			if ((from + 6) % WIDTH < from % WIDTH && from < 58 && !grid[from + 6]) {
-				m[cmove++] = move(from, from + 6, STANDARD);
-			}
-			if ((from + 15) % WIDTH < from % WIDTH && from < 49 && !grid[from + 15]) {
-				m[cmove++] = move(from, from + 15, STANDARD);
-			}
-			if ((from - 6) % WIDTH > from % WIDTH && from > 5 && !grid[from - 6]) {
-				m[cmove++] = move(from, from - 6, STANDARD);
-			}
-			if ((from - 15) % WIDTH > from % WIDTH && from > 14 && !grid[from - 15]) {
-				m[cmove++] = move(from, from - 15, STANDARD);
-			}
-			return cmove;
-		case QUEEN:
-		case ROOK:
-			for (i = from + NORTH; i >= 0; i += NORTH) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + EAST; i % WIDTH; i += EAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			if (abs(grid[from]) != QUEEN) { return cmove; }
-		case BISHOP:
-			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
-				else { break; }
-			}
-		}
-		return cmove;
-	}
-
-	int board::pieceMoves(move* m, int from) {//generates all pseudo legal moves for one piece
-		int i, cmove = 0;
-		switch (abs(grid[from])) {
-		case KING:
 			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) {
 				if (!threatened[!turn][from + SOUTHEAST] && ((turn && grid[from + SOUTHEAST] <= 0) || (!turn && grid[from + SOUTHEAST] >= 0))) {
 					if (!grid[from + SOUTHEAST]) { m[cmove++] = move(from, from + SOUTHEAST, STANDARD); }
@@ -822,230 +715,136 @@ namespace Chess {
 					else { m[cmove++] = move(from, from + NORTH, CAPTURE); }
 				}
 			}
-			if (turn) {
-				if (from == 60 && !threatened[BLACK][60] && (currC & 1 << 2)) {
-					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (currC & 1 << 0)) {
-						m[cmove++] = move(60, 62, KCASTLE);
-					}
-					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (currC & 1 << 1)) {
-						m[cmove++] = move(60, 58, QCASTLE);
-					}
-				}
-			}
-			else {
-				if (from == 4 && !threatened[WHITE][4] && (currC & 1 << 4)) {
-					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (currC & 1 << 3)) {
-						m[cmove++] = move(4, 6, KCASTLE);
-					}
-					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (currC & 1 << 5)) {
-						m[cmove++] = move(4, 2, QCASTLE);
-					}
-				}
-			}
 			return cmove;
 		case PAWN:
 			i = (turn) ? NORTH : SOUTH;
 			if (from % WIDTH) {
 				if ((turn && grid[from + i + WEST] < 0) || (!turn && grid[from + i + WEST] > 0)) {
-					if ((turn && from > 15) || (!turn && from < 48)) {
-						m[cmove++] = move(from, from + i + WEST, CAPTURE);
-					}
+					if ((turn && from > 15) || (!turn && from < 48)) { m[cmove++] = move(from, from + i + WEST, CAPTURE); }
 					else {
+						m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 						m[cmove++] = move(from, from + i + WEST, NPROMOTEC);
 						m[cmove++] = move(from, from + i + WEST, BPROMOTEC);
 						m[cmove++] = move(from, from + i + WEST, RPROMOTEC);
-						m[cmove++] = move(from, from + i + WEST, QPROMOTEC);
 					}
 				}
 			}
 			if (from % WIDTH != 7) {
 				if ((turn && grid[from + i + EAST] < 0) || (!turn && grid[from + i + EAST] > 0)) {
-					if ((turn && from > 15) || (!turn && from < 48)) {
-						m[cmove++] = move(from, from + i + EAST, CAPTURE);
-					}
+					if ((turn && from > 15) || (!turn && from < 48)) { m[cmove++] = move(from, from + i + EAST, CAPTURE); }
 					else {
+						m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 						m[cmove++] = move(from, from + i + EAST, NPROMOTEC);
 						m[cmove++] = move(from, from + i + EAST, BPROMOTEC);
 						m[cmove++] = move(from, from + i + EAST, RPROMOTEC);
-						m[cmove++] = move(from, from + i + EAST, QPROMOTEC);
 					}
 				}
 			}
 			if (!grid[from + i]) {
 				if ((turn && from > 15) || (!turn && from < 48)) {
 					m[cmove++] = move(from, from + i, STANDARD);
-					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) {
-						m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH);
-						return cmove++;
-					}
+					if (((turn && from > 47) || (!turn && from < 16)) && !grid[from + 2 * i]) { m[cmove++] = move(from, from + 2 * i, DOUBLEPUSH); }
 				}
 				else {
+					m[cmove++] = move(from, from + i, QPROMOTE);
 					m[cmove++] = move(from, from + i, NPROMOTE);
 					m[cmove++] = move(from, from + i, BPROMOTE);
 					m[cmove++] = move(from, from + i, RPROMOTE);
-					m[cmove++] = move(from, from + i, QPROMOTE);
-					return cmove++;
 				}
 			}
-			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) {
-				m[cmove++] = move(from, currM.getTo() + i, ENPASSANT);
-			}
+			if (currM.getFlags() == DOUBLEPUSH && ((currM.getTo() == from + EAST && from % WIDTH != 7) || (currM.getTo() == from + WEST && from % WIDTH))) { m[cmove++] = move(from, currM.getTo() + i, ENPASSANT); }
 			return cmove;
 		case KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54) {
-				if (!grid[from + 10]) {
-					m[cmove++] = move(from, from + 10, STANDARD);
-				}
-				else if ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)) {
-					m[cmove++] = move(from, from + 10, CAPTURE);
-				}
+				if (!grid[from + 10]) { m[cmove++] = move(from, from + 10, STANDARD); }
+				else if ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)) { m[cmove++] = move(from, from + 10, CAPTURE); }
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47) {
-				if (!grid[from + 17]) {
-					m[cmove++] = move(from, from + 17, STANDARD);
-				}
-				else if ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0)) {
-					m[cmove++] = move(from, from + 17, CAPTURE);
-				}
+				if (!grid[from + 17]) { m[cmove++] = move(from, from + 17, STANDARD); }
+				else if ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0)) { m[cmove++] = move(from, from + 17, CAPTURE); }
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from > 9) {
-				if (!grid[from - 10]) {
-					m[cmove++] = move(from, from - 10, STANDARD);
-				}
-				else if ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0)) {
-					m[cmove++] = move(from, from - 10, CAPTURE);
-				}
+				if (!grid[from - 10]) { m[cmove++] = move(from, from - 10, STANDARD); }
+				else if ((turn && grid[from - 10] < 0) || (!turn && grid[from - 10] > 0)) { m[cmove++] = move(from, from - 10, CAPTURE); }
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from > 16) {
-				if (!grid[from - 17]) {
-					m[cmove++] = move(from, from - 17, STANDARD);
-				}
-				else if ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0)) {
-					m[cmove++] = move(from, from - 17, CAPTURE);
-				}
+				if (!grid[from - 17]) { m[cmove++] = move(from, from - 17, STANDARD); }
+				else if ((turn && grid[from - 17] < 0) || (!turn && grid[from - 17] > 0)) { m[cmove++] = move(from, from - 17, CAPTURE); }
 			}
 			if ((from + 6) % WIDTH < from % WIDTH && from < 58) {
-				if (!grid[from + 6]) {
-					m[cmove++] = move(from, from + 6, STANDARD);
-				}
-				else if ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0)) {
-					m[cmove++] = move(from, from + 6, CAPTURE);
-				}
+				if (!grid[from + 6]) { m[cmove++] = move(from, from + 6, STANDARD); }
+				else if ((turn && grid[from + 6] < 0) || (!turn && grid[from + 6] > 0)) { m[cmove++] = move(from, from + 6, CAPTURE); }
 			}
 			if ((from + 15) % WIDTH < from % WIDTH && from < 49) {
-				if (!grid[from + 15]) {
-					m[cmove++] = move(from, from + 15, STANDARD);
-				}
-				else if (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0)) {
-					m[cmove++] = move(from, from + 15, CAPTURE);
-				}
+				if (!grid[from + 15]) { m[cmove++] = move(from, from + 15, STANDARD); }
+				else if (turn && (grid[from + 15] < 0) || (!turn && grid[from + 15] > 0)) { m[cmove++] = move(from, from + 15, CAPTURE); }
 			}
 			if ((from - 6) % WIDTH > from % WIDTH && from > 5) {
-				if (!grid[from - 6]) {
-					m[cmove++] = move(from, from - 6, STANDARD);
-				}
-				else if ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0)) {
-					m[cmove++] = move(from, from - 6, CAPTURE);
-				}
+				if (!grid[from - 6]) { m[cmove++] = move(from, from - 6, STANDARD); }
+				else if ((turn && grid[from - 6] < 0) || (!turn && grid[from - 6] > 0)) { m[cmove++] = move(from, from - 6, CAPTURE); }
 			}
 			if ((from - 15) % WIDTH > from % WIDTH && from > 14) {
-				if (!grid[from - 15]) {
-					m[cmove++] = move(from, from - 15, STANDARD);
-				}
-				else if ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0)) {
-					m[cmove++] = move(from, from - 15, CAPTURE);
-				}
+				if (!grid[from - 15]) { m[cmove++] = move(from, from - 15, STANDARD); }
+				else if ((turn && grid[from - 15] < 0) || (!turn && grid[from - 15] > 0)) { m[cmove++] = move(from, from - 15, CAPTURE); }
 			}
 			return cmove;
 		case QUEEN:
 		case ROOK:
 			for (i = from + NORTH; i >= 0; i += NORTH) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + EAST; i % WIDTH; i += EAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			if (abs(grid[from]) != QUEEN) { return cmove; }
 		case BISHOP:
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
-				if (!grid[i]) {
-					m[cmove++] = move(from, i, STANDARD);
-				}
+				if (!grid[i]) { m[cmove++] = move(from, i, STANDARD); }
 				else {
-					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) {
-						m[cmove++] = move(from, i, CAPTURE);
-					}
+					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0)) { m[cmove++] = move(from, i, CAPTURE); }
 					break;
 				}
 			}
@@ -1058,35 +857,37 @@ namespace Chess {
 		bool us = (grid[from] > 0) ? WHITE : BLACK;
 		switch (abs(grid[from])) {
 		case KING:
-			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { ++threatened[us][from + SOUTHEAST]; }
-			if ((from + EAST) % WIDTH > from % WIDTH) { ++threatened[us][from + EAST]; }
-			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { ++threatened[us][from + NORTHWEST]; }
-			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) { ++threatened[us][from + WEST]; }
-			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) { ++threatened[us][from + SOUTHWEST]; }
-			if (from < 56) { ++threatened[us][from + SOUTH]; }
-			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) { ++threatened[us][from + NORTHEAST]; }
-			if (from > 7) { ++threatened[us][from + NORTH]; }
+			if ((from + SOUTHEAST) % WIDTH > from % WIDTH && from < 55) { attackers[us][threatened[us][from + SOUTHEAST]++][from + SOUTHEAST] = from; }
+			if ((from + EAST) % WIDTH > from % WIDTH) { attackers[us][threatened[us][from + EAST]++][from + EAST] = from; }
+			if ((from + NORTHWEST) % WIDTH < from % WIDTH && from > 8) { attackers[us][threatened[us][from + NORTHWEST]++][from + NORTHWEST] = from; }
+			if ((from + WEST) % WIDTH < from % WIDTH && from > 0) { attackers[us][threatened[us][from + WEST]++][from + WEST] = from; }
+			if ((from + SOUTHWEST) % WIDTH < from % WIDTH && from < 57) { attackers[us][threatened[us][from + SOUTHWEST]++][from + SOUTHWEST] = from; }
+			if (from < 56) { attackers[us][threatened[us][from + SOUTH]++][from + SOUTH] = from; }
+			if ((from + NORTHEAST) % WIDTH > from % WIDTH && from > 6) { attackers[us][threatened[us][from + NORTHEAST]++][from + NORTHEAST] = from; }
+			if (from > 7) { attackers[us][threatened[us][from + NORTH]++][from + NORTH] = from; }
 			return;
 		case PAWN:
 			i = (us) ? NORTH : SOUTH;
-			if (from % WIDTH) { ++threatened[us][from + i + WEST]; }
-			if (from % WIDTH != 7) { ++threatened[us][from + i + EAST]; }
+			if (from % WIDTH) { attackers[us][threatened[us][from + i + WEST]++][from + i + WEST] = from; }
+			if (from % WIDTH != 7) { attackers[us][threatened[us][from + i + EAST]++][from + i + EAST] = from; }
 			break;
 		case KNIGHT:
-			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { ++threatened[us][from + 10]; }
-			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { ++threatened[us][from + 17]; }
-			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { ++threatened[us][from - 10]; }
-			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { ++threatened[us][from - 17]; }
-			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { ++threatened[us][from + 6]; }
-			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { ++threatened[us][from + 15]; }
-			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { ++threatened[us][from - 6]; }
-			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { ++threatened[us][from - 15]; }
+			zugswang = false;
+			if ((from + 10) % WIDTH > from % WIDTH && from < 54) { attackers[us][threatened[us][from + 10]++][from + 10] = from; }
+			if ((from + 17) % WIDTH > from % WIDTH && from < 47) { attackers[us][threatened[us][from + 17]++][from + 17] = from; }
+			if ((from - 10) % WIDTH < from % WIDTH && from > 9) { attackers[us][threatened[us][from - 10]++][from - 10] = from; }
+			if ((from - 17) % WIDTH < from % WIDTH && from > 16) { attackers[us][threatened[us][from - 17]++][from - 17] = from; }
+			if ((from + 6) % WIDTH < from % WIDTH && from < 58) { attackers[us][threatened[us][from + 6]++][from + 6] = from; }
+			if ((from + 15) % WIDTH < from % WIDTH && from < 49) { attackers[us][threatened[us][from + 15]++][from + 15] = from; }
+			if ((from - 6) % WIDTH > from % WIDTH && from > 5) { attackers[us][threatened[us][from - 6]++][from - 6] = from; }
+			if ((from - 15) % WIDTH > from % WIDTH && from > 14) { attackers[us][threatened[us][from - 15]++][from - 15] = from; }
 			break;
 		case QUEEN:
 			endgame = false;
 		case ROOK:
+			zugswang = false;
 			for (i = from + NORTH; i >= 0; i += NORTH) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (NSslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1101,7 +902,7 @@ namespace Chess {
 			}
 		failN:
 			for (i = from + SOUTH; i < SPACES; i += SOUTH) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (NSslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1116,7 +917,7 @@ namespace Chess {
 			}
 		failS:
 			for (i = from + EAST; i % WIDTH; i += EAST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (EWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1131,7 +932,7 @@ namespace Chess {
 			}
 		failE:
 			for (i = from + WEST; i % WIDTH != 7 && i >= 0; i += WEST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (EWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1147,8 +948,9 @@ namespace Chess {
 		failW:
 			if (abs(grid[from]) != QUEEN) { break; }
 		case BISHOP:
+			zugswang = false;
 			for (i = from + NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += NORTHEAST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1163,7 +965,7 @@ namespace Chess {
 			}
 		failNE:
 			for (i = from + NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += NORTHWEST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1178,7 +980,7 @@ namespace Chess {
 			}
 		failNW:
 			for (i = from + SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += SOUTHEAST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1193,7 +995,7 @@ namespace Chess {
 			}
 		failSE:
 			for (i = from + SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += SOUTHWEST) {
-				++threatened[us][i];
+				attackers[us][threatened[us][i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						pins[cpins][0] = i;
@@ -1209,6 +1011,5 @@ namespace Chess {
 		failSW:
 			break;
 		}
-		if (threatened[!turn][kpos[turn]] && cpos[threatened[!turn][kpos[turn]] - 1] == NOCHECK) { cpos[threatened[!turn][kpos[turn]] - 1] = from; }
 	}
 }

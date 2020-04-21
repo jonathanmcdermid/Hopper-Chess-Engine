@@ -42,6 +42,12 @@
     <ClInclude Include="..\src\killers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\movelist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\evaluate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\board.cpp">
@@ -57,6 +63,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\zobrist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\movelist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\evaluate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,24 +12,23 @@ namespace Chess {
     class hashtable {
     public:
         hashtable() {
-            for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); }
             master = true;
         }
         void clean() {
-            for (int i = master; i < HASHSIZE; i += 2) { table[i] = hashentry(); }
+            for (int i = master; i < HASHSIZE; i += 2) { table[i].setDepth(0); }
             master = !master;
         }
-        void extractPV(board& b, line* l) {
+        void extractPV(board* b, line* l) {
             move m;
-            int index = 0, depth = getDepth(b.currZ % HASHSIZE);
-            for (int i = 0; i < depth; ++i) {
-                m = getMove(b.currZ % HASHSIZE);
-                if (!b.validateMove(m)) { break; }
-                l->movelink[index] = m;
-                b.movePiece(m);
-                ++index;
+            int index = 0;
+            for (int i = 0; i < MAXDEPTH; ++i) {
+                m = getMove(b->currZ % HASHSIZE);
+                if (!b->validateMove(m)) { break; }
+                l->movelink[index++] = m;
+                b->movePiece(m);
             }
-            for (int i = 0; i < index; ++i) { b.unmovePiece(); }
+            //l->cmove = index;
+            for (int i = 0; i < index; ++i) { b->unmovePiece(); }
         }
         void newEntry(int index, hashentry h) { table[index] = h; }
         U64 getZobrist(int index) const { return table[index].getZobrist(); }

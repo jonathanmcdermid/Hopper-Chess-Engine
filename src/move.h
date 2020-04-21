@@ -14,6 +14,7 @@ namespace Chess {
 			void operator=(move a) { m = a.m; }
 			bool operator==(move a) const { return (m & 0xffff) == (a.m & 0xffff); }
 			bool operator!=(move a) const { return (m & 0xffff) != (a.m & 0xffff); }
+			bool isCap() const { return m != 28672 && ((m >> 12) & 0x0f) & 1 << 2; }
 			int getTo() const { return m & 0x3f; }
 			int getFrom() const { return (m >> 6) & 0x3f; }
 			int getFlags() const { return (m >> 12) & 0x0f; }

@@ -69,14 +69,14 @@ namespace Chess {
 	};
 
 	static int WROOKBIT[SPACES] = {
-		  0,  0,  0,  0,  0,  0,  0,  0,
-		  5, 10, 10, 10, 10, 10, 10,  5,
-		 -5,  0,  0,  0,  0,  0,  0, -5,
-		 -5,  0,  0,  0,  0,  0,  0, -5,
-		 -5,  0,  0,  0,  0,  0,  0, -5,
-		 -5,  0,  0,  0,  0,  0,  0, -5,
-		 -5,  0,  0,  0,  0,  0,  0, -5,
-		  0,  0,  0,  5,  5,  0,  0,  0
+		 0,  0,  0,  0,  0,  0,  0,  0,
+		 5, 10, 10, 10, 10, 10, 10,  5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		-5,  0,  0,  0,  0,  0,  0, -5,
+		 0,  0,  0,  5,  5,  0,  0,  0
 	};
 
 	static int BROOKBIT[SPACES] = {
@@ -156,28 +156,25 @@ namespace Chess {
 		-50,-40,-30,-20,-20,-30,-40,-50
 	};
 
-	int evaluate::negaEval(){
-		int kpos[2] = { 0,0 };
-		bool endgame[4] = { true, true, true, true };
+	int evaluate::negaEval() {//negamax evaluation using material sum of pieces and bonus boards
 		int sum = 0;
 		for (int i = 0; i < SPACES; ++i) {
 			switch (b->grid[i]) {
-			case EMPTY:		break;
-			case PAWN:		sum += WPAWNBIT[i];		break;
-			case -PAWN:		sum -= BPAWNBIT[i];		break;
-			case KNIGHT:	sum += WKNIGHTBIT[i];	endgame[0] = false;	break;
-			case -KNIGHT:	sum -= BKNIGHTBIT[i];	endgame[2] = false;	break;
-			case BISHOP:	sum += WBISHOPBIT[i];	endgame[0] = false;	break;
-			case -BISHOP:	sum -= BBISHOPBIT[i];	endgame[2] = false; break;
-			case ROOK:		sum += WROOKBIT[i];		endgame[0] = false; break;
-			case -ROOK:		sum -= BROOKBIT[i];		endgame[2] = false; break;
-			case QUEEN:		sum += WQUEENBIT[i];	endgame[1] = false;	break;
-			case -QUEEN:	sum -= BQUEENBIT[i];	endgame[3] = false;	break;
-			case KING:		kpos[WHITE] = i;		break;
-			case -KING:		kpos[BLACK] = i;		break;
+			case EMPTY:	break;
+			case PAWN: sum += WPAWNBIT[i]; break;
+			case -PAWN:	sum -= BPAWNBIT[i];	break;
+			case KNIGHT: sum += WKNIGHTBIT[i]; break;
+			case -KNIGHT: sum -= BKNIGHTBIT[i]; break;
+			case BISHOP: sum += WBISHOPBIT[i]; break;
+			case -BISHOP: sum -= BBISHOPBIT[i]; break;
+			case ROOK: sum += WROOKBIT[i]; break;
+			case -ROOK:	sum -= BROOKBIT[i];	break;
+			case QUEEN:	sum += WQUEENBIT[i]; break;
+			case -QUEEN: sum -= BQUEENBIT[i]; break;
+			case KING: sum += (b->endgame) ? WENDKINGBIT[i] : WKINGBIT[i]; break;
+			case -KING:	sum += (b->endgame) ? BENDKINGBIT[i] : BKINGBIT[i]; break;
 			}
 		}
-		sum = ((endgame[0] && endgame[1]) || (endgame[2] && endgame[3])) ? sum + WENDKINGBIT[kpos[WHITE]] - BENDKINGBIT[kpos[BLACK]] : sum + WKINGBIT[kpos[WHITE]] - BKINGBIT[kpos[BLACK]];
-		return (b->turn) ? b->vHist[b->cturn - 1] + sum : -b->vHist[b->cturn - 1] - sum;
+		return (b->turn) ? b->currV + sum : -b->currV - sum;
 	}
 }

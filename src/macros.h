@@ -3,7 +3,7 @@
 #define WHITE		1
 #define NOCHECK		-1
 #define LEAP		0
-#define MAXDEPTH	20
+#define MAXDEPTH	30
 #define HASHSIZE	30000
 #define HASHEXACT	1
 #define HASHBETA	2
@@ -58,11 +58,11 @@
 #define GENHASH		1
 #define GENWINCAPS	2
 #define GENKILLS	3
-#define GENNONCAPS	4
-#define GENLOSECAPS	5
-#define GENEND		6
-//#define STARTFEN	"r3k2r/p2qnppp/1pPb1nb1/4p3/B1P1P3/4BN1P/PP3PP1/R2Q1RK1 b kq - 0 16" Nc6
-//#define STARTFEN	"rr6/2p2ppp/4qk2/pp1n1n2/1b1P2N1/3B3P/PPQ2PP1/R1B3KR b - - 3 23" f6g6
+#define GENWINNONCAPS	4
+#define GENLOSENONCAPS	5
+#define GENLOSECAPS	6
+#define GENEND		7
+#define GENALL		8
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % SOUTHWEST && ((to) - (from)) % NORTHEAST) ? false : true

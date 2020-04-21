@@ -9,11 +9,10 @@ namespace Chess {
 	public:
 		board();
 		void fenSet(std::string fs);
-		bool twofoldRep() const { return zHist[cturn - 4] == currZ; }
-		bool checkMate();
-		bool checkTurn() const { return cpos[0] != NOCHECK; }
+		bool isDraw();
+		bool isCheckMate();
+		bool isCheck() const { return threatened[!turn][kpos[turn]]; }
 		move createMove(int from, int to);
-		void drawBoard();
 		void movePiece(move m);
 		void unmovePiece();
 		bool validateMove(move m);
@@ -23,26 +22,29 @@ namespace Chess {
 		int removeIllegal(move* m, int cmove);
 		void allThreats();
 		void pieceThreats(int from);
-		int pieceMoves(move* m, int from);
 		int pieceCapMoves(move* m, int from);
 		int pieceNonCapMoves(move* m, int from);
+		int pieceMoves(move* m, int from);
 		int grid[SPACES];
 		int threatened[2][SPACES];
+		int attackers[2][WIDTH][SPACES];
 		bool turn;
 		bool endgame;
+		bool zugswang;
 		int currC;
 		int currV;
 		U64 currZ;
 		move currM;
 		int pins[5][2];
 		int cpins;
+		int fmr;
 	private:
-		int cpos[2];
 		int kpos[2];
 		int cturn;
-		U64 zHist[MEMORY];
+		int fHist[MEMORY];
 		int cHist[MEMORY];
 		int vHist[MEMORY];
+		U64 zHist[MEMORY];
 		move mHist[MEMORY];
 		zobrist z;
 	};

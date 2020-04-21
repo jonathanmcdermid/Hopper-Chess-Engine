@@ -3,6 +3,7 @@
 
 #include "hashtable.h"
 #include "killers.h"
+#include "evaluate.h"
 
 namespace Chess {
 	class board;
@@ -19,17 +20,18 @@ namespace Chess {
 	} limits;
 	class bot {
 	public:
-		void makeMove(board& b);
-		int miniMax(board& b, int depth, int ply, int alpha, int beta, line* pline, bool notNull);
-		int perft(board& b, int depth);
-		int qSearch(board& b, int alpha, int beta);
-		bool see(board& b, move m, int threshold);
-		int negaEval(const board& b);
+		bot(board* bd);
+		void makeMove();
+		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool notnull);
+		int perft(int depth);
+		int quiescentSearch(int alpha, int beta);
 		limits lim;
 	private:
+		board* b;
 		killers k;
-		int nodes = 0;
 		hashtable ht;
+		evaluate e = evaluate(b);
+		int nodes = 0;
 	};
 }
 #endif

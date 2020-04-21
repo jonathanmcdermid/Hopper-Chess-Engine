@@ -140,19 +140,23 @@
   <ItemGroup>
     <ClInclude Include="..\src\board.h" />
     <ClInclude Include="..\src\bot.h" />
+    <ClInclude Include="..\src\evaluate.h" />
     <ClInclude Include="..\src\hashentry.h" />
     <ClInclude Include="..\src\hashtable.h" />
     <ClInclude Include="..\src\interface.h" />
     <ClInclude Include="..\src\killers.h" />
     <ClInclude Include="..\src\macros.h" />
     <ClInclude Include="..\src\move.h" />
+    <ClInclude Include="..\src\movelist.h" />
     <ClInclude Include="..\src\zobrist.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\board.cpp" />
     <ClCompile Include="..\src\bot.cpp" />
+    <ClCompile Include="..\src\evaluate.cpp" />
     <ClCompile Include="..\src\interface.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\movelist.cpp" />
     <ClCompile Include="..\src\zobrist.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

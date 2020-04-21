@@ -24,6 +24,34 @@ namespace Chess{
 		interface::botMove();
 	}
 
+	void interface::drawBoard() {//prints board in cmd
+		char letter;
+		std::cout << "\n  a   b   c   d   e   f   g   h";
+		for (int i = 0; i < WIDTH; ++i) {
+			std::cout << "\n---------------------------------\n|";
+			for (int j = 0; j < WIDTH; ++j) {
+				switch (game.grid[i * WIDTH + j]) {
+				case PAWN: { letter = 'P'; break; }
+				case ROOK: { letter = 'R'; break; }
+				case KNIGHT: { letter = 'N'; break; }
+				case BISHOP: { letter = 'B'; break; }
+				case QUEEN: { letter = 'Q'; break; }
+				case KING: { letter = 'K'; break; }
+				case -PAWN: { letter = 'p'; break; }
+				case -ROOK: { letter = 'r'; break; }
+				case -KNIGHT: { letter = 'n'; break; }
+				case -BISHOP: { letter = 'b'; break; }
+				case -QUEEN: { letter = 'q'; break; }
+				case -KING: { letter = 'k'; break; }
+				default: { letter = ' '; }
+				}
+				std::cout << " " << letter << " |";
+			}
+			std::cout << " " << WIDTH - i;
+		}
+		std::cout << "\n---------------------------------\n";
+	}
+
 	void interface::position(std::istringstream& is) {
 		std::string word, fen;
 		is >> word;
@@ -39,7 +67,6 @@ namespace Chess{
 
 	void interface::uci(int argc, char* argv[]) {//uci communication loop, some options non functioning
 		std::string word, cmd;
-		game = board();
 		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
 		for (int i = 1; i < argc; ++i) { cmd += std::string(argv[i]) + " "; }
 		do {
@@ -53,9 +80,9 @@ namespace Chess{
 			else if (word == "setoption")			{ ; }
 			else if (word == "go")					{ go(is); }
 			else if (word == "position")			{ position(is); }
-			else if (word == "ucinewgame")			{ game = board(); }
+			else if (word == "ucinewgame")			{ game.fenSet(STARTFEN); }
 			else if (word == "isready")				{ std::cout << "readyok\n"; }
-			else if (word == "print")				{ game.drawBoard(); }
+			else if (word == "print")				{ drawBoard(); }
 		} while (word != "quit" && argc == 1);
 	}
 
@@ -71,16 +98,16 @@ namespace Chess{
 
 	void interface::local() {//for play without uci
 		std::string input;
-		game.board::drawBoard();
+		drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
 				while (!playerMove(input)) { std::getline(std::cin, input); }
-				game.board::drawBoard();
-				if (game.checkMate()) { break; }
+				drawBoard();
+				if (game.isCheckMate()) { break; }
 				interface::botMove();
-				game.board::drawBoard();
-				if (game.checkMate()) { break; }
+				drawBoard();
+				if (game.isCheckMate()) { break; }
 			}
 		}
 		std::cout << "good game\n";
@@ -119,13 +146,13 @@ namespace Chess{
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			game.fenSet(input);
-			game.board::drawBoard();
+			drawBoard();
 		}
 		return false;
 	}
 
 	void interface::botMove() {//generates internal moves
-		ai.makeMove(game);
+		ai.makeMove();
 		std::string message = { (char)(game.currM.getFrom() % WIDTH + 'a'), (char)(WIDTH - game.currM.getFrom() / WIDTH + '0'),(char)(game.currM.getTo() % WIDTH + 'a'),(char)(WIDTH - game.currM.getTo() / WIDTH + '0') };
 		std::cout << "bestmove " << message;
 		switch (game.currM.getFlags()) {

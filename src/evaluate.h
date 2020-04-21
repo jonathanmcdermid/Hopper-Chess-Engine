@@ -1,11 +1,11 @@
 #ifndef EVALUATE_H
 #define EVALUATE_H
+
 namespace Chess {
 	class board;
-	class evaluate{
+	class evaluate {
 	public:
-		evaluate() { b = nullptr; }
-		evaluate(board* bp) { b = bp; }
+		evaluate(board* bd){ b = bd; }
 		int negaEval();
 	private:
 		board* b;
