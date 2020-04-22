@@ -108,12 +108,40 @@ namespace Chess {
 		return move();
 	}
 
-	void board::movePiece(move m) {//executes a move if legal, return value depicts success (nullmoves considered legal)
-		zHist[cturn] = (mHist[cturn - 1].getFlags() == DOUBLEPUSH) ? zHist[cturn - 1] ^ z.side ^ z.enpassant[mHist[cturn - 1].getTo()] : zHist[cturn - 1] ^ z.side;
+	void board::drawBoard() {//prints board in cmd
+		char letter;
+		std::cout << "\n  a   b   c   d   e   f   g   h";
+		for (int i = 0; i < WIDTH; ++i) {
+			std::cout << "\n---------------------------------\n|";
+			for (int j = 0; j < WIDTH; ++j) {
+				switch (grid[i * WIDTH + j]) {
+				case PAWN: { letter = 'P'; break; }
+				case ROOK: { letter = 'R'; break; }
+				case KNIGHT: { letter = 'N'; break; }
+				case BISHOP: { letter = 'B'; break; }
+				case QUEEN: { letter = 'Q'; break; }
+				case KING: { letter = 'K'; break; }
+				case -PAWN: { letter = 'p'; break; }
+				case -ROOK: { letter = 'r'; break; }
+				case -KNIGHT: { letter = 'n'; break; }
+				case -BISHOP: { letter = 'b'; break; }
+				case -QUEEN: { letter = 'q'; break; }
+				case -KING: { letter = 'k'; break; }
+				default: { letter = ' '; }
+				}
+				std::cout << " " << letter << " |";
+			}
+			std::cout << " " << WIDTH - i;
+		}
+		std::cout << "\n---------------------------------\n";
+	}
+
+	void board::movePiece(move m) {//executes a move if legal
 		cHist[cturn] = cHist[cturn - 1];
 		vHist[cturn] = vHist[cturn - 1];
 		mHist[cturn] = m;
 		fHist[cturn] = (m.getFlags() == STANDARD && abs(grid[m.getFrom()]) != PAWN) ? fHist[cturn - 1] + 1 : 0;
+		zHist[cturn] = (mHist[cturn - 1].getFlags() == DOUBLEPUSH) ? zHist[cturn - 1] ^ z.side ^ z.enpassant[mHist[cturn - 1].getTo()] : zHist[cturn - 1] ^ z.side;
 		switch (m.getFlags()) {
 		case STANDARD:
 			zHist[cturn] = (turn) ? zHist[cturn] ^ z.pieces[grid[m.getFrom()] % 10][WHITE][m.getFrom()] : zHist[cturn] ^ z.pieces[-grid[m.getFrom()] % 10][BLACK][m.getFrom()];
@@ -236,7 +264,7 @@ namespace Chess {
 		}
 		if (cHist[cturn] & 1 << 2) {
 			if (m.getFrom() == 60) {
-				cHist[cturn - 1] &= ~(1 << 2);
+				cHist[cturn] &= ~(1 << 2);
 				if (cHist[cturn] & 1 << 0) { cHist[cturn] &= ~(1 << 0); zHist[cturn] ^= z.castle[WHITE][0]; }
 				if (cHist[cturn] & 1 << 1) { cHist[cturn] &= ~(1 << 1); zHist[cturn] ^= z.castle[WHITE][1]; }
 			}
