@@ -9,7 +9,10 @@ namespace Chess {
 		killers() {
 			for (int i = 0; i < MAXDEPTH; ++i) {
 				primaryindex[i] = 0;
-				for (int j = 0; j < MEMORY; ++j) { s[i][j] = 0; }
+				for (int j = 0; j < MEMORY; ++j) {
+					m[i][j] = move();
+					s[i][j] = 0;
+				}
 			}
 		}
 		move getPrimary(int ply) const{ return m[ply][primaryindex[ply]]; }
@@ -21,7 +24,7 @@ namespace Chess {
 					if (s[ply][primaryindex[ply]] < s[ply][i]) { primaryindex[ply] = i; }
 					return;
 				}
-				else if(!s[ply][i]){
+				else if(m[ply][i] == move()){
 					m[ply][i] = cm;
 					++s[ply][i];
 					return;
@@ -38,11 +41,14 @@ namespace Chess {
 			}
 			for (int i = MAXDEPTH - 2; i < MAXDEPTH; ++i) {
 				primaryindex[i] = 0;
-				for (int j = 0; j < MEMORY; ++j) { s[i][j] = 0; }
+				for (int j = 0; j < MEMORY; ++j) {
+					m[i][j] = move();
+					s[i][j] = 0;
+				}
 			}
 		}
 	private:
-		int primaryindex[MAXDEPTH];
+		int primaryindex[MAXDEPTH] = { 0 };
 		move m[MAXDEPTH][MEMORY];
 		int s[MAXDEPTH][MEMORY];
 		int max = 0;

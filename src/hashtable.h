@@ -22,7 +22,7 @@ namespace Chess {
             move m;
             int index = 0;
             for (int i = 0; i < MAXDEPTH; ++i) {
-                m = getMove(b->currZ % HASHSIZE);
+                m = getMove(b->getCurrZ() % HASHSIZE);
                 if (!b->validateMove(m)) { break; }
                 l->movelink[index++] = m;
                 b->movePiece(m);

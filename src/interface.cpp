@@ -153,9 +153,9 @@ namespace Chess{
 
 	void interface::botMove() {//generates internal moves
 		ai.makeMove();
-		std::string message = { (char)(game.currM.getFrom() % WIDTH + 'a'), (char)(WIDTH - game.currM.getFrom() / WIDTH + '0'),(char)(game.currM.getTo() % WIDTH + 'a'),(char)(WIDTH - game.currM.getTo() / WIDTH + '0') };
+		std::string message = { (char)(game.getCurrM().getFrom() % WIDTH + 'a'), (char)(WIDTH - game.getCurrM().getFrom() / WIDTH + '0'),(char)(game.getCurrM().getTo() % WIDTH + 'a'),(char)(WIDTH - game.getCurrM().getTo() / WIDTH + '0') };
 		std::cout << "bestmove " << message;
-		switch (game.currM.getFlags()) {
+		switch (game.getCurrM().getFlags()) {
 		case NPROMOTE:
 		case NPROMOTEC:
 			std::cout << "n\n";

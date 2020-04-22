@@ -7,11 +7,16 @@
 namespace Chess {
 	class board {
 	public:
-		board();
+		board() { fenSet(STARTFEN); }
 		void fenSet(std::string fs);
 		bool isDraw();
 		bool isCheckMate();
 		bool isCheck() const { return threatened[!turn][kpos[turn]]; }
+		U64 getCurrZ() const { return zHist[cturn - 1]; }
+		int getCurrC() const { return cHist[cturn - 1]; }
+		int getCurrV() const { return vHist[cturn - 1]; }
+		int getCurrF() const { return fHist[cturn - 1]; }
+		move getCurrM() const { return mHist[cturn - 1]; }
 		move createMove(int from, int to);
 		void movePiece(move m);
 		void unmovePiece();
@@ -31,13 +36,8 @@ namespace Chess {
 		bool turn;
 		bool endgame;
 		bool zugswang;
-		int currC;
-		int currV;
-		U64 currZ;
-		move currM;
 		int pins[5][2];
 		int cpins;
-		int fmr;
 	private:
 		int kpos[2];
 		int cturn;

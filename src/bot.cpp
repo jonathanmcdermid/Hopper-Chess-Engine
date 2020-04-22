@@ -47,8 +47,8 @@ namespace Chess {
 
 	int bot::alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool notNull) {//negamax
 		if (!depth) { return quiescentSearch(alpha, beta); }
-		int keyindex = b->currZ % HASHSIZE;
-		if (ht.getZobrist(keyindex) == b->currZ && ht.getDepth(keyindex) >= depth) {
+		int keyindex = b->getCurrZ() % HASHSIZE;
+		if (ht.getZobrist(keyindex) == b->getCurrZ() && ht.getDepth(keyindex) >= depth) {
 			if (ht.getFlags(keyindex) == HASHEXACT || (ht.getFlags(keyindex) == HASHBETA && ht.getEval(keyindex) >= beta) || (ht.getFlags(keyindex) == HASHALPHA && ht.getEval(keyindex) <= alpha)) {
 				pline->movelink[0] = ht.getMove(keyindex);
 				pline->cmove = 1;
@@ -83,10 +83,10 @@ namespace Chess {
 					if (score >= beta) {
 						pline->cmove = 1;
 						if (!ml.getCurrMove().isCap()) { k.cutoff(ml.getCurrMove(), ply); }
-						ht.newEntry(keyindex, hashentry(b->currZ, depth, score, HASHBETA, ml.getCurrMove()));
+						ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, score, HASHBETA, ml.getCurrMove()));
 						return score;
 					}
-					for (int i = 1; i < depth; ++i) { pline->movelink[i] = localline.movelink[i - 1]; }
+					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
 					pline->cmove = localline.cmove + 1;
 					evaltype = HASHEXACT;
 					alpha = score;
@@ -95,7 +95,7 @@ namespace Chess {
 			}
 		}
 		if (ml.noMoves()) { return (b->isCheck()) ? -MATE - depth : -CONTEMPT; }
-		else if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b->currZ, depth, alpha, evaltype, pline->movelink[0])); }
+		else if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, alpha, evaltype, pline->movelink[0])); }
 		return alpha;
 	}
 

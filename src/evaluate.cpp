@@ -175,6 +175,6 @@ namespace Chess {
 			case -KING:	sum += (b->endgame) ? BENDKINGBIT[i] : BKINGBIT[i]; break;
 			}
 		}
-		return (b->turn) ? b->currV + sum : -b->currV - sum;
+		return (b->turn) ? b->getCurrV() + sum : -b->getCurrV() - sum;
 	}
 }

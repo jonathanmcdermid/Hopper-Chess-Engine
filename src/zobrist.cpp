@@ -27,15 +27,15 @@ namespace Chess {
 			if (b->grid[i] > 0) { key ^= pieces[ b->grid[i] % 10][WHITE][i]; }
 			else if (b->grid[i] < 0) { key ^= pieces[-b->grid[i] % 10][BLACK][i]; }
 		}
-		if (b->currC & 1 << 2) {
-			if (b->currC & 1 << 0) { key ^= castle[WHITE][0]; }
-			if (b->currC & 1 << 1) { key ^= castle[WHITE][1]; }
+		if (b->getCurrC() & 1 << 2) {
+			if (b->getCurrC() & 1 << 0) { key ^= castle[WHITE][0]; }
+			if (b->getCurrC() & 1 << 1) { key ^= castle[WHITE][1]; }
 		}
-		if (b->currC & 1 << 4) {
-			if (b->currC & 1 << 3) { key ^= castle[BLACK][0]; }
-			if (b->currC & 1 << 5) { key ^= castle[BLACK][1]; }
+		if (b->getCurrC() & 1 << 4) {
+			if (b->getCurrC() & 1 << 3) { key ^= castle[BLACK][0]; }
+			if (b->getCurrC() & 1 << 5) { key ^= castle[BLACK][1]; }
 		}
-		if (b->currM.getFlags() == DOUBLEPUSH) { key ^= enpassant[b->currM.getTo()]; }
+		if (b->getCurrM().getFlags() == DOUBLEPUSH) { key ^= enpassant[b->getCurrM().getTo()]; }
 		if (b->turn) { key ^= side; }
 		return key;
 	}
