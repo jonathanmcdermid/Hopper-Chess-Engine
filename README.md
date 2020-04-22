@@ -25,10 +25,16 @@ principle variations
 hashing
 transposition tables
 zobrist keys
-null moves
+null moves 
+zugswang detection
 quiescent search
 dynamic aspiration windows
 pinned piece detection
+double check detection
+threatened squares
 killer moves
+perft
+principal variation search
+static exchange evaluation
 ```
-Better UCI compatibility, time management, static exchange evaluation, and history heuristics are at the top of the to do list. Groundwork for history heuristic has been made, but I need to find an efficient method of sorting one array based on the contents of another before it can be implemented.
+Better UCI compatibility and history heuristics are at the top of the to do list. The code commented out in bot.cpp getMove function runs perft. From the tests I've run, the move generation for perft is perfect, but if you find an error please let me know!
