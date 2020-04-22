@@ -11,7 +11,6 @@ namespace Chess {
 		void fenSet(std::string fs);
 		bool isDraw();
 		bool isCheckMate();
-		void drawBoard();
 		bool isCheck() const { return threatened[!turn][kpos[turn]]; }
 		U64 getCurrZ() const { return zHist[cturn - 1]; }
 		int getCurrC() const { return cHist[cturn - 1]; }

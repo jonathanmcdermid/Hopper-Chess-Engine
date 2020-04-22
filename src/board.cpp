@@ -108,34 +108,6 @@ namespace Chess {
 		return move();
 	}
 
-	void board::drawBoard() {//prints board in cmd
-		char letter;
-		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (int i = 0; i < WIDTH; ++i) {
-			std::cout << "\n---------------------------------\n|";
-			for (int j = 0; j < WIDTH; ++j) {
-				switch (grid[i * WIDTH + j]) {
-				case PAWN: { letter = 'P'; break; }
-				case ROOK: { letter = 'R'; break; }
-				case KNIGHT: { letter = 'N'; break; }
-				case BISHOP: { letter = 'B'; break; }
-				case QUEEN: { letter = 'Q'; break; }
-				case KING: { letter = 'K'; break; }
-				case -PAWN: { letter = 'p'; break; }
-				case -ROOK: { letter = 'r'; break; }
-				case -KNIGHT: { letter = 'n'; break; }
-				case -BISHOP: { letter = 'b'; break; }
-				case -QUEEN: { letter = 'q'; break; }
-				case -KING: { letter = 'k'; break; }
-				default: { letter = ' '; }
-				}
-				std::cout << " " << letter << " |";
-			}
-			std::cout << " " << WIDTH - i;
-		}
-		std::cout << "\n---------------------------------\n";
-	}
-
 	void board::movePiece(move m) {//executes a move if legal
 		cHist[cturn] = cHist[cturn - 1];
 		vHist[cturn] = vHist[cturn - 1];
