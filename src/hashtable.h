@@ -11,25 +11,9 @@ namespace Chess {
     }line;
     class hashtable {
     public:
-        hashtable() {
-            master = true;
-        }
-        void clean() {
-            for (int i = master; i < HASHSIZE; i += 2) { table[i].setDepth(0); }
-            master = !master;
-        }
-        void extractPV(board* b, line* l) {
-            move m;
-            int index = 0;
-            for (int i = 0; i < MAXDEPTH; ++i) {
-                m = getMove(b->getCurrZ() % HASHSIZE);
-                if (!b->validateMove(m)) { break; }
-                l->movelink[index++] = m;
-                b->movePiece(m);
-            }
-            //l->cmove = index;
-            for (int i = 0; i < index; ++i) { b->unmovePiece(); }
-        }
+        hashtable();
+        void clean();
+        void extractPV(board* b, line* l);
         void newEntry(int index, hashentry h) { table[index] = h; }
         U64 getZobrist(int index) const { return table[index].getZobrist(); }
         hashentry getEntry(int index) const { return table[index]; }

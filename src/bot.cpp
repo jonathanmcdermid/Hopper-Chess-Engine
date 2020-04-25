@@ -4,7 +4,8 @@
 #include "board.h"
 
 namespace Chess {
-	bot::bot(board* bd) {
+	bot::bot(interface* ifx, board* bd) {
+		fx = ifx;
 		b = bd;
 		e = evaluate(b);
 	}
@@ -15,7 +16,7 @@ namespace Chess {
 		line pv;
 		nodes = 0;
 		//for (int depth = 1; depth < lim.depth; ++depth) {
-		//	int n = perft(b, depth);
+		//	int n = perft(depth);
 		//	auto stop = std::chrono::high_resolution_clock::now();
 		//	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 		//	std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() <<"\n";
@@ -57,8 +58,8 @@ namespace Chess {
 		}
 		line localline;
 		int score;
-		if (notNull && depth > 3 && !b->zugswang && !b->isCheck()) {
-			b->movePiece(move(0, 0, NULLMOVE));
+		if (notNull && depth > 3 && !b->isCheck() && !b->isEndgame()) {
+			b->movePiece(NULLMOVE);
 			score = -alphaBeta(depth / 2 - 2, ply + 1, -beta, -beta + 1, &localline, false);
 			b->unmovePiece();
 			if (score >= beta) { return score; }
@@ -70,8 +71,9 @@ namespace Chess {
 			while (ml.movesLeft()) {
 				b->movePiece(ml.getCurrMove());
 				++nodes;
-				if (b->isDraw()) { score = CONTEMPT; }
-				else if (genstate > GENHASH) {
+				if (b->isDraw() || b->insufficientMaterial()) { score = CONTEMPT; }
+				else
+					if (genstate > GENHASH) {
 					if (depth > 1) { score = -alphaBeta(depth - 2, ply + 1, -alpha - 1, -alpha, &localline, true); }
 					else { score = -alphaBeta(depth - 1, ply + 1, -alpha - 1, -alpha, &localline, true); }
 					if (score > alpha && score < beta) { score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localline, true); }

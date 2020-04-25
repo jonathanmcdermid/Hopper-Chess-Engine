@@ -8,7 +8,7 @@ namespace Chess {
 	class movelist {
 	public:
 		movelist(board* bd, move pv, move hash, move killer);
-		movelist(board* bd) { b = bd; }
+		movelist(board* bd);
 		void moveOrder(int genstate);
 		bool staticExchange(move m, int threshold);
 		bool movesLeft() { return index[state] < limit[state]; }
@@ -20,7 +20,7 @@ namespace Chess {
 		move moves[GENEND][SPACES];
 		int index[GENEND];
 		int limit[GENEND];
-		int state = GENPV;
+		int state;
 	};
 }
 #endif

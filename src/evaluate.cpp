@@ -157,22 +157,49 @@ namespace Chess {
 	};
 
 	int evaluate::negaEval() {//negamax evaluation using material sum of pieces and bonus boards
+		if (b->insufficientMaterial()) { return CONTEMPT; }
 		int sum = 0;
+		bool endgame = b->isEndgame();
 		for (int i = 0; i < SPACES; ++i) {
 			switch (b->grid[i]) {
-			case EMPTY:	break;
-			case PAWN: sum += WPAWNBIT[i]; break;
-			case -PAWN:	sum -= BPAWNBIT[i];	break;
-			case KNIGHT: sum += WKNIGHTBIT[i]; break;
-			case -KNIGHT: sum -= BKNIGHTBIT[i]; break;
-			case BISHOP: sum += WBISHOPBIT[i]; break;
-			case -BISHOP: sum -= BBISHOPBIT[i]; break;
-			case ROOK: sum += WROOKBIT[i]; break;
-			case -ROOK:	sum -= BROOKBIT[i];	break;
-			case QUEEN:	sum += WQUEENBIT[i]; break;
-			case -QUEEN: sum -= BQUEENBIT[i]; break;
-			case KING: sum += (b->endgame) ? WENDKINGBIT[i] : WKINGBIT[i]; break;
-			case -KING:	sum += (b->endgame) ? BENDKINGBIT[i] : BKINGBIT[i]; break;
+			case EMPTY:	
+				break;
+			case PAWN: 
+				sum += WPAWNBIT[i]; 
+				break;
+			case -PAWN:	
+				sum -= BPAWNBIT[i];	
+				break;
+			case KNIGHT: 
+				sum += WKNIGHTBIT[i]; 
+				break;
+			case -KNIGHT: 
+				sum -= BKNIGHTBIT[i]; 
+				break;
+			case BISHOP: 
+				sum += WBISHOPBIT[i]; 
+				break;
+			case -BISHOP: 
+				sum -= BBISHOPBIT[i]; 
+				break;
+			case ROOK: 
+				sum += WROOKBIT[i]; 
+				break;
+			case -ROOK:	
+				sum -= BROOKBIT[i];	
+				break;
+			case QUEEN:	
+				sum += WQUEENBIT[i]; 
+				break;
+			case -QUEEN: 
+				sum -= BQUEENBIT[i]; 
+				break;
+			case KING: 
+				sum += (endgame) ? WENDKINGBIT[i] : WKINGBIT[i]; 
+				break;
+			case -KING:	
+				sum += (endgame) ? BENDKINGBIT[i] : BKINGBIT[i]; 
+				break;
 			}
 		}
 		return (b->turn) ? b->getCurrV() + sum : -b->getCurrV() - sum;

@@ -3,7 +3,6 @@
 #include "zobrist.h"
 
 namespace Chess {
-
 	zobrist::zobrist() {//generates pseudo random template
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
@@ -37,6 +36,15 @@ namespace Chess {
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH) { key ^= enpassant[b->getCurrM().getTo()]; }
 		if (b->turn) { key ^= side; }
+		return key;
+	}
+
+	U64 zobrist::newPawnKey(board* b) {
+		U64 key = 0;
+		for (int i = 0; i < SPACES; i++) {
+			if (b->grid[i] == PAWN) { key ^= pieces[PINDEX][WHITE][i]; }
+			else if (b->grid[i] == -PAWN) { key ^= pieces[PINDEX][BLACK][i]; }
+		}
 		return key;
 	}
 }

@@ -4,10 +4,27 @@
 namespace Chess {
 	movelist::movelist(board* bd, move pv, move hash, move killer) {
 		b = bd;
+		for (int i = 0; i < GENEND; ++i) {
+			index[i] = 0;
+			limit[i] = 0;
+			for (int j = 0; j < SPACES; ++j) { moves[i][j] = NULLMOVE; }
+		}
+		state = GENPV;
 		moves[GENPV][0] = pv;
 		if (pv != hash) { moves[GENHASH][0] = hash; }
 		if (pv != killer && hash != killer) { moves[GENKILLS][0] = killer; }
 	}
+
+	movelist::movelist(board* bd) { 
+		b = bd;
+		for (int i = 0; i < GENEND; ++i) {
+			index[i] = 0;
+			limit[i] = 0;
+			for (int j = 0; j < SPACES; ++j) { moves[i][j] = NULLMOVE; }
+		}
+		state = GENPV;
+	}
+
 
 	bool movelist::noMoves() { 
 		for (int i = 0; i < GENEND; ++i) {
@@ -26,6 +43,7 @@ namespace Chess {
 			if (b->validateMove(moves[genstate][0])) { ++limit[genstate]; }
 			return;
 		case GENWINCAPS:
+			for (int j = 0; j < SPACES; ++j) { moves[genstate][j] = NULLMOVE; }
 			limit[GENWINCAPS] = b->genAllCaps(moves[GENWINCAPS]);
 			if (limit[GENPV] && moves[GENPV][0].isCap()) {
 				for (i = 0; i < limit[GENWINCAPS]; ++i) {

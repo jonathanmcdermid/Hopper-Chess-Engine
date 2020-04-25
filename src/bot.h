@@ -7,6 +7,7 @@
 
 namespace Chess {
 	class board;
+	class interface;
 	typedef struct limits {
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 100000, 100000 };
@@ -20,7 +21,7 @@ namespace Chess {
 	} limits;
 	class bot {
 	public:
-		bot(board* bd);
+		bot(interface* ifx, board* bd);
 		void makeMove();
 		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool notnull);
 		int perft(int depth);
@@ -28,6 +29,7 @@ namespace Chess {
 		limits lim;
 	private:
 		board* b;
+		interface* fx;
 		killers k;
 		hashtable ht;
 		evaluate e = evaluate(b);

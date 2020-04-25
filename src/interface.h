@@ -19,8 +19,8 @@ namespace Chess {
 		void promote();
 		void checkBoth();
 	private:
-		board game;
-		bot ai = bot(&game);
+		board game = board(this);
+		bot ai = bot(this, &game);
 		move m;
 	};
 }

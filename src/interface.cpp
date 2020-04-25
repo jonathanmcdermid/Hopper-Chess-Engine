@@ -3,6 +3,15 @@
 #include "interface.h"
 
 namespace Chess{
+	interface::interface(int argc, char* argv[]) {//awaits input from user or uci
+		std::string input;
+		while (1) {
+			std::getline(std::cin, input);
+			if (input == "uci") { uci(argc, argv); }
+			if (input == "local") { local(); }
+			if (input == "quit") { exit(1); }
+		}
+	}
 
 	void interface::go(std::istringstream& is) {//most options are not implemented yet
 		std::string word;
@@ -86,16 +95,6 @@ namespace Chess{
 		} while (word != "quit" && argc == 1);
 	}
 
-	interface::interface(int argc, char* argv[]){//awaits input from user or uci
-		std::string input;
-		while (1) {
-			std::getline(std::cin, input);
-			if (input == "uci")		{ uci(argc, argv); }
-			if (input == "local")	{ local(); }
-			if (input == "quit")	{ exit(1); }
-		}
-	}
-
 	void interface::local() {//for play without uci
 		std::string input;
 		drawBoard();
@@ -119,7 +118,7 @@ namespace Chess{
 			int to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				m = game.createMove(from, to);
-				if (m.getFlags() != FAIL && m.getFlags() < PROMOTE) {
+				if (m.getFlags() < NULLFLAGS) {
 					game.movePiece(m);
 					return true;
 				}

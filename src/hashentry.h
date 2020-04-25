@@ -6,27 +6,9 @@
 namespace Chess {
     class hashentry {
     public:
-        hashentry() {
-            zob = 0;
-            depth = 0;
-            eval = 0;
-            flags = 0;
-            m = move();
-        }
-        hashentry(U64 z, int d, int e, int f, move b) {
-            zob = z;
-            depth = d;
-            eval = e;
-            flags = f;
-            m = b;
-        }
-        void operator=(hashentry a) { 
-            zob = a.zob; 
-            depth = a.depth;
-            eval = a.eval;
-            flags = a.flags;
-            m = a.m;
-        }
+        hashentry() { zob = 0; depth = 0; eval = 0; flags = 0; m = NULLMOVE; }
+        hashentry(U64 z, int d, int e, int f, move b) { zob = z; depth = d; eval = e; flags = f; m = b; }
+        void operator=(hashentry a) { zob = a.zob; depth = a.depth; eval = a.eval; flags = a.flags; m = a.m; }
         U64 getZobrist() const { return zob; }
         int getDepth() const { return depth; }
         int getEval() const { return eval; }

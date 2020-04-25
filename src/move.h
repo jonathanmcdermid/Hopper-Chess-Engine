@@ -10,7 +10,7 @@ namespace Chess {
 		public:
 			move(int from, int to, int flags) { m = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f); }
 			move(int n) { m = n; }
-			move() { m = 28672; }
+			move() { m = NULLMOVE; }
 			void operator=(move a) { m = a.m; }
 			bool operator==(move a) const { return (m & 0xffff) == (a.m & 0xffff); }
 			bool operator!=(move a) const { return (m & 0xffff) != (a.m & 0xffff); }

@@ -3,8 +3,8 @@
 #define WHITE		1
 #define NOCHECK		-1
 #define LEAP		0
-#define MAXDEPTH	30
-#define HASHSIZE	30000
+#define MAXDEPTH	64
+#define HASHSIZE	20000
 #define HASHEXACT	1
 #define HASHBETA	2
 #define HASHALPHA	3
@@ -41,8 +41,7 @@
 #define QCASTLE		3
 #define CAPTURE		4
 #define ENPASSANT	5
-#define NULLMOVE	6
-#define FAIL		7	
+#define NULLFLAGS	7	
 #define PROMOTE		8
 #define NPROMOTE	8
 #define BPROMOTE	9
@@ -53,7 +52,8 @@
 #define BPROMOTEC	13
 #define RPROMOTEC	14
 #define QPROMOTEC	15
-#define MEMORY		255
+#define NULLMOVE	28672
+#define MEMORY		512
 #define GENPV		0
 #define GENHASH		1
 #define GENWINCAPS	2
@@ -62,7 +62,6 @@
 #define GENLOSENONCAPS	5
 #define GENLOSECAPS	6
 #define GENEND		7
-#define GENALL		8
 #define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % SOUTHWEST && ((to) - (from)) % NORTHEAST) ? false : true
