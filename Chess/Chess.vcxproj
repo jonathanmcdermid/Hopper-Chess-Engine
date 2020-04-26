@@ -155,6 +155,7 @@
     <ClInclude Include="..\src\bot.h" />
     <ClInclude Include="..\src\evaluate.h" />
     <ClInclude Include="..\src\hashentry.h" />
+    <ClInclude Include="..\src\hashtable.h" />
     <ClInclude Include="..\src\interface.h" />
     <ClInclude Include="..\src\killers.h" />
     <ClInclude Include="..\src\macros.h" />

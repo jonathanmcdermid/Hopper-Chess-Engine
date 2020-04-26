@@ -15,6 +15,7 @@ namespace Chess {
 			vHist[i] = 0;
 			mHist[i] = NULLMOVE;
 			zHist[i] = 0;
+			pHist[i] = 0;
 		}
 		for (int i = PINDEX; i < KINDEX; ++i) {
 			roles[BLACK][i] = 0;
@@ -105,6 +106,7 @@ namespace Chess {
 		vHist[cturn - 1] = 0;
 		for (int i = 0; i < SPACES; ++i) { vHist[cturn - 1] += grid[i]; }
 		zHist[cturn - 1] = z.newKey(this);
+		pHist[cturn - 1] = z.newPawnKey(this);
 		allThreats();
 	}
 
@@ -173,6 +175,7 @@ namespace Chess {
 		mHist[cturn] = m;
 		fHist[cturn] = (m.getFlags() == STANDARD && abs(grid[m.getFrom()]) != PAWN) ? fHist[cturn - 1] + 1 : 0;
 		zHist[cturn] = (mHist[cturn - 1].getFlags() == DOUBLEPUSH) ? zHist[cturn - 1] ^ z.side ^ z.enpassant[mHist[cturn - 1].getTo()] : zHist[cturn - 1] ^ z.side;
+		pHist[cturn] = pHist[cturn - 1];
 		switch (m.getFlags()) {
 		case STANDARD:
 			zHist[cturn] ^= z.pieces[abs(grid[m.getFrom()]) % 10][turn][m.getFrom()];
@@ -180,6 +183,10 @@ namespace Chess {
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
 			if (abs(grid[m.getTo()]) == KING) { kpos[turn] = m.getTo(); }
+			else if (abs(grid[m.getTo()]) == PAWN) { 
+				pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()]; 
+				pHist[cturn] ^= z.pieces[PINDEX][turn][m.getTo()];
+			}
 			break;
 		case DOUBLEPUSH:
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
@@ -187,6 +194,8 @@ namespace Chess {
 			zHist[cturn] ^= z.enpassant[m.getTo()];
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getTo()];
 			break;
 		case KCASTLE:
 			zHist[cturn] ^= z.pieces[KINDEX][turn][m.getFrom()];
@@ -219,20 +228,29 @@ namespace Chess {
 			grid[m.getTo()] = grid[m.getFrom()];
 			(turn) ? grid[m.getTo() + SOUTH] = EMPTY : grid[m.getTo() + NORTH] = EMPTY;
 			grid[m.getFrom()] = EMPTY;
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getTo()];
+			pHist[cturn] ^= (turn) ? z.pieces[PINDEX][BLACK][m.getTo() + SOUTH] : z.pieces[PINDEX][WHITE][m.getTo() + NORTH];
 			break;
 		case CAPTURE:
 			--roles[!turn][abs(grid[m.getTo()]) % 10];
+			if(abs(grid[m.getTo()])==PAWN){ pHist[cturn] ^= z.pieces[PINDEX][!turn][m.getTo()]; }
 			vHist[cturn] -= grid[m.getTo()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getFrom()]) % 10][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getFrom()]) % 10][turn][m.getTo()];
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
-			if (abs(grid[m.getTo()]) == KING) { kpos[turn] = m.getTo(); }
+			if (abs(grid[m.getTo()]) == PAWN) {
+				pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
+				pHist[cturn] ^= z.pieces[PINDEX][turn][m.getTo()];
+			}
+			else if (abs(grid[m.getTo()]) == KING) { kpos[turn] = m.getTo(); }
 			break;
 		case NPROMOTE:
 			--roles[turn][PINDEX];
 			++roles[turn][NINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + KNIGHT : PAWN - KNIGHT;
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[NINDEX][turn][m.getTo()];
@@ -242,6 +260,7 @@ namespace Chess {
 		case BPROMOTE:
 			--roles[turn][PINDEX];
 			++roles[turn][BINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + BISHOP : PAWN - BISHOP;
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[BINDEX][turn][m.getTo()];
@@ -251,6 +270,7 @@ namespace Chess {
 		case RPROMOTE:
 			--roles[turn][PINDEX];
 			++roles[turn][RINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + ROOK : PAWN - ROOK;
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[RINDEX][turn][m.getTo()];
@@ -260,6 +280,7 @@ namespace Chess {
 		case QPROMOTE:
 			--roles[turn][PINDEX];
 			++roles[turn][QINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + QUEEN : PAWN - QUEEN;
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[QINDEX][turn][m.getTo()];
@@ -270,6 +291,7 @@ namespace Chess {
 			--roles[!turn][abs(grid[m.getTo()]) % 10];
 			--roles[turn][PINDEX];
 			++roles[turn][NINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + KNIGHT - grid[m.getTo()] : PAWN - KNIGHT - grid[m.getTo()];
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
@@ -281,6 +303,7 @@ namespace Chess {
 			--roles[!turn][abs(grid[m.getTo()]) % 10];
 			--roles[turn][PINDEX];
 			++roles[turn][BINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + BISHOP - grid[m.getTo()] : PAWN - BISHOP - grid[m.getTo()];
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
@@ -292,6 +315,7 @@ namespace Chess {
 			--roles[!turn][abs(grid[m.getTo()]) % 10];
 			--roles[turn][PINDEX];
 			++roles[turn][RINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + ROOK - grid[m.getTo()] : PAWN - ROOK - grid[m.getTo()];
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];
@@ -303,6 +327,7 @@ namespace Chess {
 			--roles[!turn][abs(grid[m.getTo()]) % 10];
 			--roles[turn][PINDEX];
 			++roles[turn][QINDEX];
+			pHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			vHist[cturn] += (turn) ? -PAWN + QUEEN - grid[m.getTo()] : +PAWN - QUEEN - grid[m.getTo()];
 			zHist[cturn] ^= z.pieces[PINDEX][turn][m.getFrom()];
 			zHist[cturn] ^= z.pieces[abs(grid[m.getTo()]) % 10][!turn][m.getTo()];

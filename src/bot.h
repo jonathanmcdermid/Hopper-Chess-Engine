@@ -2,6 +2,7 @@
 #define BOT_H
 
 #include "hashtable.h"
+#include "pawnhash.h"
 #include "killers.h"
 #include "evaluate.h"
 
@@ -32,6 +33,7 @@ namespace Chess {
 		interface* fx;
 		killers k;
 		hashtable ht;
+		pawnhash ph;
 		evaluate e = evaluate(b);
 		int nodes = 0;
 	};

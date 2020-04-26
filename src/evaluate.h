@@ -7,6 +7,7 @@ namespace Chess {
 	public:
 		evaluate(board* bd){ b = bd; }
 		int negaEval();
+		int pawnEval();
 	private:
 		board* b;
 	};

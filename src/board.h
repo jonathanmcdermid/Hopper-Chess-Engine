@@ -19,6 +19,7 @@ namespace Chess {
 		int getCurrV() const { return vHist[cturn - 1]; }
 		int getCurrF() const { return fHist[cturn - 1]; }
 		U64 getCurrZ() const { return zHist[cturn - 1]; }
+		U64 getCurrP() const { return pHist[cturn - 1]; }
 		move getCurrM() const { return mHist[cturn - 1]; }
 		void movePiece(move m);
 		void unmovePiece();
@@ -40,15 +41,16 @@ namespace Chess {
 		int pins[5][2];
 		int cpins;
 		int kpos[2];
+		interface* fx;
 	private:
 		int roles[2][5];
-		interface* fx;
 		zobrist z;
 		int cturn;
 		int fHist[MEMORY];
 		int cHist[MEMORY];
 		int vHist[MEMORY];
 		U64 zHist[MEMORY];
+		U64 pHist[MEMORY];
 		move mHist[MEMORY];
 	};
 }
