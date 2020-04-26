@@ -236,7 +236,7 @@ namespace Chess {
 				switch (file) {
 				case 0:
 					if (!cfile[WHITE][file + 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file + 1]) { sum += PASSED; }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file + 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); }
 					for (helper = 0; helper < cfile[WHITE][file + 1]; ++helper) {
 						if (abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper]) < 2) {
 							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
@@ -246,10 +246,10 @@ namespace Chess {
 					break;
 				case 7:
 					if (!cfile[WHITE][file - 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1]) { sum += PASSED; }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][helper]) * (WIDTH - rank[WHITE][file][helper]); }
 				default:
 					if (!cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { sum += PASSED; }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); }
 					for (helper = 0; helper < cfile[WHITE][file + 1]; ++helper) {
 						if (abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper]) < 2) {
 							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
@@ -269,7 +269,7 @@ namespace Chess {
 				switch (file) {
 				case 0:
 					if (!cfile[BLACK][file + 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file + 1]) { sum -= PASSED; }
+					if (!cfile[WHITE][file] && !cfile[WHITE][file + 1]) { sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; }
 					for (helper = 0; helper < cfile[BLACK][file + 1]; ++helper) {
 						if (abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper]) < 2) {
 							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
@@ -279,11 +279,11 @@ namespace Chess {
 					break;
 				case 7:
 					if (!cfile[BLACK][file - 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1]) { sum -= PASSED; }
+					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1]) { sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; }
 					break;
 				default:
 					if (!cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) { sum -= PASSED; }
+					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) {sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index];}
 					for (helper = 0; helper < cfile[BLACK][file + 1]; ++helper) {
 						if (abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper]) < 2) {
 							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }

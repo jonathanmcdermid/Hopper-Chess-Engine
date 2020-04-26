@@ -86,7 +86,6 @@ namespace Chess {
 						pline->cmove = 1;
 						if (!ml.getCurrMove().isCap()) { k.cutoff(ml.getCurrMove(), ply); }
 						ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, score, HASHBETA, ml.getCurrMove()));
-						ph.newEntry(b->getCurrP() % HASHSIZE, e.pawnEval());
 						return score;
 					}
 					for (int j = 1; j < depth; ++j) { pline->movelink[j] = localline.movelink[j - 1]; }
@@ -100,7 +99,6 @@ namespace Chess {
 		if (ml.noMoves()) { return (b->isCheck()) ? -MATE - depth : -CONTEMPT; }
 		else if (ht.getDepth(keyindex) < depth) { 
 			ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, alpha, evaltype, pline->movelink[0])); 
-			ph.newEntry(b->getCurrP() % HASHSIZE, e.pawnEval());
 		}
 		return alpha;
 	}
@@ -119,7 +117,9 @@ namespace Chess {
 	}
 
 	int bot::quiescentSearch(int alpha, int beta) {//quiescent search
-		int score = (b->turn) ? e.negaEval() + ph.getEntry(b->getCurrP() % HASHSIZE) : e.negaEval() - ph.getEntry(b->getCurrP() % HASHSIZE);
+		int score = e.negaEval();
+		if (ph.getEntry(b->getCurrP() % HASHSIZE) == b->getCurrP()) {score += (b->turn)? ph.getEntry(b->getCurrP() % HASHSIZE): -ph.getEntry(b->getCurrP() % HASHSIZE);}
+		else { ph.newEntry(b->getCurrP() % HASHSIZE, e.pawnEval()); }
 		if (score >= beta) { return score; }
 		if (score > alpha) { alpha = score; }
 		movelist ml = movelist(b);

@@ -39,11 +39,11 @@ namespace Chess {
 		int attackers[2][WIDTH][SPACES];
 		bool turn;
 		int pins[5][2];
+		int roles[2][5];
 		int cpins;
 		int kpos[2];
 		interface* fx;
 	private:
-		int roles[2][5];
 		zobrist z;
 		int cturn;
 		int fHist[MEMORY];

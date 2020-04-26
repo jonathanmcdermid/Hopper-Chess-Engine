@@ -89,3 +89,5 @@
 #define CONNECTED	2
 #define BACKWARD	0
 #define PHALANX		10
+
+#define BISHOPPAIR	100
