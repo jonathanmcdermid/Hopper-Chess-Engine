@@ -22,8 +22,8 @@ mobility evaluation
 alpha-beta pruning
 iterative deepening 
 principle variations
-hashing
 transposition tables
+pawn hash table
 zobrist keys
 null moves 
 zugswang detection
