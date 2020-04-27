@@ -203,6 +203,8 @@ namespace Chess {
 				break;
 			}
 		}
+		if (b->roles[WHITE][BINDEX] > 1) { sum += BISHOPPAIR; }
+		if (b->roles[BLACK][BINDEX] > 1) { sum -= BISHOPPAIR; }
 		return (b->turn) ? b->getCurrV() + sum : -b->getCurrV() - sum;
 	}
 

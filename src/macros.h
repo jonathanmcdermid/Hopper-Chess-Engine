@@ -90,4 +90,4 @@
 #define BACKWARD	0
 #define PHALANX		10
 
-#define BISHOPPAIR	100
+#define BISHOPPAIR	15
