@@ -140,8 +140,12 @@ namespace Chess {
 
 	bool board::isDraw() {
 		if (fHist[cturn - 1] >= 100) { return true; }
+		bool once = false;
 		for (int i = 4; i < fHist[cturn - 1]; i += 4) {
-			if (zHist[cturn - i - 1] == zHist[cturn - 1]) { return true; }
+			if (zHist[cturn - i - 1] == zHist[cturn - 1]) { 
+				if (once) { return true; }
+				else { once = true; }
+			}
 		}
 		return false;
 	}

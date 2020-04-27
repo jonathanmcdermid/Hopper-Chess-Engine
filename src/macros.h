@@ -82,12 +82,16 @@
 #define GENLOSECAPS		6
 #define GENEND			7
 
-#define PASSED		5
-#define ISOLATED	-20
-#define DOUBLED		-30
-#define TRIPLED		-100
-#define CONNECTED	2
-#define BACKWARD	0
-#define PHALANX		10
+#define PASSED			5
+#define ROOKONPASSED	25
+#define ISOLATED		-20
+#define DOUBLED			-30
+#define TRIPLED			-100
+#define CONNECTED		2
+#define BACKWARD		0
+#define PHALANX			10
 
-#define BISHOPPAIR	15
+#define BISHOPPAIR			15
+#define ROOKOPENFILE		50
+#define ROOKHALFOPENFILE	30
+#define SPOILEDCASTLE		-20

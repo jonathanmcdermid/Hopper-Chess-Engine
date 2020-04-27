@@ -160,46 +160,68 @@ namespace Chess {
 	int evaluate::negaEval() {//negamax evaluation using material sum of pieces and bonus boards
 		if (b->insufficientMaterial()) { return CONTEMPT; }
 		int sum = 0;
+		int cfile[2][WIDTH];
+		for (int i = 0; i < 2; ++i) {
+			for (int j = 0; j < WIDTH; ++j) {
+				cfile[i][j] = 0;
+			}
+		}
+		for (int i = 0; i < SPACES; ++i) {
+			if (b->grid[i] == PAWN) {
+				cfile[WHITE][i % WIDTH]++;
+			}
+			else if (b->grid[i] == -PAWN) {
+				cfile[BLACK][i % WIDTH]++;
+			}
+		}
 		bool endgame = b->isEndgame();
 		for (int i = 0; i < SPACES; ++i) {
 			switch (b->grid[i]) {
-			case EMPTY:	
+			case EMPTY:
 				break;
-			case PAWN: 
-				sum += WPAWNBIT[i]; 
+			case PAWN:
+				sum += WPAWNBIT[i];
 				break;
-			case -PAWN:	
-				sum -= BPAWNBIT[i];	
+			case -PAWN:
+				sum -= BPAWNBIT[i];
 				break;
-			case KNIGHT: 
-				sum += WKNIGHTBIT[i]; 
+			case KNIGHT:
+				sum += WKNIGHTBIT[i];
 				break;
-			case -KNIGHT: 
-				sum -= BKNIGHTBIT[i]; 
+			case -KNIGHT:
+				sum -= BKNIGHTBIT[i];
 				break;
-			case BISHOP: 
-				sum += WBISHOPBIT[i]; 
+			case BISHOP:
+				sum += WBISHOPBIT[i];
 				break;
-			case -BISHOP: 
-				sum -= BBISHOPBIT[i]; 
+			case -BISHOP:
+				sum -= BBISHOPBIT[i];
 				break;
-			case ROOK: 
-				sum += WROOKBIT[i]; 
+			case ROOK:
+				sum += WROOKBIT[i];
+				if (!cfile[WHITE][i % WIDTH] || !cfile[BLACK][i % WIDTH]) {
+					if (!cfile[WHITE][i % WIDTH] && !cfile[BLACK][i % WIDTH]) { sum += ROOKOPENFILE; }
+					else { sum += ROOKHALFOPENFILE; }
+				}
 				break;
-			case -ROOK:	
-				sum -= BROOKBIT[i];	
+			case -ROOK:
+				sum -= BROOKBIT[i];
+				if (!cfile[WHITE][i % WIDTH] || !cfile[BLACK][i % WIDTH]) {
+					if (!cfile[WHITE][i % WIDTH] && !cfile[BLACK][i % WIDTH]) { sum -= ROOKOPENFILE; }
+					else { sum -= ROOKHALFOPENFILE; }
+				}
 				break;
-			case QUEEN:	
-				sum += WQUEENBIT[i]; 
+			case QUEEN:
+				sum += WQUEENBIT[i];
 				break;
-			case -QUEEN: 
-				sum -= BQUEENBIT[i]; 
+			case -QUEEN:
+				sum -= BQUEENBIT[i];
 				break;
-			case KING: 
-				sum += (endgame) ? WENDKINGBIT[i] : WKINGBIT[i]; 
+			case KING:
+				sum += (endgame) ? WENDKINGBIT[i] : WKINGBIT[i];
 				break;
-			case -KING:	
-				sum += (endgame) ? BENDKINGBIT[i] : BKINGBIT[i]; 
+			case -KING:
+				sum += (endgame) ? BENDKINGBIT[i] : BKINGBIT[i];
 				break;
 			}
 		}
@@ -222,43 +244,57 @@ namespace Chess {
 			}
 		}
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->grid[i] == PAWN) { 
-				rank[WHITE][i % WIDTH][cfile[WHITE][i % WIDTH]++] = i / WIDTH;
-			}
-			else if(b->grid[i] == -PAWN) { 
-				rank[BLACK][i % WIDTH][cfile[BLACK][i % WIDTH]++] = i / WIDTH; 
-			}
+			if (b->grid[i] == PAWN) { rank[WHITE][i % WIDTH][cfile[WHITE][i % WIDTH]++] = i / WIDTH; }
+			else if (b->grid[i] == -PAWN) { rank[BLACK][i % WIDTH][cfile[BLACK][i % WIDTH]++] = i / WIDTH; }
 		}
 		for (int file = 0; file < WIDTH; ++file) {
 			if (cfile[WHITE][file] > 1) {
 				if (cfile[WHITE][file] == 2) { sum += DOUBLED; }
-				else { TRIPLED; }
+				else { sum += TRIPLED; }
 			}
 			for (int index = 0; index < cfile[WHITE][file]; ++index) {
 				switch (file) {
 				case 0:
 					if (!cfile[WHITE][file + 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file + 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file + 1]) { 
+						sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); 
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
 					for (helper = 0; helper < cfile[WHITE][file + 1]; ++helper) {
 						if (abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper]) < 2) {
-							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
+							//if (!abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper])) { sum += PHALANX; }
 							sum += CONNECTED;
 						}
 					}
 					break;
 				case 7:
 					if (!cfile[WHITE][file - 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][helper]) * (WIDTH - rank[WHITE][file][helper]); }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1]) { 
+						sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); 
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
+					break;
 				default:
 					if (!cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) { sum += ISOLATED * cfile[WHITE][file]; }
-					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]); }
+					if (!cfile[BLACK][file] && !cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { 
+						sum += PASSED * (WIDTH - rank[WHITE][file][index]) * (WIDTH - rank[WHITE][file][index]);
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
 					for (helper = 0; helper < cfile[WHITE][file + 1]; ++helper) {
 						if (abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper]) < 2) {
-							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
+							//if (!abs(rank[WHITE][file][index] - rank[WHITE][file + 1][helper])) { sum += PHALANX; }
 							sum += CONNECTED;
 						}
 					}
-					break;
 				}
 			}
 		}
@@ -271,28 +307,45 @@ namespace Chess {
 				switch (file) {
 				case 0:
 					if (!cfile[BLACK][file + 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file + 1]) { sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; }
+					if (!cfile[WHITE][file] && !cfile[WHITE][file + 1]) { 
+						sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; 
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
 					for (helper = 0; helper < cfile[BLACK][file + 1]; ++helper) {
 						if (abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper]) < 2) {
-							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
+							//if (!abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper])) { sum -= PHALANX; }
 							sum -= CONNECTED;
 						}
 					}
 					break;
 				case 7:
 					if (!cfile[BLACK][file - 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1]) { sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; }
+					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1]) { 
+						sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; 
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
 					break;
 				default:
 					if (!cfile[BLACK][file - 1] && !cfile[BLACK][file + 1]) { sum -= ISOLATED * cfile[BLACK][file]; }
-					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) {sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index];}
+					if (!cfile[WHITE][file] && !cfile[WHITE][file - 1] && !cfile[WHITE][file + 1]) { 
+						sum -= PASSED * rank[BLACK][file][index] * rank[BLACK][file][index]; 
+						//for (helper = file; helper < SPACES; helper += WIDTH) {
+						//	if (b->grid[helper] == ROOK) { sum += ROOKONPASSED; }
+						//	else if (b->grid[helper] == -ROOK) { sum -= ROOKONPASSED; }
+						//}
+					}
 					for (helper = 0; helper < cfile[BLACK][file + 1]; ++helper) {
 						if (abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper]) < 2) {
-							//if (!abs(rank[i][j][k] - rank[i][j + 1][helper])) { sum += (i) ? PHALANX : -PHALANX; }
+							//if (!abs(rank[BLACK][file][index] - rank[BLACK][file + 1][helper])) { sum -= PHALANX; }
 							sum -= CONNECTED;
 						}
 					}
-					break;
 				}
 			}
 		}
