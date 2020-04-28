@@ -87,8 +87,8 @@
 #define ISOLATED		-20
 #define DOUBLED			-30
 #define TRIPLED			-100
-#define CONNECTED		2
-#define BACKWARD		0
+#define CONNECTED		10
+#define BACKWARD		-50
 #define PHALANX			10
 
 #define BISHOPPAIR			15
