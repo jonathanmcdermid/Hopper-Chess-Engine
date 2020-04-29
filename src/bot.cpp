@@ -97,9 +97,7 @@ namespace Chess {
 			}
 		}
 		if (ml.noMoves()) { return (b->isCheck()) ? -MATE - depth : -CONTEMPT; }
-		else if (ht.getDepth(keyindex) < depth) { 
-			ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, alpha, evaltype, pline->movelink[0])); 
-		}
+		else if (ht.getDepth(keyindex) < depth) { ht.newEntry(keyindex, hashentry(b->getCurrZ(), depth, alpha, evaltype, pline->movelink[0])); }
 		return alpha;
 	}
 

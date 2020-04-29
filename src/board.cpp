@@ -22,9 +22,7 @@ namespace Chess {
 			roles[WHITE][i] = 0;
 		}
 		for (int i = 0; i < 2; ++i) {
-			for (int j = 0; j < 5; ++j) {
-				pins[i][j] = 0;
-			}
+			for (int j = 0; j < 5; ++j) { pins[i][j] = 0; }
 		}
 		int index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
