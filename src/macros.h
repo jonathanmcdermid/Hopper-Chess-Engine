@@ -90,8 +90,10 @@
 #define CONNECTED		10
 #define BACKWARD		-50
 #define PHALANX			10
+#define OUTPOST			25
 
 #define BISHOPPAIR			15
 #define ROOKOPENFILE		50
 #define ROOKHALFOPENFILE	30
+#define RONKFILE			15
 #define SPOILEDCASTLE		-20
