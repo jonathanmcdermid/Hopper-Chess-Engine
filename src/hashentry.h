@@ -3,7 +3,7 @@
 
 #include "move.h"
 
-namespace Chess {
+namespace Hopper {
     class hashentry {
     public:
         hashentry() { zob = 0; depth = 0; eval = 0; flags = 0; m = NULLMOVE; }

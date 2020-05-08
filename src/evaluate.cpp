@@ -2,7 +2,7 @@
 #include "board.h"
 #include "interface.h"
 
-namespace Chess {
+namespace Hopper {
 	static int WPAWNBIT[SPACES] = {
 		 0,  0,  0,  0,  0,  0,  0,  0,
 		50, 50, 50, 50, 50, 50, 50, 50,
@@ -173,32 +173,44 @@ namespace Chess {
 			switch (b->grid[i]) {
 			case PAWN:
 				sum += WPAWNBIT[i];
-				if (b->grid[i + NORTH] == -PAWN) {
-					if (i % WIDTH != 7 && b->grid[i + NORTHEAST] == KNIGHT && (i % WIDTH == 6 || !cfile[BLACK][i % WIDTH + 2])) { sum += OUTPOST; }
-					if (i % WIDTH && b->grid[i + NORTHWEST] == KNIGHT && (i % WIDTH == 1 || !cfile[BLACK][i % WIDTH - 2])) { sum += OUTPOST; }
+				if (b->grid[i + NORTH] == -PAWN || !cfile[BLACK][i % WIDTH]) {
+					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[BLACK][i % WIDTH + 2])) {
+						if (b->grid[i + NORTHEAST] == KNIGHT) { sum += NOUTPOST; }
+						else if (b->grid[i + NORTHEAST] == BISHOP) { sum += BOUTPOST; }
+					}
+					if (i % WIDTH && (i % WIDTH == 1 || !cfile[BLACK][i % WIDTH - 2])) {
+						if (b->grid[i + NORTHWEST] == KNIGHT) { sum += NOUTPOST; }
+						else if (b->grid[i + NORTHWEST] == BISHOP) { sum += BOUTPOST; }
+					}
 				}
 				break;
 			case -PAWN:
 				sum -= BPAWNBIT[i];
-				if (b->grid[i + SOUTH] == PAWN) {
-					if (i % WIDTH != 7 && b->grid[i + SOUTHEAST] == -KNIGHT && (i % WIDTH == 6 || !cfile[WHITE][i % WIDTH + 2])) { sum -= OUTPOST; }
-					if (i % WIDTH && b->grid[i + SOUTHWEST] == -KNIGHT && (i % WIDTH == 1 || !cfile[WHITE][i % WIDTH - 2])) { sum -= OUTPOST; }
+				if (b->grid[i + SOUTH] == PAWN || !cfile[WHITE][i % WIDTH]) {
+					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[WHITE][i % WIDTH + 2])) { 
+						if (b->grid[i + SOUTHEAST] == -KNIGHT) { sum -= NOUTPOST; }
+						else if (b->grid[i + SOUTHEAST] == -BISHOP) { sum -= BOUTPOST; }
+					}
+					if (i % WIDTH && (i % WIDTH == 1 || !cfile[WHITE][i % WIDTH - 2])) { 
+						if (b->grid[i + SOUTHWEST] == -KNIGHT) { sum -= NOUTPOST; }
+						else if (b->grid[i + SOUTHWEST] == -BISHOP) { sum -= BOUTPOST; }
+					}
 				}
 				break;
 			case KNIGHT:
-				sum += WKNIGHTBIT[i];
+				sum += WKNIGHTBIT[i] + hypotenuse(b->kpos[BLACK], i);
 				break;
 			case -KNIGHT:
-				sum -= BKNIGHTBIT[i];
+				sum -= BKNIGHTBIT[i] + hypotenuse(b->kpos[WHITE], i);
 				break;
 			case BISHOP:
-				sum += WBISHOPBIT[i];
+				sum += WBISHOPBIT[i] + hypotenuse(b->kpos[BLACK], i) * 2;
 				break;
 			case -BISHOP:
-				sum -= BBISHOPBIT[i];
+				sum -= BBISHOPBIT[i] + hypotenuse(b->kpos[WHITE], i) * 2;
 				break;
 			case ROOK:
-				sum += WROOKBIT[i];
+				sum += WROOKBIT[i] + hypotenuse(b->kpos[BLACK], i) * 3;
 				helper = i % WIDTH;
 				if (!cfile[WHITE][helper] || !cfile[BLACK][helper]) {
 					if (!cfile[WHITE][helper] && !cfile[BLACK][helper]) { sum += ROOKOPENFILE; }
@@ -211,7 +223,7 @@ namespace Chess {
 				}
 				break;
 			case -ROOK:
-				sum -= BROOKBIT[i];
+				sum -= BROOKBIT[i] + hypotenuse(b->kpos[WHITE], i) * 3;
 				helper = i % WIDTH;
 				if (!cfile[WHITE][helper] || !cfile[BLACK][helper]) {
 					if (!cfile[WHITE][helper] && !cfile[BLACK][helper]) { sum -= ROOKOPENFILE; }
@@ -224,10 +236,22 @@ namespace Chess {
 				}
 				break;
 			case QUEEN:
-				sum += WQUEENBIT[i];
+				sum += WQUEENBIT[i] + hypotenuse(b->kpos[BLACK], i) * 4;
+				for (helper = 0; helper < b->threatened[WHITE][i]; ++helper) {
+					if (b->grid[b->attackers[WHITE][helper][i]] == ROOK || b->grid[b->attackers[WHITE][helper][i]] == BISHOP) {
+						sum += QSUPPORT;
+						break;
+					}
+				}
 				break;
 			case -QUEEN:
-				sum -= BQUEENBIT[i];
+				sum -= BQUEENBIT[i] + hypotenuse(b->kpos[WHITE], i) * 4;
+				for (helper = 0; helper < b->threatened[BLACK][i]; ++helper) {
+					if (b->grid[b->attackers[BLACK][helper][i]] == -ROOK || b->grid[b->attackers[BLACK][helper][i]] == -BISHOP) {
+						sum -= QSUPPORT;
+						break;
+					}
+				}
 				break;
 			case KING:
 				sum += (endgame) ? WENDKINGBIT[i] : WKINGBIT[i];
@@ -240,6 +264,14 @@ namespace Chess {
 		if (b->roles[WHITE][BINDEX] > 1) { sum += BISHOPPAIR; }
 		if (b->roles[BLACK][BINDEX] > 1) { sum -= BISHOPPAIR; }
 		return (b->turn) ? b->getCurrV() + sum : -b->getCurrV() - sum;
+	}
+
+	int evaluate::hypotenuse(int a, int b) {
+		int xc = WIDTH - abs(a % WIDTH - b % WIDTH);
+		int yc = WIDTH - abs(a / WIDTH - b / WIDTH);
+		int c = xc * xc + yc * yc;
+		c = (int) std::sqrt(c);
+		return c;
 	}
 
 	int evaluate::pawnEval() {
@@ -258,11 +290,15 @@ namespace Chess {
 			else if (b->grid[i] == -PAWN) { rank[BLACK][i % WIDTH][cfile[BLACK][i % WIDTH]++] = i / WIDTH; }
 		}
 		for (int file = 0; file < WIDTH; ++file) {
-			if (cfile[WHITE][file] > 1) {
-				if (cfile[WHITE][file] == 2) { sum += DOUBLED; }
-				else { sum += TRIPLED; }
-			}
 			for (int index = 0; index < cfile[WHITE][file]; ++index) {
+				switch (index) {
+				case 1:
+					sum += DOUBLED;
+					break;
+				case 2:
+					sum += TRIPLED;
+					break;
+				}
 				switch (file) {
 				case 0:
 					if (!cfile[WHITE][1]) { sum += ISOLATED * cfile[WHITE][0]; }
@@ -311,11 +347,15 @@ namespace Chess {
 			}
 		}
 		for (int file = 0; file < WIDTH; ++file) {
-			if (cfile[BLACK][file] > 1) {
-				if (cfile[BLACK][file] == 2) { sum -= DOUBLED; }
-				else { sum -= TRIPLED; }
-			}
 			for (int index = 0; index < cfile[BLACK][file]; ++index) {
+				switch (index) {
+				case 1:
+					sum -= DOUBLED;
+					break;
+				case 2:
+					sum -= TRIPLED;
+					break;
+				}
 				switch (file) {
 				case 0:
 					if (!cfile[BLACK][1]) { sum -= ISOLATED * cfile[BLACK][0]; }

@@ -4,7 +4,7 @@
 #include "move.h"
 #include "zobrist.h"
 
-namespace Chess {
+namespace Hopper {
 	class interface;
 	class board {
 	public:

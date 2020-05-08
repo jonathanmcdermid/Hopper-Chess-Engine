@@ -4,7 +4,7 @@
 #include "macros.h"
 #include <iostream>
 
-namespace Chess {
+namespace Hopper {
 	typedef unsigned long long U64;
 	class move {
 		public:

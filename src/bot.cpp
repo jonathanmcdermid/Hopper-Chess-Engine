@@ -3,7 +3,7 @@
 #include "movelist.h"
 #include "board.h"
 
-namespace Chess {
+namespace Hopper {
 	bot::bot(interface* ifx, board* bd) {
 		fx = ifx;
 		b = bd;

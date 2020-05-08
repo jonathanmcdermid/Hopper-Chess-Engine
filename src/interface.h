@@ -4,7 +4,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-namespace Chess {
+namespace Hopper {
 	class interface {
 	public:
 		interface(int argc, char* argv[]);

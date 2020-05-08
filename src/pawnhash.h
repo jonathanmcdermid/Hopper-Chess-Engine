@@ -3,7 +3,7 @@
 
 #include "move.h"
 
-namespace Chess {
+namespace Hopper {
 	class pawnhash {
 	public:
 		pawnhash() { for (int i = 0; i < HASHSIZE; ++i) { hashtable[i] = 0; } }

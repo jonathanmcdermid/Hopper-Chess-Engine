@@ -1,7 +1,7 @@
 #ifndef ZOBRIST_H
 #define ZOBRIST_H
 
-namespace Chess {
+namespace Hopper {
 	class board;
 	class zobrist {
 	public:

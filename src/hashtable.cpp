@@ -1,6 +1,6 @@
 #include "hashtable.h"
 
-namespace Chess {
+namespace Hopper {
     hashtable::hashtable() {
         for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); }
         master = true;

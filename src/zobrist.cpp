@@ -2,7 +2,7 @@
 #include "board.h"
 #include "zobrist.h"
 
-namespace Chess {
+namespace Hopper {
 	zobrist::zobrist() {//generates pseudo random template
 		std::random_device rd;
 		std::mt19937_64 gen(rd());

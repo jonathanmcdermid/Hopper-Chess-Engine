@@ -4,7 +4,7 @@
 #include "hashentry.h"
 #include "board.h"
 
-namespace Chess {
+namespace Hopper {
     typedef struct line {
         int cmove = 0;
         move movelink[MAXDEPTH];

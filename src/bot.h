@@ -6,7 +6,7 @@
 #include "killers.h"
 #include "evaluate.h"
 
-namespace Chess {
+namespace Hopper {
 	class board;
 	class interface;
 	typedef struct limits {

@@ -1,6 +1,6 @@
 #include "killers.h"
 
-namespace Chess {
+namespace Hopper {
 	killers::killers() {
 		max = 0;
 		for (int i = 0; i < MAXDEPTH; ++i) {

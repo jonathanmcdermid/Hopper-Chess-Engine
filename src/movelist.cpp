@@ -1,7 +1,7 @@
 #include "movelist.h"
 #include "board.h"
 
-namespace Chess {
+namespace Hopper {
 	movelist::movelist(board* bd, move pv, move hash, move killer) {
 		b = bd;
 		for (int i = 0; i < GENEND; ++i) {

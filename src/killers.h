@@ -3,7 +3,7 @@
 
 #include "move.h"
 
-namespace Chess {
+namespace Hopper {
 	class killers {
 	public:
 		killers();

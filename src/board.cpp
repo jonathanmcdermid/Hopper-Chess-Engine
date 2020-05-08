@@ -1,7 +1,7 @@
 #include "board.h"
 #include "interface.h"
 
-namespace Chess {
+namespace Hopper {
 	board::board(interface* ifx) {
 		fx = ifx;
 		fenSet(STARTFEN);
@@ -467,7 +467,7 @@ namespace Chess {
 		}
 	}
 
-	void board::pieceThreats(int from) {//generates all pseudo legal moves for one piec
+	void board::pieceThreats(int from) {//generates all pseudo legal moves for one piece
 		int i, j;
 		bool us = (grid[from] > 0) ? WHITE : BLACK;
 		switch (abs(grid[from])) {

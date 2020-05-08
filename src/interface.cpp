@@ -2,7 +2,7 @@
 #include <sstream>
 #include "interface.h"
 
-namespace Chess{
+namespace Hopper{
 	interface::interface(int argc, char* argv[]) {//awaits input from user or uci
 		std::string input;
 		while (1) {
@@ -71,12 +71,12 @@ namespace Chess{
 		else if (word == "fen") { while (is >> word && word != "moves") { fen += word + " "; } }
 		else { return; }
 		game.fenSet(fen);
-		while (is >> word) { if (!playerMove(word)) { break; } }
+		while (is >> word) { if (!playerMove(word)) { return; } }
 	}
 
 	void interface::uci(int argc, char* argv[]) {//uci communication loop, some options non functioning
 		std::string word, cmd;
-		std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
+		std::cout << "id name Hopper Engine \nid author Jonathan M\nuciok\n";
 		for (int i = 1; i < argc; ++i) { cmd += std::string(argv[i]) + " "; }
 		do {
 			if (argc == 1 && !getline(std::cin, cmd)) { cmd = "quit"; }

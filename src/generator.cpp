@@ -1,6 +1,6 @@
 #include "board.h"
 
-namespace Chess {
+namespace Hopper {
 	bool board::validateMove(move m) {//validates a single move
 		move temp[28];
 		int cmove;
