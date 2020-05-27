@@ -9,75 +9,78 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{a4b39391-21bc-4f45-b62c-b035016574c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\board.cpp">
+    <ClCompile Include="Movelist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bot.cpp">
+    <ClCompile Include="Zobrist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\interface.cpp">
+    <ClCompile Include="Board.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\main.cpp">
+    <ClCompile Include="Bot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\zobrist.cpp">
+    <ClCompile Include="Evaluate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\movelist.cpp">
+    <ClCompile Include="Generator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\evaluate.cpp">
+    <ClCompile Include="Hashtable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\killers.cpp">
+    <ClCompile Include="Interface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hashtable.cpp">
+    <ClCompile Include="Killers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\generator.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\pawnhash.h">
-      <Filter>Resource Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\board.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Evaluate.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bot.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Hashtable.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\evaluate.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Interface.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hashentry.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Killers.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\interface.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="macros.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\killers.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Move.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\macros.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Movelist.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\move.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Pawnhash.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\movelist.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Zobrist.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\zobrist.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Board.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hashtable.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="Bot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hashentry.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

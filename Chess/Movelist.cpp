@@ -1,8 +1,10 @@
-#include "movelist.h"
-#include "board.h"
+#include "Movelist.h"
+#include "Board.h"
+#include "Move.h"
+#include <cmath>
 
 namespace Hopper {
-	movelist::movelist(board* bd, move pv, move hash, move killer) {
+	MoveList::MoveList(Board* bd, Move pv, Move hash, Move killer) {
 		b = bd;
 		for (int i = 0; i < GENEND; ++i) {
 			index[i] = 0;
@@ -15,7 +17,7 @@ namespace Hopper {
 		if (pv != killer && hash != killer) { moves[GENKILLS][0] = killer; }
 	}
 
-	movelist::movelist(board* bd) { 
+	MoveList::MoveList(Board* bd) { 
 		b = bd;
 		for (int i = 0; i < GENEND; ++i) {
 			index[i] = 0;
@@ -26,14 +28,14 @@ namespace Hopper {
 	}
 
 
-	bool movelist::noMoves() { 
+	bool MoveList::noMoves() { 
 		for (int i = 0; i < GENEND; ++i) {
 			if (limit[i]) { return false; } 
 		}
 		return true; 
 	}
 
-	void movelist::moveOrder(int genstate) {
+	void MoveList::moveOrder(int genstate) {
 		int i;
 		state = genstate;
 		switch (genstate) {
@@ -95,7 +97,7 @@ namespace Hopper {
 				}
 			}
 			for (i = 0; i < limit[GENWINNONCAPS]; ++i) {
-				if (b->threatened[!b->turn][moves[GENWINNONCAPS][i].getTo()] && moves[GENWINNONCAPS][i].getFlags() < PROMOTE) {
+				if (b->threatened[!b->turn][moves[GENWINNONCAPS][i].getTo()] && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE) {
 					moves[GENLOSENONCAPS][limit[GENLOSENONCAPS]++] = moves[GENWINNONCAPS][i];
 					moves[GENWINNONCAPS][i--] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
 				}
@@ -108,7 +110,7 @@ namespace Hopper {
 		}
 	}
 
-	bool movelist::staticExchange(move m, int threshold) {
+	bool MoveList::staticExchange(Move m, int threshold) {
 		if (!b->threatened[!b->turn][m.getTo()] || abs(b->grid[m.getTo()]) >= abs(b->grid[m.getFrom()]) ) { return true; }
 		if (abs(b->grid[m.getTo()]) <= abs(b->grid[m.getFrom()] && b->threatened[!b->turn][m.getTo()] > b->threatened[b->turn][m.getTo()])) { return false; }
 		bool tomove = b->turn;

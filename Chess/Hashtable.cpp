@@ -1,18 +1,18 @@
-#include "hashtable.h"
+#include "Hashtable.h"
 
 namespace Hopper {
-    hashtable::hashtable() {
-        for (int i = 0; i < HASHSIZE; ++i) { table[i] = hashentry(); }
+    Hashtable::Hashtable() {
+        for (int i = 0; i < HASHSIZE; ++i) { table[i] = Hashentry(); }
         master = true;
     }
 
-    void hashtable::clean() {
+    void Hashtable::clean() {
         for (int i = master; i < HASHSIZE; i += 2) { table[i].setDepth(0); }
         master = !master;
     }
 
-    void hashtable::extractPV(board* b, line* l) {
-        move m;
+    void Hashtable::extractPV(Board* b, line* l) {
+        Move m;
         int index = 0;
         int depth = getDepth(b->getCurrZ() % HASHSIZE);
         do {

@@ -1,7 +1,7 @@
-#include "killers.h"
+#include "Killers.h"
 
 namespace Hopper {
-	killers::killers() {
+	Killers::Killers() {
 		max = 0;
 		for (int i = 0; i < MAXDEPTH; ++i) {
 			primaryindex[i] = 0;
@@ -12,7 +12,7 @@ namespace Hopper {
 		}
 	}
 
-	void killers::cutoff(move cm, int ply) {
+	void Killers::cutoff(Move cm, int ply) {
 		int i = 0;
 		do {
 			if (m[ply][i] == cm) {
@@ -28,7 +28,7 @@ namespace Hopper {
 		} while (++i < MEMORY);
 	}
 
-	void killers::chrono() {
+	void Killers::chrono() {
 		for (int i = 0; i < MAXDEPTH - 2; ++i) {
 			primaryindex[i] = primaryindex[i + 2];
 			for (int j = 0; j < MEMORY; ++j) {

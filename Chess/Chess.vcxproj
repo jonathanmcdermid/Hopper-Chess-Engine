@@ -18,6 +18,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Board.cpp" />
+    <ClCompile Include="Bot.cpp" />
+    <ClCompile Include="Evaluate.cpp" />
+    <ClCompile Include="Generator.cpp" />
+    <ClCompile Include="Hashtable.cpp" />
+    <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="Killers.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Movelist.cpp" />
+    <ClCompile Include="Zobrist.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Board.h" />
+    <ClInclude Include="Bot.h" />
+    <ClInclude Include="Evaluate.h" />
+    <ClInclude Include="Hashentry.h" />
+    <ClInclude Include="Hashtable.h" />
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="Killers.h" />
+    <ClInclude Include="macros.h" />
+    <ClInclude Include="Move.h" />
+    <ClInclude Include="Movelist.h" />
+    <ClInclude Include="Pawnhash.h" />
+    <ClInclude Include="Zobrist.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{594E110F-22CB-4F4A-9C8D-5C5A514182DF}</ProjectGuid>
@@ -138,32 +164,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\board.cpp" />
-    <ClCompile Include="..\src\bot.cpp" />
-    <ClCompile Include="..\src\evaluate.cpp" />
-    <ClCompile Include="..\src\generator.cpp" />
-    <ClCompile Include="..\src\hashtable.cpp" />
-    <ClCompile Include="..\src\interface.cpp" />
-    <ClCompile Include="..\src\killers.cpp" />
-    <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\movelist.cpp" />
-    <ClCompile Include="..\src\pawnhash.h" />
-    <ClCompile Include="..\src\zobrist.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\src\board.h" />
-    <ClInclude Include="..\src\bot.h" />
-    <ClInclude Include="..\src\evaluate.h" />
-    <ClInclude Include="..\src\hashentry.h" />
-    <ClInclude Include="..\src\hashtable.h" />
-    <ClInclude Include="..\src\interface.h" />
-    <ClInclude Include="..\src\killers.h" />
-    <ClInclude Include="..\src\macros.h" />
-    <ClInclude Include="..\src\move.h" />
-    <ClInclude Include="..\src\movelist.h" />
-    <ClInclude Include="..\src\zobrist.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
