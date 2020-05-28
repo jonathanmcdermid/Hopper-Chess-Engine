@@ -15,8 +15,19 @@ namespace Hopper
 				uci(argc, argv);
 			if (input == "local")
 				local();
-			if (input == "3d" || input == "3D") 
-				break;
+			if (input == "3d" || input == "3D")
+			{
+				std::cout << "Select opponent difficulty from 1 to 9\n";
+				while (1) {
+					std::getline(std::cin, input);
+					if (input.at(0) > '0' && input.at(0) <= '9') {
+						int time = (input.at(0) - '0') * 30000;
+						ai.lim.time[WHITE] = time;
+						ai.lim.time[BLACK] = time;
+						return;
+					}
+				}
+			}
 			if (input == "quit") 
 				exit(1);
 		}
