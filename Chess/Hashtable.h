@@ -3,14 +3,19 @@
 #include "Hashentry.h"
 #include "Board.h"
 
-namespace Hopper {
-    typedef struct line {
+namespace Hopper 
+{
+    typedef struct line 
+    {
         int cmove = 0;
         Move movelink[MAXDEPTH];
     }line;
-    class Hashtable {
+
+    class Hashtable 
+    {
     public:
         Hashtable();
+        ~Hashtable() { ; }
         void clean();
         void extractPV(Board* b, line* l);
         void newEntry(int index, Hashentry h) { table[index] = h; }

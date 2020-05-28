@@ -4,10 +4,13 @@
 #include "Bot.h"
 #include <string>
 
-namespace Hopper {
-	class Interface {
+namespace Hopper 
+{
+	class Interface 
+	{
 	public:
 		Interface(int argc, char* argv[]);
+		~Interface() { ; }
 		void drawBoard();
 		void uci(int argc, char* argv[]);
 		void go(std::istringstream& is);

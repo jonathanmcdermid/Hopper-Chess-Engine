@@ -3,12 +3,15 @@
 #include "macros.h"
 #include "move.h"
 
-namespace Hopper {
+namespace Hopper 
+{
 	class Board;
-	class MoveList {
+	class MoveList 
+	{
 	public:
 		MoveList(Board* bd, Move pv, Move hash, Move killer);
 		MoveList(Board* bd);
+		~MoveList() { ; }
 		void moveOrder(int genstate);
 		bool staticExchange(Move m, int threshold);
 		bool movesLeft() { return index[state] < limit[state]; }

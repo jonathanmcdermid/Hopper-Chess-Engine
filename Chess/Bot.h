@@ -5,9 +5,11 @@
 #include "Killers.h"
 #include "Evaluate.h"
 
-namespace Hopper {
+namespace Hopper 
+{
 	class Board;
-	typedef struct limits {
+	typedef struct limits 
+	{
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 100000, 100000 };
 		int movetime = 0;
@@ -18,9 +20,12 @@ namespace Hopper {
 		int mate = 0;
 		bool infinite = false;
 	} limits;
-	class Bot {
+
+	class Bot 
+	{
 	public:
 		Bot(Board* bd);
+		~Bot() { ; }
 		void makeMove();
 		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool notnull);
 		int perft(int depth);

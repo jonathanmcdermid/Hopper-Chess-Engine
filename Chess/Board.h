@@ -2,10 +2,13 @@
 
 #include "zobrist.h"
 
-namespace Hopper {
-	class Board {
+namespace Hopper 
+{
+	class Board 
+	{
 	public:
 		Board();
+		~Board() { ; }
 		void fenSet(const char* fs);
 		bool isCheckMate();
 		bool isDraw();
@@ -33,20 +36,20 @@ namespace Hopper {
 		int pieceMoves(Move* m, int from);
 		enum::role_enum grid[SPACES];
 		enum::side_enum turn;
-		int threatened[2][SPACES];
-		int attackers[2][WIDTH][SPACES];
-		int pins[5][2];
-		int roles[2][5];
-		int cpins;
-		int kpos[2];
+		int threatened[2][SPACES] = { 0 };
+		int attackers[2][WIDTH][SPACES] = { 0 };
+		int pins[5][2] = { 0 };
+		int roles[2][5] = { 0 };
+		int cpins = 0;
+		int kpos[2] = { 0 };
 	private:
 		Zobrist z;
 		int cturn;
-		int fHist[MEMORY];
-		int cHist[MEMORY];
-		int vHist[MEMORY];
-		U64 zHist[MEMORY];
-		U64 pHist[MEMORY];
+		int fHist[MEMORY] = { 0 };
+		int cHist[MEMORY] = { 0 };
+		int vHist[MEMORY] = { 0 };
+		U64 zHist[MEMORY] = { 0 };
+		U64 pHist[MEMORY] = { 0 };
 		Move mHist[MEMORY];
 	};
 }
