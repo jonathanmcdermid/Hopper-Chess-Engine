@@ -91,7 +91,7 @@ namespace Hopper
 			{
 				b->movePiece(ml.getCurrMove());
 				++nodes;
-				if (b->isDraw() || b->insufficientMaterial()) 
+				if (b->isRepititionDraw() || b->isMaterialDraw()) 
 					score = CONTEMPT;
 				else if (genstate > GENHASH) 
 				{

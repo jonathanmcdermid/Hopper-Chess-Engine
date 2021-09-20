@@ -12,7 +12,7 @@ enum generation_enum { GENPV = 0, GENHASH, GENWINCAPS, GENKILLS, GENWINNONCAPS, 
 
 enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 
-#define STARTFEN	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define STARTFEN	"rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
@@ -21,7 +21,7 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 #define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
 #define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
 
-#define HASHSIZE	20000
+#define HASHSIZE	24000
 
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000

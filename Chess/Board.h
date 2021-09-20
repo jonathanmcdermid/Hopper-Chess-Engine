@@ -1,9 +1,27 @@
 #pragma once
 
 #include "zobrist.h"
+#include <vector>
 
 namespace Hopper 
 {
+	struct historyInfo {
+		int fHist = 0;
+		int cHist = 0;
+		int vHist = 0;
+		U64 zHist = 0;
+		U64 pHist = 0;
+		Move mHist = NULLMOVE;
+		historyInfo(int f, int c, int v, U64 z, U64 p, Move m) {
+			fHist = f;
+			cHist = c;
+			vHist = v;
+			zHist = z;
+			pHist = p;
+			mHist = m;
+		}
+	};
+
 	class Board 
 	{
 	public:
@@ -11,16 +29,16 @@ namespace Hopper
 		~Board() { ; }
 		void fenSet(const char* fs);
 		bool isCheckMate();
-		bool isDraw();
-		bool insufficientMaterial();
+		bool isRepititionDraw();
+		bool isMaterialDraw();
 		bool isEndgame();
 		bool isCheck() const { return threatened[!turn][kpos[turn]]; }
-		int getCurrC() const { return cHist[cturn - 1]; }
-		int getCurrV() const { return vHist[cturn - 1]; }
-		int getCurrF() const { return fHist[cturn - 1]; }
-		U64 getCurrZ() const { return zHist[cturn - 1]; }
-		U64 getCurrP() const { return pHist[cturn - 1]; }
-		Move getCurrM() const { return mHist[cturn - 1]; }
+		int getCurrC() const { return hist.back().cHist; }
+		int getCurrV() const { return hist.back().vHist; }
+		int getCurrF() const { return hist.back().fHist; }
+		U64 getCurrZ() const { return hist.back().zHist; }
+		U64 getCurrP() const { return hist.back().pHist; }
+		Move getCurrM() const { return hist.back().mHist; }
 		void movePiece(Move m);
 		void unmovePiece();
 		void allThreats();
@@ -44,12 +62,6 @@ namespace Hopper
 		int kpos[2] = { 0 };
 	private:
 		Zobrist z;
-		int cturn;
-		int fHist[MEMORY] = { 0 };
-		int cHist[MEMORY] = { 0 };
-		int vHist[MEMORY] = { 0 };
-		U64 zHist[MEMORY] = { 0 };
-		U64 pHist[MEMORY] = { 0 };
-		Move mHist[MEMORY];
+		std::vector<historyInfo> hist;
 	};
 }

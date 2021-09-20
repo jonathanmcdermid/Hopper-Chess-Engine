@@ -160,7 +160,7 @@ namespace Hopper
 
 	int Evaluate::negaEval() 
 	{//negamax evaluation using material sum of pieces and bonus boards
-		if (b->insufficientMaterial()) 
+		if (b->isRepititionDraw() || b->isMaterialDraw()) 
 			return CONTEMPT;
 		int sum = 0, helper;
 		int cfile[2][WIDTH];

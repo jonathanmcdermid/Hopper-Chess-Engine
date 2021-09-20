@@ -16,6 +16,7 @@ namespace Hopper
 		void go(std::istringstream& is);
 		void position(std::istringstream& is);
 		void local();
+		void self();
 		bool playerMove(std::string input);
 		void botMove();
 		Board game;

@@ -220,8 +220,8 @@ namespace Hopper
 					m[cmove++] = Move(from, from + i + BOARD_EAST, RPROMOTEC);
 				}
 			}
-			if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && ((mHist[cturn - 1].getTo() == from + BOARD_EAST && from % WIDTH != 7) || (mHist[cturn - 1].getTo() == from + BOARD_WEST && from % WIDTH)))
-				m[cmove++] = Move(from, mHist[cturn - 1].getTo() + i, ENPASSANT);
+			if (hist.back().mHist.getFlags() == DOUBLEPUSH && ((hist.back().mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (hist.back().mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
+				m[cmove++] = Move(from, hist.back().mHist.getTo() + i, ENPASSANT);
 			return cmove;
 		case W_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)))
@@ -330,21 +330,21 @@ namespace Hopper
 		case W_KING:
 			if (turn)
 			{
-				if (from == 60 && !threatened[BLACK][60] && (cHist[cturn - 1] & 1 << 2))
+				if (from == 60 && !threatened[BLACK][60] && (hist.back().cHist & 1 << 2))
 				{
-					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (cHist[cturn - 1] & 1 << 0))
+					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (hist.back().cHist & 1 << 0))
 						m[cmove++] = Move(60, 62, KCASTLE);
-					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (cHist[cturn - 1] & 1 << 1))
+					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (hist.back().cHist & 1 << 1))
 						m[cmove++] = Move(60, 58, QCASTLE);
 				}
 			}
 			else
 			{
-				if (from == 4 && !threatened[WHITE][4] && (cHist[cturn - 1] & 1 << 4))
+				if (from == 4 && !threatened[WHITE][4] && (hist.back().cHist & 1 << 4))
 				{
-					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (cHist[cturn - 1] & 1 << 3))
+					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (hist.back().cHist & 1 << 3))
 						m[cmove++] = Move(4, 6, KCASTLE);
-					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (cHist[cturn - 1] & 1 << 5))
+					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (hist.back().cHist & 1 << 5))
 						m[cmove++] = Move(4, 2, QCASTLE);
 				}
 			}
@@ -475,21 +475,21 @@ namespace Hopper
 		case W_KING:
 			if (turn)
 			{
-				if (from == 60 && !threatened[BLACK][60] && (cHist[cturn - 1] & 1 << 2))
+				if (from == 60 && !threatened[BLACK][60] && (hist.back().cHist & 1 << 2))
 				{
-					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (cHist[cturn - 1] & 1 << 0))
+					if (!grid[61] && !grid[62] && !threatened[BLACK][61] && !threatened[BLACK][62] && (hist.back().cHist & 1 << 0))
 						m[cmove++] = Move(60, 62, KCASTLE);
-					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (cHist[cturn - 1] & 1 << 1))
+					if (!grid[59] && !grid[58] && !grid[57] && !threatened[BLACK][59] && !threatened[BLACK][58] && (hist.back().cHist & 1 << 1))
 						m[cmove++] = Move(60, 58, QCASTLE);
 				}
 			}
 			else
 			{
-				if (from == 4 && !threatened[WHITE][4] && (cHist[cturn - 1] & 1 << 4))
+				if (from == 4 && !threatened[WHITE][4] && (hist.back().cHist & 1 << 4))
 				{
-					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (cHist[cturn - 1] & 1 << 3))
+					if (!grid[5] && !grid[6] && !threatened[WHITE][5] && !threatened[WHITE][6] && (hist.back().cHist & 1 << 3))
 						m[cmove++] = Move(4, 6, KCASTLE);
-					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (cHist[cturn - 1] & 1 << 5))
+					if (!grid[3] && !grid[2] && !grid[1] && !threatened[WHITE][3] && !threatened[WHITE][2] && (hist.back().cHist & 1 << 5))
 						m[cmove++] = Move(4, 2, QCASTLE);
 				}
 			}
@@ -620,8 +620,8 @@ namespace Hopper
 					m[cmove++] = Move(from, from + i, RPROMOTE);
 				}
 			}
-			if (mHist[cturn - 1].getFlags() == DOUBLEPUSH && ((mHist[cturn - 1].getTo() == from + BOARD_EAST && from % WIDTH != 7) || (mHist[cturn - 1].getTo() == from + BOARD_WEST && from % WIDTH)))
-				m[cmove++] = Move(from, mHist[cturn - 1].getTo() + i, ENPASSANT);
+			if (hist.back().mHist.getFlags() == DOUBLEPUSH && ((hist.back().mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (hist.back().mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
+				m[cmove++] = Move(from, hist.back().mHist.getTo() + i, ENPASSANT);
 			return cmove;
 		case W_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54)

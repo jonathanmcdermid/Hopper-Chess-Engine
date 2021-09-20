@@ -15,6 +15,8 @@ namespace Hopper
 				uci(argc, argv);
 			if (input == "local")
 				local();
+			if (input == "self")
+				self();
 			if (input == "3d" || input == "3D")
 			{
 				std::cout << "Select opponent difficulty from 1 to 9\n";
@@ -179,6 +181,25 @@ namespace Hopper
 		std::cout << "good game\n";
 	}
 
+	void Interface::self()
+	{//for play without uci
+		std::string input;
+		drawBoard();
+		while (1)
+		{
+			std::getline(std::cin, input);
+			if (input.length())
+			{
+				while (!playerMove(input))
+					std::getline(std::cin, input);
+				drawBoard();
+				if (game.isCheckMate())
+					break;
+			}
+		}
+		std::cout << "good game\n";
+	}
+
 	bool Interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) 
 		{
@@ -228,6 +249,11 @@ namespace Hopper
 		{
 			std::getline(std::cin, input);
 			game.fenSet(input.c_str());
+			drawBoard();
+		}
+		else if (input == "unmove")
+		{
+			game.unmovePiece();
 			drawBoard();
 		}
 		return false;
