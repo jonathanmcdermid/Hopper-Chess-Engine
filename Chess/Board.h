@@ -32,35 +32,35 @@ namespace Hopper
 		bool isRepititionDraw();
 		bool isMaterialDraw();
 		bool isEndgame();
-		bool isCheck() const { return threatened[!turn][kpos[turn]]; }
+		bool isCheck() const { return threatened[(int) (!turn << 6) + kpos[turn]]; }
 		int getCurrC() const { return hist.back().cHist; }
 		int getCurrV() const { return hist.back().vHist; }
 		int getCurrF() const { return hist.back().fHist; }
 		U64 getCurrZ() const { return hist.back().zHist; }
 		U64 getCurrP() const { return hist.back().pHist; }
 		Move getCurrM() const { return hist.back().mHist; }
-		void movePiece(Move m);
+		void movePiece(const Move& m);
 		void unmovePiece();
-		void allThreats();
-		void pieceThreats(int from);
-		bool validateMove(Move m);
+		bool validateMove(const Move& m);
 		Move createMove(int from, int to);
-		int removeIllegal(Move* m, int cmove);
 		int genAll(Move* m);
 		int genAllCaps(Move* m);
 		int genAllNonCaps(Move* m);
+		enum::role_enum grid[SPACES];
+		enum::side_enum turn;
+		int threatened[SPACES * 2];
+		int attackers[WIDTH * 2][SPACES];
+		int pins[10];
+		int roles[10];
+		int cpins;
+		int kpos[2];
+	private:
+		void pieceThreats(int from);
+		void allThreats();
 		int pieceCapMoves(Move* m, int from);
 		int pieceNonCapMoves(Move* m, int from);
 		int pieceMoves(Move* m, int from);
-		enum::role_enum grid[SPACES];
-		enum::side_enum turn;
-		int threatened[2][SPACES] = { 0 };
-		int attackers[2][WIDTH][SPACES] = { 0 };
-		int pins[5][2] = { 0 };
-		int roles[2][5] = { 0 };
-		int cpins = 0;
-		int kpos[2] = { 0 };
-	private:
+		int removeIllegal(Move* m, int cmove);
 		Zobrist z;
 		std::vector<historyInfo> hist;
 	};

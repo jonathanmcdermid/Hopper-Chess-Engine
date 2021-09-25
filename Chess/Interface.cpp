@@ -75,7 +75,7 @@ namespace Hopper
 			std::cout << "\n---------------------------------\n|";
 			for (int j = 0; j < WIDTH; ++j) 
 			{
-				switch (game.grid[i * WIDTH + j]) 
+				switch (game.grid[(int) (i << 3) + j]) 
 				{
 				case W_PAWN: 
 					letter = 'P'; break;

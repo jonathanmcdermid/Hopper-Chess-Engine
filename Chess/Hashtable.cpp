@@ -11,9 +11,9 @@ namespace Hopper
 
     void Hashtable::clean() 
     {
-        for (int i = master; i < HASHSIZE; i += 2) 
+        for (int i = (int) master; i < HASHSIZE; i += 2) 
             table[i].setDepth(0);
-        master = !master;
+        master != master;
     }
 
     void Hashtable::extractPV(Board* b, line* l) 

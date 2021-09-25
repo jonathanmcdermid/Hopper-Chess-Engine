@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Board.h"
 #include "Hashtable.h"
 #include "Pawnhash.h"
 #include "Killers.h"
-#include "Evaluate.h"
+#include "Movelist.h"
 
 namespace Hopper 
 {
-	class Board;
 	typedef struct limits 
 	{
 		int time[2] = { 300000, 300000 };
@@ -27,16 +27,18 @@ namespace Hopper
 		Bot(Board* bd);
 		~Bot() { ; }
 		void makeMove();
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool notnull);
-		int perft(int depth);
-		int quiescentSearch(int alpha, int beta);
+		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
 		limits lim;
 	private:
+		int perft(int depth);
+		int quiescentSearch(int alpha, int beta);
+		int negaEval();
+		static int hypotenuse(const int a, const int b);
+		int pawnEval();
 		Board* b;
 		Killers k;
 		Hashtable ht;
 		Pawnhash ph;
-		Evaluate e = Evaluate(b);
 		int nodes = 0;
 	};
 }

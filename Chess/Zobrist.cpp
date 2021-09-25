@@ -14,36 +14,25 @@ namespace Hopper
 			pieces[i] = dis(gen);
 		for (int i = 0; i < SPACES; ++i)
 			enpassant[i] = dis(gen);
-		castle[WHITE][0] = dis(gen);
-		castle[WHITE][1] = dis(gen);
-		castle[BLACK][0] = dis(gen);
-		castle[BLACK][1] = dis(gen);
+		for (int i = 0; i < 4; ++i) {
+			castle[i] = dis(gen);
+		}
 	}
 
-	U64 Zobrist::newKey(Board* b) 
+	U64 Zobrist::newKey(Board* b)
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->grid[i] > 0) 
-				key ^= piecesAt( b->grid[i] % 10,WHITE, i);
-			else if (b->grid[i] < 0) 
-				key ^= piecesAt(b->grid[i] % 10, BLACK, i);
+			if (b->grid[i])
+				key ^= piecesAt(b->grid[i] % 10, b->grid[i] > 0, i);
 		}
-		if (b->getCurrC() & 1 << 2) {
-			if (b->getCurrC() & 1 << 0)
-				key ^= castle[WHITE][0];
-			if (b->getCurrC() & 1 << 1)
-				key ^= castle[WHITE][1];
+		for (int i = 0; i < 4; ++i) {
+			if (b->getCurrC() & 1 << i)
+				key ^= castle[i];
 		}
-		if (b->getCurrC() & 1 << 4) {
-			if (b->getCurrC() & 1 << 3) 
-				key ^= castle[BLACK][0];
-			if (b->getCurrC() & 1 << 5)
-				key ^= castle[BLACK][1];
-		}
-		if (b->getCurrM().getFlags() == DOUBLEPUSH) 
+		if (b->getCurrM().getFlags() == DOUBLEPUSH)
 			key ^= enpassant[b->getCurrM().getTo()];
-		if (b->turn) 
+		if (b->turn)
 			key ^= side;
 		return key;
 	}

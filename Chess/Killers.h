@@ -14,8 +14,8 @@ namespace Hopper
 		void chrono();
 	private:
 		Move m[MAXDEPTH * MEMORY];
-		int primaryindex[MAXDEPTH] = { 0 };
-		int s[MAXDEPTH * MEMORY] = { 0 };
-		int max = 0;
+		int primaryindex[MAXDEPTH];
+		int s[MAXDEPTH * MEMORY];
+		int max;
 	};
 }
