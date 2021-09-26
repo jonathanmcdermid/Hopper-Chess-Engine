@@ -26,22 +26,21 @@ namespace Hopper
 	{
 	public:
 		Board();
-		~Board() { ; }
 		void fenSet(const char* fs);
 		bool isCheckMate();
 		bool isRepititionDraw();
 		bool isMaterialDraw();
 		bool isEndgame();
-		bool isCheck() const { return threatened[(int) (!turn << 6) + kpos[turn]]; }
+		bool isCheck() const { return threatened[!turn * SPACES + kpos[turn]]; }
 		int getCurrC() const { return hist.back().cHist; }
 		int getCurrV() const { return hist.back().vHist; }
 		int getCurrF() const { return hist.back().fHist; }
 		U64 getCurrZ() const { return hist.back().zHist; }
 		U64 getCurrP() const { return hist.back().pHist; }
 		Move getCurrM() const { return hist.back().mHist; }
-		void movePiece(const Move& m);
+		void movePiece(Move m);
 		void unmovePiece();
-		bool validateMove(const Move& m);
+		bool validateMove(const Move m);
 		Move createMove(int from, int to);
 		int genAll(Move* m);
 		int genAllCaps(Move* m);

@@ -8,7 +8,6 @@ namespace Hopper
 	{
 	public:
 		Killers();
-		~Killers() { ; }
 		Move getPrimary(int ply) const { return m[ply + primaryindex[ply] * MAXDEPTH]; }
 		void cutoff(Move cm, int ply);
 		void chrono();

@@ -18,7 +18,7 @@ namespace Hopper
 		int score;
 		line pv;
 		nodes = 0;
-		/*for (int depth = 1; depth < lim.depth; ++depth) 
+		/*for (int depth = 1; depth < lim.depth; ++depth)
 		{
 			int n = perft(depth);
 			auto stop = std::chrono::high_resolution_clock::now();
@@ -33,10 +33,10 @@ namespace Hopper
 			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
 			for (int i = 0; i < pv.cmove; ++i) {
 				message += { (char)(pv.movelink[i].getFrom() % WIDTH + 'a'),
-					(char)(WIDTH - (int)(pv.movelink[i].getFrom() >> 3) + '0'),
-					(char)(pv.movelink[i].getTo() % WIDTH + 'a'),
-					(char)(WIDTH - (int)(pv.movelink[i].getTo() >> 3) + '0'),
-					(char)' ' };
+					(char) (WIDTH - (int)(pv.movelink[i].getFrom() / WIDTH) + '0'),
+					(char) (pv.movelink[i].getTo() % WIDTH + 'a'),
+					(char) (WIDTH - (int)(pv.movelink[i].getTo() / WIDTH) + '0'),
+					(char) ' ' };
 			}
 			std::cout << message << "\n";
 			auto stop = std::chrono::high_resolution_clock::now();

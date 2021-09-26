@@ -75,7 +75,7 @@ namespace Hopper
 			std::cout << "\n---------------------------------\n|";
 			for (int j = 0; j < WIDTH; ++j) 
 			{
-				switch (game.grid[(int) (i << 3) + j]) 
+				switch (game.grid[i * WIDTH  + j]) 
 				{
 				case W_PAWN: 
 					letter = 'P'; break;
@@ -126,9 +126,10 @@ namespace Hopper
 		else 
 			return;
 		game.fenSet((const char*)fen.c_str());
-		while (is >> word) 
-			if (!playerMove(word)) 
+		while (is >> word) {
+			if (!playerMove(word))
 				return;
+		}
 	}
 
 	void Interface::uci(int argc, char* argv[]) 
@@ -193,7 +194,7 @@ namespace Hopper
 				while (!playerMove(input))
 					std::getline(std::cin, input);
 				drawBoard();
-				if (game.isCheckMate())
+				if (game.isCheckMate() || game.isMaterialDraw() || game.isRepititionDraw())
 					break;
 			}
 		}

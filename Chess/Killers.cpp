@@ -17,17 +17,17 @@ namespace Hopper
 		int i = 0;
 		do 
 		{
-			if (m[ply + (int) (i << 6)] == cm)
+			if (m[ply + i * SPACES] == cm)
 			{
-				++s[ply + (int) (i << 6)];
-				if (s[ply + primaryindex[ply]] < s[ply + (int) (i << 6)])
+				++s[ply + i * SPACES];
+				if (s[ply + primaryindex[ply]] < s[ply + i * SPACES])
 					primaryindex[ply] = i;
 				return;
 			}
-			else if (m[ply + (int) (i << 6)] == NULLMOVE)
+			else if (m[ply + i * SPACES] == NULLMOVE)
 			{
-				m[ply + (int) (i << 6)] = cm;
-				++s[ply + (int) (i << 6)];
+				m[ply + i * SPACES] = cm;
+				++s[ply + i * SPACES];
 				return;
 			}
 		} while (++i < MEMORY);
@@ -40,8 +40,8 @@ namespace Hopper
 			primaryindex[i] = primaryindex[i + 2];
 			for (int j = 0; j < MEMORY; ++j) 
 			{
-				m[i + (int) (j << 6)] = m[i + 2 + (int) (j << 6)];
-				s[i + (int) (j << 6)] = s[i + 2 + (int) (j << 6)];
+				m[i + j * SPACES] = m[i + 2 + j * SPACES];
+				s[i + j * SPACES] = s[i + 2 + j * SPACES];
 			}
 		}
 		for (int i = MAXDEPTH - 2; i < MAXDEPTH; ++i) 
@@ -49,8 +49,8 @@ namespace Hopper
 			primaryindex[i] = 0;
 			for (int j = 0; j < MEMORY; ++j) 
 			{
-				m[i + (int) (j << 6)] = NULLMOVE;
-				s[i + (int) (j << 6)] = 0;
+				m[i + j * SPACES] = NULLMOVE;
+				s[i + j * SPACES] = 0;
 			}
 		}
 	}

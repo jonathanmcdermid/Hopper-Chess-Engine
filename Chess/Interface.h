@@ -9,7 +9,6 @@ namespace Hopper
 	{
 	public:
 		Interface(int argc, char* argv[]);
-		~Interface() { ; }
 		void uci(int argc, char* argv[]);
 		void go(std::istringstream& is);
 		void position(std::istringstream& is);

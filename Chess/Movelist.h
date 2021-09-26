@@ -11,7 +11,6 @@ namespace Hopper
 	public:
 		MoveList(Board* bd, Move pv, Move hash, Move killer);
 		MoveList(Board* bd);
-		~MoveList() { ; }
 		void moveOrder(int genstate);
 		bool staticExchange(Move m, int threshold);
 		bool movesLeft() const { return index[state] < limit[state]; }

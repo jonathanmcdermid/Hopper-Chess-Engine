@@ -25,15 +25,14 @@ namespace Hopper
 	{
 	public:
 		Bot(Board* bd);
-		~Bot() { ; }
 		void makeMove();
 		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
 		limits lim;
 	private:
+		static int hypotenuse(const int a, const int b);
 		int perft(int depth);
 		int quiescentSearch(int alpha, int beta);
 		int negaEval();
-		static int hypotenuse(const int a, const int b);
 		int pawnEval();
 		Board* b;
 		Killers k;

@@ -13,7 +13,7 @@ namespace Hopper
 		for (int i = 0; i < 6 * 2 * SPACES; ++i)
 			pieces[i] = dis(gen);
 		for (int i = 0; i < SPACES; ++i)
-			enpassant[i] = dis(gen);
+			enPassant[i] = dis(gen);
 		for (int i = 0; i < 4; ++i) {
 			castle[i] = dis(gen);
 		}
@@ -23,15 +23,16 @@ namespace Hopper
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->grid[i])
-				key ^= piecesAt(b->grid[i] % 10, b->grid[i] > 0, i);
+			if (b->grid[i]) {
+				key ^= piecesAt(abs(b->grid[i]) % 10, b->grid[i] > 0, i);
+			}
 		}
 		for (int i = 0; i < 4; ++i) {
-			if (b->getCurrC() & 1 << i)
+			if (b->getCurrC() & (int) ( 1 << i))
 				key ^= castle[i];
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)
-			key ^= enpassant[b->getCurrM().getTo()];
+			key ^= enPassant[b->getCurrM().getTo()];
 		if (b->turn)
 			key ^= side;
 		return key;

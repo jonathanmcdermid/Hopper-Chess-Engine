@@ -144,7 +144,7 @@ namespace Hopper {
 		if (hist.back().fHist >= 100) { return true; }
 		bool once = false;
 		for (int i = 4; i < hist.back().fHist; i += 4) {
-			if (hist[hist.size() - i - 2].zHist == hist.back().zHist) {
+			if (hist[hist.size() - i - 1].zHist == hist.back().zHist) {
 				if (once) { 
 					return true; 
 				}
@@ -185,13 +185,13 @@ namespace Hopper {
 		return true;
 	}
 
-	void Board::movePiece(const Move& m)
+	void Board::movePiece(Move m)
 	{//executes a move if legal
 		hist.push_back(historyInfo(
 			(m.getFlags() == STANDARD && abs(grid[m.getFrom()]) != W_PAWN) ? hist.back().fHist + 1 : 0,
 			hist.back().cHist,
 			hist.back().vHist,
-			(hist.back().mHist.getFlags() == DOUBLEPUSH) ? hist.back().zHist ^ z.side ^ z.enpassant[hist.back().mHist.getTo()] : hist.back().zHist ^ z.side,
+			(hist.back().mHist.getFlags() == DOUBLEPUSH) ? hist.back().zHist ^ z.sideAt() ^ z.enPassantAt(hist.back().mHist.getTo()) : hist.back().zHist ^ z.sideAt(),
 			hist.back().pHist,
 			m
 		));
@@ -201,7 +201,9 @@ namespace Hopper {
 			hist.back().zHist ^= z.piecesAt(abs(grid[m.getFrom()]) % 10, turn, m.getTo());
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
-			if (abs(grid[m.getTo()]) == W_KING) { kpos[turn] = m.getTo(); }
+			if (abs(grid[m.getTo()]) == W_KING) { 
+				kpos[turn] = m.getTo(); 
+			}
 			else if (abs(grid[m.getTo()]) == W_PAWN) {
 				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
 				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getTo());
@@ -210,7 +212,7 @@ namespace Hopper {
 		case DOUBLEPUSH:
 			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
 			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getTo());
-			hist.back().zHist ^= z.enpassant[m.getTo()];
+			hist.back().zHist ^= z.enPassantAt(m.getTo());
 			grid[m.getTo()] = grid[m.getFrom()];
 			grid[m.getFrom()] = EMPTY;
 			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
@@ -357,38 +359,38 @@ namespace Hopper {
 		}
 		if (hist.back().cHist & 1 << 0 && (m.getTo() == 63 || m.getFrom() == 63)) {
 			hist.back().cHist &= ~(1 << 0);
-			hist.back().zHist ^= z.castle[WKINGSIDE];
+			hist.back().zHist ^= z.castleAt(WKINGSIDE);
 		}
 		if (hist.back().cHist & 1 << 1 && (m.getTo() == 56 || m.getFrom() == 56)) {
 			hist.back().cHist &= ~(1 << 1);
-			hist.back().zHist ^= z.castle[WQUEENSIDE];
+			hist.back().zHist ^= z.castleAt(WQUEENSIDE);
 		}
 		if (m.getFrom() == 60) {
 			if (hist.back().cHist & 1 << 0) { 
 				hist.back().cHist &= ~(1 << 0); 
-				hist.back().zHist ^= z.castle[WKINGSIDE]; 
+				hist.back().zHist ^= z.castleAt(WKINGSIDE); 
 			}
 			if (hist.back().cHist & 1 << 1) { 
 				hist.back().cHist &= ~(1 << 1); 
-				hist.back().zHist ^= z.castle[WQUEENSIDE]; 
+				hist.back().zHist ^= z.castleAt(WQUEENSIDE); 
 			}
 		}
 		if (hist.back().cHist & 1 << 2 && (m.getTo() == 7 || m.getFrom() == 7)) {
 			hist.back().cHist &= ~(1 << 2);
-			hist.back().zHist ^= z.castle[BKINGSIDE];
+			hist.back().zHist ^= z.castleAt(BKINGSIDE);
 		}
 		if (hist.back().cHist & 1 << 3 && (m.getTo() == 0 || m.getFrom() == 0)) {
 			hist.back().cHist &= ~(1 << 3);
-			hist.back().zHist ^= z.castle[BQUEENSIDE];
+			hist.back().zHist ^= z.castleAt(BQUEENSIDE);
 		}
 		if (m.getFrom() == 4) {
 			if (hist.back().cHist & 1 << 2) {
 				hist.back().cHist &= ~(1 << 2); 
-				hist.back().zHist ^= z.castle[BKINGSIDE]; 
+				hist.back().zHist ^= z.castleAt(BKINGSIDE); 
 			}
 			if (hist.back().cHist & 1 << 3) { 
 				hist.back().cHist &= ~(1 << 3); 
-				hist.back().zHist ^= z.castle[BQUEENSIDE]; 
+				hist.back().zHist ^= z.castleAt(BQUEENSIDE); 
 			}
 		}
 		turn = (side_enum)(!turn);
@@ -518,35 +520,35 @@ namespace Hopper {
 		case B_KING:
 			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_SOUTHEAST]++][from + BOARD_SOUTHEAST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_SOUTHEAST]++][from + BOARD_SOUTHEAST] = from; 
 			}
 			if ((from + BOARD_EAST) % WIDTH > from % WIDTH) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_EAST]++][from + BOARD_EAST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_EAST]++][from + BOARD_EAST] = from; 
 			}
 			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_NORTHWEST]++][from + BOARD_NORTHWEST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_NORTHWEST]++][from + BOARD_NORTHWEST] = from; 
 			}
 			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_WEST]++][from + BOARD_WEST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_WEST]++][from + BOARD_WEST] = from; 
 			}
 			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_SOUTHWEST]++][from + BOARD_SOUTHWEST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_SOUTHWEST]++][from + BOARD_SOUTHWEST] = from; 
 			}
 			if (from < 56) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_SOUTH]++][from + BOARD_SOUTH] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_SOUTH]++][from + BOARD_SOUTH] = from; 
 			}
 			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_NORTHEAST]++][from + BOARD_NORTHEAST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_NORTHEAST]++][from + BOARD_NORTHEAST] = from; 
 			}
 			if (from > 7) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + BOARD_NORTH]++][from + BOARD_NORTH] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + BOARD_NORTH]++][from + BOARD_NORTH] = from; 
 			}
 			return;
 		case W_PAWN:
@@ -554,46 +556,46 @@ namespace Hopper {
 			i = (us) ? BOARD_NORTH : BOARD_SOUTH;
 			if (from % WIDTH) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + i + BOARD_WEST]++][from + i + BOARD_WEST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + i + BOARD_WEST]++][from + i + BOARD_WEST] = from; 
 			}
 			if (from % WIDTH != 7) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + i + BOARD_EAST]++][from + i + BOARD_EAST] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + i + BOARD_EAST]++][from + i + BOARD_EAST] = from; 
 			}
 			break;
 		case W_KNIGHT:
 		case B_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + 10]++][from + 10] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + 10]++][from + 10] = from; 
 			}
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + 17]++][from + 17] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + 17]++][from + 17] = from; 
 			}
 			if ((from - 10) % WIDTH < from % WIDTH && from > 9) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from - 10]++][from - 10] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from - 10]++][from - 10] = from; 
 			}
 			if ((from - 17) % WIDTH < from % WIDTH && from > 16) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from - 17]++][from - 17] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from - 17]++][from - 17] = from; 
 			}
 			if ((from + 6) % WIDTH < from % WIDTH && from < 58) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + 6]++][from + 6] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + 6]++][from + 6] = from; 
 			}
 			if ((from + 15) % WIDTH < from % WIDTH && from < 49) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from + 15]++][from + 15] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from + 15]++][from + 15] = from; 
 			}
 			if ((from - 6) % WIDTH > from % WIDTH && from > 5) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from - 6]++][from - 6] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from - 6]++][from - 6] = from; 
 			}
 			if ((from - 15) % WIDTH > from % WIDTH && from > 14) 
 			{ 
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + from - 15]++][from - 15] = from; 
+				attackers[us * WIDTH  + threatened[us * SPACES  + from - 15]++][from - 15] = from; 
 			}
 			break;
 		case W_QUEEN:
@@ -601,7 +603,7 @@ namespace Hopper {
 		case B_QUEEN:
 		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (NSslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						for (j = i + BOARD_NORTH; j != kpos[turn]; j += BOARD_NORTH) {
@@ -615,7 +617,7 @@ namespace Hopper {
 			}
 		failN:
 			for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (NSslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTH; j != kpos[turn]; j += BOARD_SOUTH) {
@@ -629,7 +631,7 @@ namespace Hopper {
 			}
 		failS:
 			for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (EWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						for (j = i + BOARD_EAST; j != kpos[turn]; j += BOARD_EAST) {
@@ -643,13 +645,13 @@ namespace Hopper {
 			}
 		failE:
 			for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (EWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						for (j = i + BOARD_WEST; j != kpos[turn]; j += BOARD_WEST) {
 							if (grid[j]) { goto failW; }
 						}
-						pins[5 + cpins] = i;
+						pins[cpins] = i;
 						pins[5 + cpins++] = BOARD_WEST;
 					}
 					break;
@@ -660,7 +662,7 @@ namespace Hopper {
 		case W_BISHOP:
 		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						for (j = i + BOARD_NORTHEAST; j != kpos[turn]; j += BOARD_NORTHEAST) {
@@ -674,7 +676,7 @@ namespace Hopper {
 			}
 		failNE:
 			for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
 						for (j = i + BOARD_NORTHWEST; j != kpos[turn]; j += BOARD_NORTHWEST) {
@@ -688,7 +690,7 @@ namespace Hopper {
 			}
 		failNW:
 			for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTHEAST; j != kpos[turn]; j += BOARD_SOUTHEAST) {
@@ -702,7 +704,7 @@ namespace Hopper {
 			}
 		failSE:
 			for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
-				attackers[(int) (us << 3) + threatened[(int) (us << 6) + i]++][i] = from;
+				attackers[us * WIDTH  + threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
 					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTHWEST; j != kpos[turn]; j += BOARD_SOUTHWEST) {

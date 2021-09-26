@@ -5,8 +5,7 @@
 
 namespace Hopper 
 {
-    typedef struct line 
-    {
+    typedef struct line {
         int cmove = 0;
         Move movelink[MAXDEPTH];
     }line;
@@ -15,7 +14,6 @@ namespace Hopper
     {
     public:
         Hashtable();
-        ~Hashtable() { ; }
         void clean();
         void extractPV(Board* b, line* l);
         void newEntry(int index, Hashentry& h) { table[index] = h; }

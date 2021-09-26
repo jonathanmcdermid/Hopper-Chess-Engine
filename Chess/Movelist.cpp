@@ -129,7 +129,7 @@ namespace Hopper
 			}
 			for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 			{
-				if (b->threatened[(int)(!b->turn << 6) + moves[GENWINNONCAPS][i].getTo()] && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
+				if (b->threatened[!b->turn * SPACES + moves[GENWINNONCAPS][i].getTo()] && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
 				{
 					moves[GENLOSENONCAPS][limit[GENLOSENONCAPS]++] = moves[GENWINNONCAPS][i];
 					moves[GENWINNONCAPS][i--] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
@@ -145,43 +145,43 @@ namespace Hopper
 
 	bool MoveList::staticExchange(Move m, int threshold)
 	{
-		if (!b->threatened[(int) (!b->turn << 6) + m.getTo()] || abs(b->grid[m.getTo()]) >= abs(b->grid[m.getFrom()]))
+		if (!b->threatened[!b->turn * SPACES + m.getTo()] || abs(b->grid[m.getTo()]) >= abs(b->grid[m.getFrom()]))
 			return true;
-		if (abs(b->grid[m.getTo()]) <= abs(b->grid[m.getFrom()] && b->threatened[(int)(!b->turn << 6) + m.getTo()] > b->threatened[(int)(b->turn << 6) + m.getTo()]))
+		if (abs(b->grid[m.getTo()]) <= abs(b->grid[m.getFrom()] && b->threatened[!b->turn * SPACES + m.getTo()] > b->threatened[b->turn * SPACES + m.getTo()]))
 			return false;
 		bool tomove = b->turn;
 		int to = m.getTo(), from = m.getFrom(), attackers[WIDTH * 2], total[2], see = abs(b->grid[to]), trophy = abs(b->grid[from]), smallestindex;
 		for (int i = 0; i < 2; ++i)
 		{
-			total[i] = b->threatened[(int)(i << 6) + to];
+			total[i] = b->threatened[i * SPACES + to];
 			for (int j = 0; j < total[i]; ++j)
-				attackers[(int) (i << 3) + j] = b->attackers[(int) (i << 3) + j][to];
+				attackers[i * WIDTH + j] = b->attackers[i * WIDTH + j][to];
 		}
 		for (int i = 0; i < total[tomove]; ++i)
-			if (attackers[(int) (tomove << 3) + i] == from)
-				attackers[(int) (tomove << 3) + i] = attackers[(int) (tomove << 3) + --total[tomove]];
+			if (attackers[tomove * WIDTH + i] == from)
+				attackers[tomove * WIDTH + i] = attackers[tomove * WIDTH + --total[tomove]];
 		while (total[!tomove])
 		{
 			tomove = !tomove;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->grid[attackers[(int) (tomove << 3) + i]] < b->grid[attackers[(int) (tomove << 3) + smallestindex]])
+				if (b->grid[attackers[tomove * WIDTH + i]] < b->grid[attackers[tomove * WIDTH + smallestindex]])
 					smallestindex = i;
 			see -= trophy;
 			if (see >= threshold)
 				return true;
-			trophy = b->grid[attackers[(int) (tomove << 3) + smallestindex]];
-			attackers[(int) (tomove << 3) + smallestindex] = attackers[(int) (tomove << 3) + --total[tomove]];
+			trophy = b->grid[attackers[tomove * WIDTH + smallestindex]];
+			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			tomove = !tomove;
 			if (see + trophy < threshold || (!total[tomove] && see < threshold))
 				return false;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->grid[attackers[(int) (tomove << 3) + i]] < b->grid[attackers[(int) (tomove << 3) + smallestindex]])
+				if (b->grid[attackers[tomove * WIDTH + i]] < b->grid[attackers[tomove * WIDTH + smallestindex]])
 					smallestindex = i;
 			see += trophy;
-			trophy = b->grid[attackers[(int) (tomove << 3) + smallestindex]];
-			attackers[(int) (tomove << 3) + smallestindex] = attackers[(int) (tomove << 3) + --total[tomove]];
+			trophy = b->grid[attackers[tomove * WIDTH + smallestindex]];
+			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			if (see - trophy >= threshold)
 				return true;
 			if (see < trophy)

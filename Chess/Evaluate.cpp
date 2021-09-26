@@ -230,7 +230,7 @@ namespace Hopper
 			case W_ROOK:
 				sum += WROOKBIT[i] + hypotenuse(b->kpos[BLACK], i) * 3;
 				helper = i % WIDTH;
-				if (!cfile[helper + WIDTH] || !cfile[helper + WIDTH]) 
+				if (!cfile[helper + WIDTH] || !cfile[helper]) 
 				{
 					if (!cfile[helper + WIDTH] && !cfile[helper]) 
 						sum += BONUS_ROOK_OPEN_FILE;
@@ -304,7 +304,7 @@ namespace Hopper
 	int Bot::hypotenuse(int a, int b) 
 	{
 		int xc = WIDTH - abs(a % WIDTH - b % WIDTH);
-		int yc = WIDTH - abs((int) (a >> 3) - (int) (b >> 3));
+		int yc = WIDTH - abs(a / WIDTH - b / WIDTH);
 		int c = xc * xc + yc * yc;
 		c = (int) std::sqrt(c);
 		return c;
@@ -325,9 +325,9 @@ namespace Hopper
 		for (int i = 0; i < SPACES; ++i) 
 		{
 			if (b->grid[i] == W_PAWN) 
-				rank[i % WIDTH + WIDTH][cfile[i % WIDTH + WIDTH]++] = (int) (i >> 3);
+				rank[i % WIDTH + WIDTH][cfile[i % WIDTH + WIDTH]++] = i / WIDTH;
 			else if (b->grid[i] == B_PAWN) 
-				rank[i % WIDTH][cfile[i % WIDTH]++] = (int)(i >> 3);
+				rank[i % WIDTH][cfile[i % WIDTH]++] = i / WIDTH;
 		}
 		for (int file = 0; file < WIDTH; ++file) 
 		{
@@ -335,10 +335,10 @@ namespace Hopper
 			{
 				switch (index) 
 				{
-				case 1:
+				case 2:
 					sum += PAWN_DOUBLED;
 					break;
-				case 2:
+				case 3:
 					sum += PAWN_TRIPLED;
 					break;
 				}
@@ -417,10 +417,10 @@ namespace Hopper
 			{
 				switch (index) 
 				{
-				case 1:
+				case 2:
 					sum -= PAWN_DOUBLED;
 					break;
-				case 2:
+				case 3:
 					sum -= PAWN_TRIPLED;
 					break;
 				}
