@@ -167,68 +167,68 @@ namespace Hopper
 		for (int i = 0; i < WIDTH * 2; ++i)
 			cfile[i] = 0;
 		for (int i = 0; i < SPACES; ++i){
-			if (b->grid[i] == W_PAWN) 
+			if (b->gridAt(i) == W_PAWN) 
 				++cfile[i % WIDTH + WIDTH];
-			else if (b->grid[i] == B_PAWN) 
+			else if (b->gridAt(i) == B_PAWN) 
 				++cfile[i % WIDTH];
 		}
 		for (int i = 0; i < SPACES; ++i) 
 		{
-			switch (b->grid[i]) 
+			switch (b->gridAt(i)) 
 			{
 			case W_PAWN:
 				sum += WPAWNBIT[i];
-				if (b->grid[i + BOARD_NORTH] == B_PAWN || !cfile[i % WIDTH]) 
+				if (b->gridAt(i + BOARD_NORTH) == B_PAWN || !cfile[i % WIDTH]) 
 				{
 					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 2])) 
 					{
-						if (b->grid[i + BOARD_NORTHEAST] == W_KNIGHT) 
+						if (b->gridAt(i + BOARD_NORTHEAST) == W_KNIGHT) 
 							sum += PAWN_KNIGHT_OUTPOST; 
-						else if (b->grid[i + BOARD_NORTHEAST] == W_BISHOP) 
+						else if (b->gridAt(i + BOARD_NORTHEAST) == W_BISHOP) 
 							sum += PAWN_BISHOP_OUTPOST;
 					}
 					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH - 2])) 
 					{
-						if (b->grid[i + BOARD_NORTHWEST] == W_KNIGHT) 
+						if (b->gridAt(i + BOARD_NORTHWEST) == W_KNIGHT) 
 							sum += PAWN_KNIGHT_OUTPOST;
-						else if (b->grid[i + BOARD_NORTHWEST] == W_BISHOP) 
+						else if (b->gridAt(i + BOARD_NORTHWEST) == W_BISHOP) 
 							sum += PAWN_BISHOP_OUTPOST;
 					}
 				}
 				break;
 			case B_PAWN:
 				sum -= BPAWNBIT[i];
-				if (b->grid[i + BOARD_SOUTH] == W_PAWN || !cfile[i % WIDTH + WIDTH]) 
+				if (b->gridAt(i + BOARD_SOUTH) == W_PAWN || !cfile[i % WIDTH + WIDTH]) 
 				{
 					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 10])) 
 					{
-						if (b->grid[i + BOARD_SOUTHEAST] == B_KNIGHT) 
+						if (b->gridAt(i + BOARD_SOUTHEAST) == B_KNIGHT) 
 							sum -= PAWN_KNIGHT_OUTPOST;
-						else if (b->grid[i + BOARD_SOUTHEAST] == B_BISHOP) 
+						else if (b->gridAt(i + BOARD_SOUTHEAST) == B_BISHOP) 
 							sum -= PAWN_BISHOP_OUTPOST;
 					}
 					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH + 6])) { 
-						if (b->grid[i + BOARD_SOUTHWEST] == B_KNIGHT)
+						if (b->gridAt(i + BOARD_SOUTHWEST) == B_KNIGHT)
 							sum -= PAWN_KNIGHT_OUTPOST;
-						else if (b->grid[i + BOARD_SOUTHWEST] == B_BISHOP)
+						else if (b->gridAt(i + BOARD_SOUTHWEST) == B_BISHOP)
 							sum -= PAWN_BISHOP_OUTPOST;
 					}
 				}
 				break;
 			case W_KNIGHT:
-				sum += WKNIGHTBIT[i] + hypotenuse(b->kpos[BLACK], i);
+				sum += WKNIGHTBIT[i] + hypotenuse(b->kposAt(BLACK), i);
 				break;
 			case B_KNIGHT:
-				sum -= BKNIGHTBIT[i] + hypotenuse(b->kpos[WHITE], i);
+				sum -= BKNIGHTBIT[i] + hypotenuse(b->kposAt(WHITE), i);
 				break;
 			case W_BISHOP:
-				sum += WBISHOPBIT[i] + hypotenuse(b->kpos[BLACK], i) * 2;
+				sum += WBISHOPBIT[i] + hypotenuse(b->kposAt(BLACK), i) * 2;
 				break;
 			case B_BISHOP:
-				sum -= BBISHOPBIT[i] + hypotenuse(b->kpos[WHITE], i) * 2;
+				sum -= BBISHOPBIT[i] + hypotenuse(b->kposAt(WHITE), i) * 2;
 				break;
 			case W_ROOK:
-				sum += WROOKBIT[i] + hypotenuse(b->kpos[BLACK], i) * 3;
+				sum += WROOKBIT[i] + hypotenuse(b->kposAt(BLACK), i) * 3;
 				helper = i % WIDTH;
 				if (!cfile[helper + WIDTH] || !cfile[helper]) 
 				{
@@ -242,12 +242,12 @@ namespace Hopper
 							sum += PAWN_ROOK_ON_PASSED;
 						sum += BONUS_ROOK_HALF_OPEN_FILE; 
 					}
-					if (b->kpos[BLACK] % WIDTH == i % WIDTH) 
+					if (b->kposAt(BLACK) % WIDTH == i % WIDTH) 
 						sum += BONUS_ROOK_ON_KING_FILE;
 				}
 				break;
 			case B_ROOK:
-				sum -= BROOKBIT[i] + hypotenuse(b->kpos[WHITE], i) * 3;
+				sum -= BROOKBIT[i] + hypotenuse(b->kposAt(WHITE), i) * 3;
 				helper = i % WIDTH;
 				if (!cfile[helper + WIDTH] || !cfile[helper]) 
 				{
@@ -260,15 +260,15 @@ namespace Hopper
 							sum -= PAWN_ROOK_ON_PASSED;
 						sum -= BONUS_ROOK_HALF_OPEN_FILE; 
 					}
-					if (b->kpos[WHITE] % WIDTH == i % WIDTH) 
+					if (b->kposAt(WHITE) % WIDTH == i % WIDTH) 
 						sum -= BONUS_ROOK_ON_KING_FILE;
 				}
 				break;
 			case W_QUEEN:
-				sum += WW_QUEENBIT[i] + hypotenuse(b->kpos[BLACK], i) * 4;
-				for (helper = 0; helper < b->threatened[SPACES + i]; ++helper) 
+				sum += WW_QUEENBIT[i] + hypotenuse(b->kposAt(BLACK), i) * 4;
+				for (helper = 0; helper < b->threatenedAt(WHITE, i); ++helper) 
 				{
-					if (b->grid[b->attackers[WIDTH + helper][i]] == W_ROOK || b->grid[b->attackers[WIDTH + helper][i]] == W_BISHOP) 
+					if (b->gridAt(b->getAttackers(WHITE,helper,i)) == W_ROOK || b->gridAt(b->getAttackers(WHITE,helper,i)) == W_BISHOP) 
 					{
 						sum += BONUS_QUEEN_SUPPORT;
 						break;
@@ -276,10 +276,10 @@ namespace Hopper
 				}
 				break;
 			case B_QUEEN:
-				sum -= BW_QUEENBIT[i] + hypotenuse(b->kpos[WHITE], i) * 4;
-				for (helper = 0; helper < b->threatened[i]; ++helper) 
+				sum -= BW_QUEENBIT[i] + hypotenuse(b->kposAt(WHITE), i) * 4;
+				for (helper = 0; helper < b->threatenedAt(BLACK, i); ++helper) 
 				{
-					if (b->grid[b->attackers[helper][i]] == B_ROOK || b->grid[b->attackers[helper][i]] == B_BISHOP) 
+					if (b->gridAt(b->getAttackers(BLACK,helper,i)) == B_ROOK || b->gridAt(b->getAttackers(BLACK,helper,i)) == B_BISHOP) 
 					{
 						sum -= BONUS_QUEEN_SUPPORT;
 						break;
@@ -294,11 +294,11 @@ namespace Hopper
 				break;
 			}
 		}
-		if (b->roles[KINDEX + BINDEX] > 1) 
+		if (b->rolesAt(KINDEX + BINDEX) > 1) 
 			sum += BONUS_BISHOP_PAIR;
-		if (b->roles[BINDEX] > 1) 
+		if (b->rolesAt(BINDEX) > 1) 
 			sum -= BONUS_BISHOP_PAIR;
-		return (b->turn) ? b->getCurrV() + sum : -b->getCurrV() - sum;
+		return (b->getTurn()) ? b->getCurrV() + sum : -b->getCurrV() - sum;
 	}
 
 	int Bot::hypotenuse(int a, int b) 
@@ -324,9 +324,9 @@ namespace Hopper
 		}
 		for (int i = 0; i < SPACES; ++i) 
 		{
-			if (b->grid[i] == W_PAWN) 
+			if (b->gridAt(i) == W_PAWN) 
 				rank[i % WIDTH + WIDTH][cfile[i % WIDTH + WIDTH]++] = i / WIDTH;
-			else if (b->grid[i] == B_PAWN) 
+			else if (b->gridAt(i) == B_PAWN) 
 				rank[i % WIDTH][cfile[i % WIDTH]++] = i / WIDTH;
 		}
 		for (int file = 0; file < WIDTH; ++file) 
@@ -354,7 +354,7 @@ namespace Hopper
 						{
 							if (!abs(rank[WIDTH][index] - rank[9][helper])) 
 								sum += PAWN_PHALANX;
-							if (rank[WIDTH][index] - rank[9][helper] == 1 && b->grid[rank[9][helper] * WIDTH + BOARD_NORTH] == B_PAWN) 
+							if (rank[WIDTH][index] - rank[9][helper] == 1 && b->gridAt(rank[9][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -372,7 +372,7 @@ namespace Hopper
 						{
 							if (!abs(rank[15][index] - rank[14][helper])) 
 								sum += PAWN_PHALANX;
-							if (rank[15][index] - rank[14][helper] == 1 && b->grid[7 + rank[14][helper] * WIDTH + BOARD_NORTH] == B_PAWN) 
+							if (rank[15][index] - rank[14][helper] == 1 && b->gridAt(7 + rank[14][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -390,7 +390,7 @@ namespace Hopper
 						{
 							if (!abs(rank[file + WIDTH][index] - rank[file + 9][helper])) 
 								sum += PAWN_PHALANX;
-							if (rank[file + WIDTH][index] - rank[file + 9][helper] == 1 && b->grid[file + rank[file + 9][helper] * WIDTH + BOARD_NORTH] == B_PAWN) 
+							if (rank[file + WIDTH][index] - rank[file + 9][helper] == 1 && b->gridAt(file + rank[file + 9][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -402,7 +402,7 @@ namespace Hopper
 						{
 							if (!abs(rank[file + WIDTH][index] - rank[file + 7][helper])) 
 								sum += PAWN_PHALANX;
-							if (rank[file + WIDTH][index] - rank[file + 7][helper] == 1 && b->grid[file + rank[file + 7][helper] * WIDTH + BOARD_NORTH] == B_PAWN) 
+							if (rank[file + WIDTH][index] - rank[file + 7][helper] == 1 && b->gridAt(file + rank[file + 7][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -437,7 +437,7 @@ namespace Hopper
 						{
 							if (!abs(rank[0][index] - rank[1][helper])) 
 								sum -= PAWN_PHALANX;
-							if (rank[0][index] - rank[1][helper] == 1 && b->grid[rank[1][helper] * WIDTH + BOARD_SOUTH] == W_PAWN) 
+							if (rank[0][index] - rank[1][helper] == 1 && b->gridAt(rank[1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
@@ -455,7 +455,7 @@ namespace Hopper
 						{
 							if (!abs(rank[7][index] - rank[6][helper])) 
 								sum -= PAWN_PHALANX;
-							if (rank[7][index] - rank[6][helper] == 1 && b->grid[7 + rank[6][helper] * WIDTH + BOARD_SOUTH] == W_PAWN) 
+							if (rank[7][index] - rank[6][helper] == 1 && b->gridAt(7 + rank[6][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
@@ -473,7 +473,7 @@ namespace Hopper
 						{
 							if (!abs(rank[file][index] - rank[file + 1][helper])) 
 								sum -= PAWN_PHALANX;
-							if (rank[file][index] - rank[file + 1][helper] == 1 && b->grid[file + rank[file + 1][helper] * WIDTH + BOARD_SOUTH] == W_PAWN) 
+							if (rank[file][index] - rank[file + 1][helper] == 1 && b->gridAt(file + rank[file + 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
@@ -485,7 +485,7 @@ namespace Hopper
 						{
 							if (!abs(rank[file][index] - rank[file - 1][helper])) 
 								sum -= PAWN_PHALANX;
-							if (rank[file][index] - rank[file - 1][helper] == 1 && b->grid[file + rank[file - 1][helper] * WIDTH + BOARD_SOUTH] == W_PAWN) 
+							if (rank[file][index] - rank[file - 1][helper] == 1 && b->gridAt(file + rank[file - 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;

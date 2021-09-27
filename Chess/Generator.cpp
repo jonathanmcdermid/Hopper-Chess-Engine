@@ -76,25 +76,25 @@ namespace Hopper
 		}
 		for (int i = 0; i < threatened[!turn * SPACES + kpos[turn]]; ++i)
 		{
-			if (abs(grid[attackers[!turn * WIDTH + i][kpos[turn]]]) <= W_KNIGHT)
+			if (abs(grid[attackers[!turn][i][kpos[turn]]]) <= W_KNIGHT)
 				checktype = BOARD_LEAP;
-			else if (NSslide(attackers[!turn * WIDTH + i][kpos[turn]], kpos[turn]))
-				checktype = (attackers[!turn * WIDTH + i][kpos[turn]] > kpos[turn]) ? BOARD_NORTH : BOARD_SOUTH;
-			else if (EWslide(attackers[!turn * WIDTH + i][kpos[turn]], kpos[turn]))
-				checktype = (attackers[!turn * WIDTH + i][kpos[turn]] > kpos[turn]) ? BOARD_WEST : BOARD_EAST;
-			else if (NESWslide(attackers[!turn * WIDTH + i][kpos[turn]], kpos[turn]))
-				checktype = (attackers[!turn * WIDTH + i][kpos[turn]] > kpos[turn]) ? BOARD_NORTHEAST : BOARD_SOUTHWEST;
+			else if (NSslide(attackers[!turn][i][kpos[turn]], kpos[turn]))
+				checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? BOARD_NORTH : BOARD_SOUTH;
+			else if (EWslide(attackers[!turn][i][kpos[turn]], kpos[turn]))
+				checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? BOARD_WEST : BOARD_EAST;
+			else if (NESWslide(attackers[!turn][i][kpos[turn]], kpos[turn]))
+				checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? BOARD_NORTHEAST : BOARD_SOUTHWEST;
 			else
-				checktype = (attackers[!turn * WIDTH + i][kpos[turn]] > kpos[turn]) ? BOARD_NORTHWEST : BOARD_SOUTHEAST;
+				checktype = (attackers[!turn][i][kpos[turn]] > kpos[turn]) ? BOARD_NORTHWEST : BOARD_SOUTHEAST;
 			for (int j = 0; j < cmove; ++j)
 			{
 				to = m[j].getTo();
 				from = m[j].getFrom();
 				if (from != kpos[turn])
 				{
-					if (checktype != BOARD_LEAP && ((to - attackers[!turn * WIDTH + i][kpos[turn]]) % checktype || (to < attackers[!turn * WIDTH + i][kpos[turn]] && to < kpos[turn]) || (to > attackers[!turn * WIDTH + i][kpos[turn]] && to > kpos[turn])))
+					if (checktype != BOARD_LEAP && ((to - attackers[!turn][i][kpos[turn]]) % checktype || (to < attackers[!turn][i][kpos[turn]] && to < kpos[turn]) || (to > attackers[!turn][i][kpos[turn]] && to > kpos[turn])))
 						m[j--] = m[--cmove];
-					else if (checktype == BOARD_LEAP && to != attackers[!turn * WIDTH + i][kpos[turn]] && m[j].getFlags() != ENPASSANT)
+					else if (checktype == BOARD_LEAP && to != attackers[!turn][i][kpos[turn]] && m[j].getFlags() != ENPASSANT)
 						m[j--] = m[--cmove];
 				}
 				else if (checktype != BOARD_LEAP && to - from == checktype)

@@ -23,8 +23,8 @@ namespace Hopper
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->grid[i]) {
-				key ^= piecesAt(abs(b->grid[i]) % 10, b->grid[i] > 0, i);
+			if (b->gridAt(i)) {
+				key ^= piecesAt(abs(b->gridAt(i)) % 10, b->gridAt(i) > 0, i);
 			}
 		}
 		for (int i = 0; i < 4; ++i) {
@@ -33,7 +33,7 @@ namespace Hopper
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)
 			key ^= enPassant[b->getCurrM().getTo()];
-		if (b->turn)
+		if (b->getTurn())
 			key ^= side;
 		return key;
 	}
@@ -42,9 +42,9 @@ namespace Hopper
 	{
 		U64 key = 0;
 		for (int i = 0; i < SPACES; i++) {
-			if (b->grid[i] == W_PAWN) 
+			if (b->gridAt(i) == W_PAWN) 
 				key ^= piecesAt(PINDEX, WHITE, i);
-			else if (b->grid[i] == B_PAWN) 
+			else if (b->gridAt(i) == B_PAWN) 
 				key ^= piecesAt(PINDEX, BLACK, i);
 		}
 		return key;

@@ -12,7 +12,7 @@ namespace Hopper
 	void Bot::makeMove() 
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto start = std::chrono::high_resolution_clock::now();
-		int timeallotted = (b->turn) ? lim.time[WHITE] / (lim.movesleft + 10) : lim.time[BLACK] / (lim.movesleft + 10);
+		int timeallotted = (b->getTurn()) ? lim.time[WHITE] / (lim.movesleft + 10) : lim.time[BLACK] / (lim.movesleft + 10);
 		int window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
@@ -155,7 +155,7 @@ namespace Hopper
 	{
 		int score = negaEval();
 		if (ph.getEntry(b->getCurrP() % HASHSIZE) == b->getCurrP()) 
-			score += (b->turn)? ph.getEntry(b->getCurrP() % HASHSIZE): -ph.getEntry(b->getCurrP() % HASHSIZE);
+			score += (b->getTurn())? ph.getEntry(b->getCurrP() % HASHSIZE): -ph.getEntry(b->getCurrP() % HASHSIZE);
 		else 
 			ph.newEntry(b->getCurrP() % HASHSIZE, pawnEval()); 
 		if (score >= beta) 

@@ -38,6 +38,15 @@ namespace Hopper
 		U64 getCurrZ() const { return hist.back().zHist; }
 		U64 getCurrP() const { return hist.back().pHist; }
 		Move getCurrM() const { return hist.back().mHist; }
+		bool getTurn() const { return turn; }
+		int gridAt(int x)const { return (int) grid[x]; }
+		int threatenedAt(bool team, int x)const { return threatened[team * SPACES + x]; }
+		int getAttackers(int x, int y, int z)const { return attackers[x][y][z]; }
+		void setAttackers(int x, int y, int z, int val) { attackers[x][y][z] = val; }
+		int pinsAt(int x)const { return pins[x]; }
+		int rolesAt(int x)const { return roles[x]; }
+		int cpinsAt()const { return cpins; }
+		int kposAt(int x)const { return kpos[x]; }
 		void movePiece(Move m);
 		void unmovePiece();
 		bool validateMove(const Move m);
@@ -45,14 +54,6 @@ namespace Hopper
 		int genAll(Move* m);
 		int genAllCaps(Move* m);
 		int genAllNonCaps(Move* m);
-		enum::role_enum grid[SPACES];
-		enum::side_enum turn;
-		int threatened[SPACES * 2];
-		int attackers[WIDTH * 2][SPACES];
-		int pins[10];
-		int roles[10];
-		int cpins;
-		int kpos[2];
 	private:
 		void pieceThreats(int from);
 		void allThreats();
@@ -62,5 +63,13 @@ namespace Hopper
 		int removeIllegal(Move* m, int cmove);
 		Zobrist z;
 		std::vector<historyInfo> hist;
+		enum::role_enum grid[SPACES];
+		int attackers[2][WIDTH][SPACES];
+		int threatened[SPACES * 2];
+		int pins[10];
+		int roles[10];
+		int kpos[2];
+		bool turn;
+		int cpins;
 	};
 }

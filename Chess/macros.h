@@ -1,7 +1,5 @@
 #pragma once
 
-enum side_enum { BLACK = 0, WHITE };
-
 enum castle_enum { WKINGSIDE = 0, WQUEENSIDE, BKINGSIDE, BQUEENSIDE };
 
 enum role_enum { EMPTY = 0, B_KING = -20005, B_QUEEN = -904, B_ROOK = -503, B_BISHOP = -322, B_KNIGHT = -301, B_PAWN = -100, W_PAWN = 100, W_KNIGHT = 301, W_BISHOP = 322, W_ROOK = 503, W_QUEEN = 904, W_KING = 20005 };
@@ -16,12 +14,14 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 
 #define STARTFEN	"rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % BOARD_SOUTHWEST && ((to) - (from)) % BOARD_NORTHEAST) ? false : true
 #define NWSEslide(from, to) (((to) - (from)) % BOARD_SOUTHEAST && ((to) - (from)) % BOARD_NORTHWEST) ? false : true
 #define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
 #define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
+
+#define BLACK		false
+#define WHITE		true
 
 #define HASHSIZE	24000
 

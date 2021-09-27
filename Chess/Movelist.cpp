@@ -12,8 +12,8 @@ namespace Hopper
 		{
 			index[i] = 0;
 			limit[i] = 0;
-			for (int j = 0; j < SPACES; ++j) 
-				moves[i][j] = NULLMOVE;
+			//for (int j = 0; j < SPACES; ++j) 
+			//	moves[i][j] = NULLMOVE;
 		}
 		state = GENPV;
 		moves[GENPV][0] = pv;
@@ -30,8 +30,8 @@ namespace Hopper
 		{
 			index[i] = 0;
 			limit[i] = 0;
-			for (int j = 0; j < SPACES; ++j) 
-				moves[i][j] = NULLMOVE;
+			//for (int j = 0; j < SPACES; ++j) 
+			//	moves[i][j] = NULLMOVE;
 		}
 		state = GENPV;
 	}
@@ -129,7 +129,7 @@ namespace Hopper
 			}
 			for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 			{
-				if (b->threatened[!b->turn * SPACES + moves[GENWINNONCAPS][i].getTo()] && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
+				if (b->threatenedAt(!b->getTurn(), moves[GENWINNONCAPS][i].getTo()) && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
 				{
 					moves[GENLOSENONCAPS][limit[GENLOSENONCAPS]++] = moves[GENWINNONCAPS][i];
 					moves[GENWINNONCAPS][i--] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
@@ -145,17 +145,17 @@ namespace Hopper
 
 	bool MoveList::staticExchange(Move m, int threshold)
 	{
-		if (!b->threatened[!b->turn * SPACES + m.getTo()] || abs(b->grid[m.getTo()]) >= abs(b->grid[m.getFrom()]))
+		if (!b->threatenedAt(!b->getTurn(), m.getTo()) || abs(b->gridAt(m.getTo())) >= abs(b->gridAt(m.getFrom())))
 			return true;
-		if (abs(b->grid[m.getTo()]) <= abs(b->grid[m.getFrom()] && b->threatened[!b->turn * SPACES + m.getTo()] > b->threatened[b->turn * SPACES + m.getTo()]))
+		if (abs(b->gridAt(m.getTo())) <= abs(b->gridAt(m.getFrom()) && b->threatenedAt(!b->getTurn(), m.getTo()) > b->threatenedAt(b->getTurn(), m.getTo())))
 			return false;
-		bool tomove = b->turn;
-		int to = m.getTo(), from = m.getFrom(), attackers[WIDTH * 2], total[2], see = abs(b->grid[to]), trophy = abs(b->grid[from]), smallestindex;
+		bool tomove = b->getTurn();
+		int to = m.getTo(), from = m.getFrom(), attackers[WIDTH * 2], total[2], see = abs(b->gridAt(to)), trophy = abs(b->gridAt(from)), smallestindex;
 		for (int i = 0; i < 2; ++i)
 		{
-			total[i] = b->threatened[i * SPACES + to];
+			total[i] = b->threatenedAt(i, to);
 			for (int j = 0; j < total[i]; ++j)
-				attackers[i * WIDTH + j] = b->attackers[i * WIDTH + j][to];
+				attackers[i * WIDTH + j] = b->getAttackers(i,j,to);
 		}
 		for (int i = 0; i < total[tomove]; ++i)
 			if (attackers[tomove * WIDTH + i] == from)
@@ -165,22 +165,22 @@ namespace Hopper
 			tomove = !tomove;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->grid[attackers[tomove * WIDTH + i]] < b->grid[attackers[tomove * WIDTH + smallestindex]])
+				if (b->gridAt(attackers[tomove * WIDTH + i]) < b->gridAt(attackers[tomove * WIDTH + smallestindex]))
 					smallestindex = i;
 			see -= trophy;
 			if (see >= threshold)
 				return true;
-			trophy = b->grid[attackers[tomove * WIDTH + smallestindex]];
+			trophy = b->gridAt(attackers[tomove * WIDTH + smallestindex]);
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			tomove = !tomove;
 			if (see + trophy < threshold || (!total[tomove] && see < threshold))
 				return false;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->grid[attackers[tomove * WIDTH + i]] < b->grid[attackers[tomove * WIDTH + smallestindex]])
+				if (b->gridAt(attackers[tomove * WIDTH + i]) < b->gridAt(attackers[tomove * WIDTH + smallestindex]))
 					smallestindex = i;
 			see += trophy;
-			trophy = b->grid[attackers[tomove * WIDTH + smallestindex]];
+			trophy = b->gridAt(attackers[tomove * WIDTH + smallestindex]);
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			if (see - trophy >= threshold)
 				return true;
