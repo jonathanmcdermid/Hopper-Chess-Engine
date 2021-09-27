@@ -21,10 +21,10 @@ namespace Hopper
 		bool infinite = false;
 	} limits;
 
-	class Bot 
+	class Engine 
 	{
 	public:
-		Bot(Board* bd);
+		Engine(Board* bd);
 		void makeMove();
 		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
 		limits lim;
@@ -34,10 +34,10 @@ namespace Hopper
 		int quiescentSearch(int alpha, int beta);
 		int negaEval();
 		int pawnEval();
-		Board* b;
-		Killers k;
-		Hashtable ht;
-		Pawnhash ph;
+		Board* myBoard;
+		Killers myKillers;
+		HashTable myHashTable;
+		Pawnhash myPawnHashTable;
 		int nodes = 0;
 	};
 }

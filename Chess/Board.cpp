@@ -10,13 +10,13 @@ namespace Hopper {
 
 	void Board::fenSet(const char* fs) 
 	{//sets board to state outlined in FEN string
-		hist.push_back(historyInfo(0,0,0,0,0,NULLMOVE));
+		myHistory.push_back(historyInfo(0,0,0,0,0,NULLMOVE));
 		for (int i = PINDEX; i < KINDEX * 2; ++i) {
-			roles[i] = 0;
-			pins[i] = 0;
+			roleCounts[i] = 0;
+			pinnedPieces[i] = 0;
 		}
 		for (int i = 0; i < 2; ++i) {
-			kpos[i] = 0;
+			kingPos[i] = 0;
 			for (int j = 0; j < WIDTH; ++j) {
 				for (int k = 0; k < SPACES; ++k) {
 					attackers[i][j][k] = 0;
@@ -31,50 +31,50 @@ namespace Hopper {
 			switch (fs[index]) {
 			case 'P':  
 				grid[counter++] = W_PAWN; 
-				++roles[KINDEX + PINDEX];
+				++roleCounts[KINDEX + PINDEX];
 				break; 
 			case 'R': 
 				grid[counter++] = W_ROOK;
-				++roles[KINDEX + RINDEX];
+				++roleCounts[KINDEX + RINDEX];
 				break;
 			case 'N':  
 				grid[counter++] = W_KNIGHT; 
-				++roles[KINDEX + NINDEX];
+				++roleCounts[KINDEX + NINDEX];
 				break;
 			case 'B':  
 				grid[counter++] = W_BISHOP; 
-				++roles[KINDEX + BINDEX];
+				++roleCounts[KINDEX + BINDEX];
 				break;
 			case 'Q':  
 				grid[counter++] = W_QUEEN; 
-				++roles[KINDEX + QINDEX];
+				++roleCounts[KINDEX + QINDEX];
 				break;
 			case 'K':  
-				kpos[WHITE] = counter;
+				kingPos[WHITE] = counter;
 				grid[counter++] = W_KING; 
 				break; 
 			case 'p':  
 				grid[counter++] = B_PAWN; 
-				++roles[PINDEX];
+				++roleCounts[PINDEX];
 				break;
 			case 'r':  
 				grid[counter++] = B_ROOK; 
-				++roles[RINDEX];
+				++roleCounts[RINDEX];
 				break;
 			case 'n':  
 				grid[counter++] = B_KNIGHT; 
-				++roles[NINDEX];
+				++roleCounts[NINDEX];
 				break;
 			case 'b':
 				grid[counter++] = B_BISHOP; 
-				++roles[BINDEX];
+				++roleCounts[BINDEX];
 				break;
 			case 'q':  
 				grid[counter++] = B_QUEEN; 
-				++roles[QINDEX];
+				++roleCounts[QINDEX];
 				break;
 			case 'k':  
-				kpos[BLACK] = counter;
+				kingPos[BLACK] = counter;
 				grid[counter++] = B_KING;
 				break; 
 			case '/':  
@@ -87,51 +87,51 @@ namespace Hopper {
 		}
 		turn = (fs[++index] == 'w');
 		++index;
-		hist.back().cHist = 0;
+		myHistory.back().cHist = 0;
 		do {
 			switch (fs[index++]) {
 			case 'K': 
-				hist.back().cHist |= 1 << 0; 
+				myHistory.back().cHist |= 1 << 0; 
 				break;
 			case 'Q': 
-				hist.back().cHist |= 1 << 1; 
+				myHistory.back().cHist |= 1 << 1; 
 				break;
 			case 'k': 
-				hist.back().cHist |= 1 << 2; 
+				myHistory.back().cHist |= 1 << 2; 
 				break;
 			case 'q': 
-				hist.back().cHist |= 1 << 3; 
+				myHistory.back().cHist |= 1 << 3; 
 				break;
 			}
 		} while (fs[index] != ' ');
 		if (fs[++index] != '-') {
 			int from = (turn) ? fs[index] - '0' - WIDTH : fs[index] - '0' + WIDTH;
 			int to = (turn) ? fs[index] - '0' + WIDTH : fs[index] - '0' - WIDTH;
-			hist.back().mHist = Move(from, to, DOUBLEPUSH);
+			myHistory.back().mHist = Move(from, to, DOUBLEPUSH);
 		}
 		index += 2;
-		hist.back().fHist = fs[index] - '0';
-		hist.back().vHist = 0;
+		myHistory.back().fHist = fs[index] - '0';
+		myHistory.back().vHist = 0;
 		for (int i = 0; i < SPACES; ++i) 
 		{ 
-			hist.back().vHist += grid[i]; 
+			myHistory.back().vHist += grid[i]; 
 		}
-		hist.back().zHist = z.newKey(this);
-		hist.back().pHist = z.newPawnKey(this);
+		myHistory.back().zHist = myZobrist.newKey(this);
+		myHistory.back().pHist = myZobrist.newPawnKey(this);
 		allThreats();
 	}
 
 	bool Board::isCheckMate() 
 	{
-		Move m[28];
-		int cmove;
+		Move nextMove[28];
+		int moveCount;
 		if (turn) {
 			for (int i = 0; i < SPACES; ++i) {
 				if (grid[i] > 0) {
-					cmove = pieceMoves(m, i);
-					if (cmove) {
-						cmove = removeIllegal(m, cmove);
-						if (cmove) { return false; }
+					moveCount = genAllMovesAt(nextMove, i);
+					if (moveCount) {
+						moveCount = removeIllegalMoves(nextMove, moveCount);
+						if (moveCount) { return false; }
 					}
 				}
 			}
@@ -139,10 +139,10 @@ namespace Hopper {
 		else {
 			for (int i = 0; i < SPACES; ++i) {
 				if (grid[i] < 0) {
-					cmove = pieceMoves(m, i);
-					if (cmove) {
-						cmove = removeIllegal(m, cmove);
-						if (cmove) { return false; }
+					moveCount = genAllMovesAt(nextMove, i);
+					if (moveCount) {
+						moveCount = removeIllegalMoves(nextMove, moveCount);
+						if (moveCount) { return false; }
 					}
 				}
 			}
@@ -152,10 +152,10 @@ namespace Hopper {
 
 	bool Board::isRepititionDraw() 
 	{
-		if (hist.back().fHist >= 100) { return true; }
+		if (myHistory.back().fHist >= 100) { return true; }
 		bool once = false;
-		for (int i = 4; i < hist.back().fHist; i += 4) {
-			if (hist[hist.size() - i - 1].zHist == hist.back().zHist) {
+		for (int i = 4; i < myHistory.back().fHist; i += 4) {
+			if (myHistory[myHistory.size() - i - 1].zHist == myHistory.back().zHist) {
 				if (once) { 
 					return true; 
 				}
@@ -169,12 +169,12 @@ namespace Hopper {
 
 	bool Board::isMaterialDraw()
 	{
-		if (roles[KINDEX + PINDEX] || roles[PINDEX] || roles[KINDEX + QINDEX] || roles[QINDEX]) { return false; }
+		if (roleCounts[KINDEX + PINDEX] || roleCounts[PINDEX] || roleCounts[KINDEX + QINDEX] || roleCounts[QINDEX]) { return false; }
 		int helper;
 		for (int i = 0; i < 2; ++i) {
 			helper = 0;
 			for (int j = NINDEX; j < QINDEX; ++j)
-				helper += j * roles[i + j];
+				helper += j * roleCounts[i + j];
 			if (helper > BINDEX)
 				return false;
 		}
@@ -184,224 +184,224 @@ namespace Hopper {
 	bool Board::isEndgame() 
 	{
 		for (int i = 0; i < 2; ++i) {
-			if (roles[i + QINDEX]) {
+			if (roleCounts[i + QINDEX]) {
 				for (int j = NINDEX; j < QINDEX; ++j) {
-					if (roles[i + j]) 
+					if (roleCounts[i + j]) 
 						return false;
 				}
-				if (roles[i + QINDEX] > 1) 
+				if (roleCounts[i + QINDEX] > 1) 
 					return false;
 			}
 		}
 		return true;
 	}
 
-	void Board::movePiece(Move m)
+	void Board::movePiece(Move nextMove)
 	{//executes a move if legal
-		hist.push_back(historyInfo(
-			(m.getFlags() == STANDARD && abs(grid[m.getFrom()]) != W_PAWN) ? hist.back().fHist + 1 : 0,
-			hist.back().cHist,
-			hist.back().vHist,
-			(hist.back().mHist.getFlags() == DOUBLEPUSH) ? hist.back().zHist ^ z.sideAt() ^ z.enPassantAt(hist.back().mHist.getTo()) : hist.back().zHist ^ z.sideAt(),
-			hist.back().pHist,
-			m
+		myHistory.push_back(historyInfo(
+			(nextMove.getFlags() == STANDARD && abs(grid[nextMove.getFrom()]) != W_PAWN) ? myHistory.back().fHist + 1 : 0,
+			myHistory.back().cHist,
+			myHistory.back().vHist,
+			(myHistory.back().mHist.getFlags() == DOUBLEPUSH) ? myHistory.back().zHist ^ myZobrist.sideAt() ^ myZobrist.enPassantAt(myHistory.back().mHist.getTo()) : myHistory.back().zHist ^ myZobrist.sideAt(),
+			myHistory.back().pHist,
+			nextMove
 		));
-		switch (m.getFlags()) {
+		switch (nextMove.getFlags()) {
 		case STANDARD:
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getFrom()]) % 10, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getFrom()]) % 10, turn, m.getTo());
-			grid[m.getTo()] = grid[m.getFrom()];
-			grid[m.getFrom()] = EMPTY;
-			if (abs(grid[m.getTo()]) == W_KING) { 
-				kpos[turn] = m.getTo(); 
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			grid[nextMove.getFrom()] = EMPTY;
+			if (abs(grid[nextMove.getTo()]) == W_KING) { 
+				kingPos[turn] = nextMove.getTo(); 
 			}
-			else if (abs(grid[m.getTo()]) == W_PAWN) {
-				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getTo());
+			else if (abs(grid[nextMove.getTo()]) == W_PAWN) {
+				myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+				myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
 			}
 			break;
 		case DOUBLEPUSH:
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getTo());
-			hist.back().zHist ^= z.enPassantAt(m.getTo());
-			grid[m.getTo()] = grid[m.getFrom()];
-			grid[m.getFrom()] = EMPTY;
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.enPassantAt(nextMove.getTo());
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			grid[nextMove.getFrom()] = EMPTY;
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
 			break;
 		case KCASTLE:
-			hist.back().zHist ^= z.piecesAt(KINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(KINDEX, turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo() + 1);
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo() - 1);
-			grid[m.getTo()] = grid[m.getFrom()];
-			grid[m.getTo() - 1] = grid[m.getTo() + 1];
-			grid[m.getTo() + 1] = EMPTY;
-			grid[m.getFrom()] = EMPTY;
-			kpos[turn] = m.getTo();
+			myHistory.back().zHist ^= myZobrist.piecesAt(KINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(KINDEX, turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo() + 1);
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo() - 1);
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			grid[nextMove.getTo() - 1] = grid[nextMove.getTo() + 1];
+			grid[nextMove.getTo() + 1] = EMPTY;
+			grid[nextMove.getFrom()] = EMPTY;
+			kingPos[turn] = nextMove.getTo();
 			break;
 		case QCASTLE:
-			hist.back().zHist ^= z.piecesAt(KINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(KINDEX, turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo() - 2);
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo() + 1);
-			grid[m.getTo()] = grid[m.getFrom()];
-			grid[m.getTo() + 1] = grid[m.getTo() - 2];
-			grid[m.getTo() - 2] = EMPTY;
-			grid[m.getFrom()] = EMPTY;
-			kpos[turn] = m.getTo();
+			myHistory.back().zHist ^= myZobrist.piecesAt(KINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(KINDEX, turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo() - 2);
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo() + 1);
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			grid[nextMove.getTo() + 1] = grid[nextMove.getTo() - 2];
+			grid[nextMove.getTo() - 2] = EMPTY;
+			grid[nextMove.getFrom()] = EMPTY;
+			kingPos[turn] = nextMove.getTo();
 			break;
 		case CAPTURE:
-			--roles[!turn * KINDEX + abs(grid[m.getTo()]) % 10];
-			if (abs(grid[m.getTo()]) == W_PAWN) { hist.back().pHist ^= z.piecesAt(PINDEX, !turn, m.getTo()); }
-			hist.back().vHist -= grid[m.getTo()];
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getFrom()]) % 10, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getTo()]) % 10, !turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getFrom()]) % 10, turn, m.getTo());
-			grid[m.getTo()] = grid[m.getFrom()];
-			grid[m.getFrom()] = EMPTY;
-			if (abs(grid[m.getTo()]) == W_PAWN) {
-				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-				hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getTo());
+			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
+			if (abs(grid[nextMove.getTo()]) == W_PAWN) { myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, !turn, nextMove.getTo()); }
+			myHistory.back().vHist -= grid[nextMove.getTo()];
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			grid[nextMove.getFrom()] = EMPTY;
+			if (abs(grid[nextMove.getTo()]) == W_PAWN) {
+				myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+				myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
 			}
-			else if (abs(grid[m.getTo()]) == W_KING) { kpos[turn] = m.getTo(); }
+			else if (abs(grid[nextMove.getTo()]) == W_KING) { kingPos[turn] = nextMove.getTo(); }
 			break;
 		case ENPASSANT:
-			--roles[!turn * KINDEX + PINDEX];
-			hist.back().vHist += (turn) ? W_PAWN : B_PAWN;
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getTo());
-			hist.back().zHist ^= (turn) ? z.piecesAt(PINDEX, BLACK, m.getTo() + BOARD_SOUTH) : z.piecesAt(PINDEX, WHITE, m.getTo() + BOARD_NORTH);
-			grid[m.getTo()] = grid[m.getFrom()];
-			(turn) ? grid[m.getTo() + BOARD_SOUTH] = EMPTY : grid[m.getTo() + BOARD_NORTH] = EMPTY;
-			grid[m.getFrom()] = EMPTY;
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getTo());
-			hist.back().pHist ^= (turn) ? z.piecesAt(PINDEX, BLACK, m.getTo() + BOARD_SOUTH) : z.piecesAt(PINDEX, WHITE, m.getTo() + BOARD_NORTH);
+			--roleCounts[!turn * KINDEX + PINDEX];
+			myHistory.back().vHist += (turn) ? W_PAWN : B_PAWN;
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
+			myHistory.back().zHist ^= (turn) ? myZobrist.piecesAt(PINDEX, BLACK, nextMove.getTo() + BOARD_SOUTH) : myZobrist.piecesAt(PINDEX, WHITE, nextMove.getTo() + BOARD_NORTH);
+			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			(turn) ? grid[nextMove.getTo() + BOARD_SOUTH] = EMPTY : grid[nextMove.getTo() + BOARD_NORTH] = EMPTY;
+			grid[nextMove.getFrom()] = EMPTY;
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
+			myHistory.back().pHist ^= (turn) ? myZobrist.piecesAt(PINDEX, BLACK, nextMove.getTo() + BOARD_SOUTH) : myZobrist.piecesAt(PINDEX, WHITE, nextMove.getTo() + BOARD_NORTH);
 			break;
 		case NPROMOTE:
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + NINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_KNIGHT : W_PAWN + B_KNIGHT;
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(NINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_KNIGHT : B_KNIGHT;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + NINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_KNIGHT : W_PAWN + B_KNIGHT;
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(NINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_KNIGHT : B_KNIGHT;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case BPROMOTE:
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + BINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_BISHOP : W_PAWN + B_BISHOP;
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(BINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_BISHOP : B_BISHOP;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + BINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_BISHOP : W_PAWN + B_BISHOP;
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(BINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_BISHOP : B_BISHOP;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case RPROMOTE:
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + RINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_ROOK : W_PAWN + B_ROOK;
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_ROOK : B_ROOK;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + RINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_ROOK : W_PAWN + B_ROOK;
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_ROOK : B_ROOK;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case QPROMOTE:
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + QINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_QUEEN : W_PAWN - W_QUEEN;
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(QINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_QUEEN : B_QUEEN;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + QINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_QUEEN : W_PAWN - W_QUEEN;
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(QINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_QUEEN : B_QUEEN;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case NPROMOTEC:
-			--roles[!turn * KINDEX + abs(grid[m.getTo()]) % 10];
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + NINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_KNIGHT - grid[m.getTo()] : W_PAWN + B_KNIGHT - grid[m.getTo()];
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getTo()]) % 10, !turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(NINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_KNIGHT : B_KNIGHT;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + NINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_KNIGHT - grid[nextMove.getTo()] : W_PAWN + B_KNIGHT - grid[nextMove.getTo()];
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(NINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_KNIGHT : B_KNIGHT;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case BPROMOTEC:
-			--roles[!turn * KINDEX + abs(grid[m.getTo()]) % 10];
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + BINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_BISHOP - grid[m.getTo()] : W_PAWN + B_BISHOP - grid[m.getTo()];
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getTo()]) % 10, !turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(BINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_BISHOP : B_BISHOP;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + BINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_BISHOP - grid[nextMove.getTo()] : W_PAWN + B_BISHOP - grid[nextMove.getTo()];
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(BINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_BISHOP : B_BISHOP;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case RPROMOTEC:
-			--roles[!turn * KINDEX + abs(grid[m.getTo()]) % 10];
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + RINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_ROOK - grid[m.getTo()] : W_PAWN + B_ROOK - grid[m.getTo()];
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getTo()]) % 10, !turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(RINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_ROOK : B_ROOK;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + RINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_ROOK - grid[nextMove.getTo()] : W_PAWN + B_ROOK - grid[nextMove.getTo()];
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(RINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_ROOK : B_ROOK;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case QPROMOTEC:
-			--roles[!turn * KINDEX + abs(grid[m.getTo()]) % 10];
-			--roles[turn * KINDEX + PINDEX];
-			++roles[turn * KINDEX + QINDEX];
-			hist.back().pHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().vHist += (turn) ? B_PAWN + W_QUEEN - grid[m.getTo()] : W_PAWN - W_QUEEN - grid[m.getTo()];
-			hist.back().zHist ^= z.piecesAt(PINDEX, turn, m.getFrom());
-			hist.back().zHist ^= z.piecesAt(abs(grid[m.getTo()]) % 10, !turn, m.getTo());
-			hist.back().zHist ^= z.piecesAt(QINDEX, turn, m.getTo());
-			grid[m.getTo()] = (turn) ? W_QUEEN : B_QUEEN;
-			grid[m.getFrom()] = EMPTY;
+			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
+			--roleCounts[turn * KINDEX + PINDEX];
+			++roleCounts[turn * KINDEX + QINDEX];
+			myHistory.back().pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().vHist += (turn) ? B_PAWN + W_QUEEN - grid[nextMove.getTo()] : W_PAWN - W_QUEEN - grid[nextMove.getTo()];
+			myHistory.back().zHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
+			myHistory.back().zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
+			myHistory.back().zHist ^= myZobrist.piecesAt(QINDEX, turn, nextMove.getTo());
+			grid[nextMove.getTo()] = (turn) ? W_QUEEN : B_QUEEN;
+			grid[nextMove.getFrom()] = EMPTY;
 			break;
 		}
-		if (hist.back().cHist & 1 << 0 && (m.getTo() == 63 || m.getFrom() == 63)) {
-			hist.back().cHist &= ~(1 << 0);
-			hist.back().zHist ^= z.castleAt(WKINGSIDE);
+		if (myHistory.back().cHist & 1 << 0 && (nextMove.getTo() == 63 || nextMove.getFrom() == 63)) {
+			myHistory.back().cHist &= ~(1 << 0);
+			myHistory.back().zHist ^= myZobrist.castleAt(WKINGSIDE);
 		}
-		if (hist.back().cHist & 1 << 1 && (m.getTo() == 56 || m.getFrom() == 56)) {
-			hist.back().cHist &= ~(1 << 1);
-			hist.back().zHist ^= z.castleAt(WQUEENSIDE);
+		if (myHistory.back().cHist & 1 << 1 && (nextMove.getTo() == 56 || nextMove.getFrom() == 56)) {
+			myHistory.back().cHist &= ~(1 << 1);
+			myHistory.back().zHist ^= myZobrist.castleAt(WQUEENSIDE);
 		}
-		if (m.getFrom() == 60) {
-			if (hist.back().cHist & 1 << 0) { 
-				hist.back().cHist &= ~(1 << 0); 
-				hist.back().zHist ^= z.castleAt(WKINGSIDE); 
+		if (nextMove.getFrom() == 60) {
+			if (myHistory.back().cHist & 1 << 0) { 
+				myHistory.back().cHist &= ~(1 << 0); 
+				myHistory.back().zHist ^= myZobrist.castleAt(WKINGSIDE); 
 			}
-			if (hist.back().cHist & 1 << 1) { 
-				hist.back().cHist &= ~(1 << 1); 
-				hist.back().zHist ^= z.castleAt(WQUEENSIDE); 
+			if (myHistory.back().cHist & 1 << 1) { 
+				myHistory.back().cHist &= ~(1 << 1); 
+				myHistory.back().zHist ^= myZobrist.castleAt(WQUEENSIDE); 
 			}
 		}
-		if (hist.back().cHist & 1 << 2 && (m.getTo() == 7 || m.getFrom() == 7)) {
-			hist.back().cHist &= ~(1 << 2);
-			hist.back().zHist ^= z.castleAt(BKINGSIDE);
+		if (myHistory.back().cHist & 1 << 2 && (nextMove.getTo() == 7 || nextMove.getFrom() == 7)) {
+			myHistory.back().cHist &= ~(1 << 2);
+			myHistory.back().zHist ^= myZobrist.castleAt(BKINGSIDE);
 		}
-		if (hist.back().cHist & 1 << 3 && (m.getTo() == 0 || m.getFrom() == 0)) {
-			hist.back().cHist &= ~(1 << 3);
-			hist.back().zHist ^= z.castleAt(BQUEENSIDE);
+		if (myHistory.back().cHist & 1 << 3 && (nextMove.getTo() == 0 || nextMove.getFrom() == 0)) {
+			myHistory.back().cHist &= ~(1 << 3);
+			myHistory.back().zHist ^= myZobrist.castleAt(BQUEENSIDE);
 		}
-		if (m.getFrom() == 4) {
-			if (hist.back().cHist & 1 << 2) {
-				hist.back().cHist &= ~(1 << 2); 
-				hist.back().zHist ^= z.castleAt(BKINGSIDE); 
+		if (nextMove.getFrom() == 4) {
+			if (myHistory.back().cHist & 1 << 2) {
+				myHistory.back().cHist &= ~(1 << 2); 
+				myHistory.back().zHist ^= myZobrist.castleAt(BKINGSIDE); 
 			}
-			if (hist.back().cHist & 1 << 3) { 
-				hist.back().cHist &= ~(1 << 3); 
-				hist.back().zHist ^= z.castleAt(BQUEENSIDE); 
+			if (myHistory.back().cHist & 1 << 3) { 
+				myHistory.back().cHist &= ~(1 << 3); 
+				myHistory.back().zHist ^= myZobrist.castleAt(BQUEENSIDE); 
 			}
 		}
 		turn = (!turn);
@@ -411,107 +411,107 @@ namespace Hopper {
 	void Board::unmovePiece() 
 	{//unmakes a move
 		turn = (!turn);
-		switch (hist.back().mHist.getFlags()) {
+		switch (myHistory.back().mHist.getFlags()) {
 		case STANDARD:
-			grid[hist.back().mHist.getFrom()] = grid[hist.back().mHist.getTo()];
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			if (abs(grid[hist.back().mHist.getFrom()]) == W_KING) { kpos[turn] = hist.back().mHist.getFrom(); }
+			grid[myHistory.back().mHist.getFrom()] = grid[myHistory.back().mHist.getTo()];
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			if (abs(grid[myHistory.back().mHist.getFrom()]) == W_KING) { kingPos[turn] = myHistory.back().mHist.getFrom(); }
 			break;
 		case DOUBLEPUSH:
-			grid[hist.back().mHist.getFrom()] = grid[hist.back().mHist.getTo()];
-			grid[hist.back().mHist.getTo()] = EMPTY;
+			grid[myHistory.back().mHist.getFrom()] = grid[myHistory.back().mHist.getTo()];
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
 			break;
 		case KCASTLE:
-			grid[hist.back().mHist.getFrom()] = grid[hist.back().mHist.getTo()];
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			grid[hist.back().mHist.getTo() + 1] = grid[hist.back().mHist.getTo() - 1];
-			grid[hist.back().mHist.getTo() - 1] = EMPTY;
-			kpos[turn] = hist.back().mHist.getFrom();
+			grid[myHistory.back().mHist.getFrom()] = grid[myHistory.back().mHist.getTo()];
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			grid[myHistory.back().mHist.getTo() + 1] = grid[myHistory.back().mHist.getTo() - 1];
+			grid[myHistory.back().mHist.getTo() - 1] = EMPTY;
+			kingPos[turn] = myHistory.back().mHist.getFrom();
 			break;
 		case QCASTLE:
-			grid[hist.back().mHist.getFrom()] = grid[hist.back().mHist.getTo()];
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			grid[hist.back().mHist.getTo() - 2] = grid[hist.back().mHist.getTo() + 1];
-			grid[hist.back().mHist.getTo() + 1] = EMPTY;
-			kpos[turn] = hist.back().mHist.getFrom();
+			grid[myHistory.back().mHist.getFrom()] = grid[myHistory.back().mHist.getTo()];
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			grid[myHistory.back().mHist.getTo() - 2] = grid[myHistory.back().mHist.getTo() + 1];
+			grid[myHistory.back().mHist.getTo() + 1] = EMPTY;
+			kingPos[turn] = myHistory.back().mHist.getFrom();
 			break;
 		case CAPTURE:
-			grid[hist.back().mHist.getFrom()] = grid[hist.back().mHist.getTo()];
-			grid[hist.back().mHist.getTo()] = (role_enum) (hist[hist.size() - 2].vHist - hist.back().vHist);
-			if (abs(grid[hist.back().mHist.getFrom()]) == W_KING) { kpos[turn] = hist.back().mHist.getFrom(); }
-			++roles[!turn * KINDEX + abs(grid[hist.back().mHist.getTo()]) % 10];
+			grid[myHistory.back().mHist.getFrom()] = grid[myHistory.back().mHist.getTo()];
+			grid[myHistory.back().mHist.getTo()] = (role_enum) (myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist);
+			if (abs(grid[myHistory.back().mHist.getFrom()]) == W_KING) { kingPos[turn] = myHistory.back().mHist.getFrom(); }
+			++roleCounts[!turn * KINDEX + abs(grid[myHistory.back().mHist.getTo()]) % 10];
 			break;
 		case ENPASSANT:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = EMPTY;
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
 			if (turn) {
-				grid[hist.back().mHist.getTo() + 8] = B_PAWN;
+				grid[myHistory.back().mHist.getTo() + 8] = B_PAWN;
 			}
 			else {
-				grid[hist.back().mHist.getTo() - 8] = W_PAWN;
+				grid[myHistory.back().mHist.getTo() - 8] = W_PAWN;
 			}
-			++roles[!turn * KINDEX + PINDEX];
+			++roleCounts[!turn * KINDEX + PINDEX];
 			break;
 		case NPROMOTE:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + NINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + NINDEX];
 			break;
 		case BPROMOTE:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + BINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + BINDEX];
 			break;
 		case RPROMOTE:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + RINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + RINDEX];
 			break;
 		case QPROMOTE:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = EMPTY;
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + QINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = EMPTY;
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + QINDEX];
 			break;
 		case NPROMOTEC:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = (turn) ? (role_enum)( hist[hist.size() - 2].vHist - hist.back().vHist + W_KNIGHT - W_PAWN) : (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist + B_KNIGHT + W_PAWN);
-			++roles[!turn * KINDEX + abs(grid[hist.back().mHist.getTo()]) % 10];
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + NINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = (turn) ? (role_enum)( myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + W_KNIGHT - W_PAWN) : (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + B_KNIGHT + W_PAWN);
+			++roleCounts[!turn * KINDEX + abs(grid[myHistory.back().mHist.getTo()]) % 10];
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + NINDEX];
 			break;
 		case BPROMOTEC:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = (turn) ? (role_enum) (hist[hist.size() - 2].vHist - hist.back().vHist + W_BISHOP - W_PAWN) : (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist + B_BISHOP + W_PAWN);
-			++roles[!turn * KINDEX + abs(grid[hist.back().mHist.getTo()]) % 10];
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + BINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = (turn) ? (role_enum) (myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + W_BISHOP - W_PAWN) : (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + B_BISHOP + W_PAWN);
+			++roleCounts[!turn * KINDEX + abs(grid[myHistory.back().mHist.getTo()]) % 10];
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + BINDEX];
 			break;
 		case RPROMOTEC:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = (turn) ? (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist + W_ROOK - W_PAWN) : (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist + B_ROOK + W_PAWN);
-			++roles[!turn * KINDEX + abs(grid[hist.back().mHist.getTo()]) % 10];
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + RINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = (turn) ? (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + W_ROOK - W_PAWN) : (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + B_ROOK + W_PAWN);
+			++roleCounts[!turn * KINDEX + abs(grid[myHistory.back().mHist.getTo()]) % 10];
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + RINDEX];
 			break;
 		case QPROMOTEC:
-			grid[hist.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[hist.back().mHist.getTo()] = (turn) ? (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist + W_QUEEN - W_PAWN) : (role_enum)(hist[hist.size() - 2].vHist - hist.back().vHist - W_QUEEN + W_PAWN);
-			++roles[!turn * KINDEX + abs(grid[hist.back().mHist.getTo()]) % 10];
-			++roles[turn * KINDEX + PINDEX];
-			--roles[turn * KINDEX + QINDEX];
+			grid[myHistory.back().mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
+			grid[myHistory.back().mHist.getTo()] = (turn) ? (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist + W_QUEEN - W_PAWN) : (role_enum)(myHistory[myHistory.size() - 2].vHist - myHistory.back().vHist - W_QUEEN + W_PAWN);
+			++roleCounts[!turn * KINDEX + abs(grid[myHistory.back().mHist.getTo()]) % 10];
+			++roleCounts[turn * KINDEX + PINDEX];
+			--roleCounts[turn * KINDEX + QINDEX];
 			break;
 		}
-		hist.pop_back();
+		myHistory.pop_back();
 		allThreats();
 	}
 
 	void Board::allThreats() 
 	{
-		cpins = 0;
+		pinCount = 0;
 		for (int i = 0; i < SPACES * 2; ++i)
 			threatened[i] = 0;
 		for (int from = 0; from < SPACES; ++from) {
@@ -616,12 +616,12 @@ namespace Hopper {
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (NSslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
-						for (j = i + BOARD_NORTH; j != kpos[turn]; j += BOARD_NORTH) {
+					if (NSslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
+						for (j = i + BOARD_NORTH; j != kingPos[turn]; j += BOARD_NORTH) {
 							if (grid[j]) { goto failN; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_NORTH;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_NORTH;
 					}
 					break;
 				}
@@ -630,12 +630,12 @@ namespace Hopper {
 			for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (NSslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
-						for (j = i + BOARD_SOUTH; j != kpos[turn]; j += BOARD_SOUTH) {
+					if (NSslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
+						for (j = i + BOARD_SOUTH; j != kingPos[turn]; j += BOARD_SOUTH) {
 							if (grid[j]) { goto failS; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_SOUTH;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_SOUTH;
 					}
 					break;
 				}
@@ -644,12 +644,12 @@ namespace Hopper {
 			for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (EWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
-						for (j = i + BOARD_EAST; j != kpos[turn]; j += BOARD_EAST) {
+					if (EWslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
+						for (j = i + BOARD_EAST; j != kingPos[turn]; j += BOARD_EAST) {
 							if (grid[j]) { goto failE; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_EAST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_EAST;
 					}
 					break;
 				}
@@ -658,12 +658,12 @@ namespace Hopper {
 			for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (EWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
-						for (j = i + BOARD_WEST; j != kpos[turn]; j += BOARD_WEST) {
+					if (EWslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
+						for (j = i + BOARD_WEST; j != kingPos[turn]; j += BOARD_WEST) {
 							if (grid[j]) { goto failW; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_WEST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_WEST;
 					}
 					break;
 				}
@@ -675,12 +675,12 @@ namespace Hopper {
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
-						for (j = i + BOARD_NORTHEAST; j != kpos[turn]; j += BOARD_NORTHEAST) {
+					if (DIAGslide(i, kingPos[turn]) && NESWslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
+						for (j = i + BOARD_NORTHEAST; j != kingPos[turn]; j += BOARD_NORTHEAST) {
 							if (grid[j]) { goto failNE; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_NORTHEAST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_NORTHEAST;
 					}
 					break;
 				}
@@ -689,12 +689,12 @@ namespace Hopper {
 			for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i > kpos[turn] && turn != us) {
-						for (j = i + BOARD_NORTHWEST; j != kpos[turn]; j += BOARD_NORTHWEST) {
+					if (DIAGslide(i, kingPos[turn]) && NWSEslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
+						for (j = i + BOARD_NORTHWEST; j != kingPos[turn]; j += BOARD_NORTHWEST) {
 							if (grid[j]) { goto failNW; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_NORTHWEST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_NORTHWEST;
 					}
 					break;
 				}
@@ -703,12 +703,12 @@ namespace Hopper {
 			for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (DIAGslide(i, kpos[turn]) && NWSEslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
-						for (j = i + BOARD_SOUTHEAST; j != kpos[turn]; j += BOARD_SOUTHEAST) {
+					if (DIAGslide(i, kingPos[turn]) && NWSEslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
+						for (j = i + BOARD_SOUTHEAST; j != kingPos[turn]; j += BOARD_SOUTHEAST) {
 							if (grid[j]) { goto failSE; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_SOUTHEAST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_SOUTHEAST;
 					}
 					break;
 				}
@@ -717,12 +717,12 @@ namespace Hopper {
 			for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
 				attackers[us][threatened[us * SPACES  + i]++][i] = from;
 				if (grid[i]) {
-					if (DIAGslide(i, kpos[turn]) && NESWslide(i, kpos[turn]) && i < kpos[turn] && turn != us) {
-						for (j = i + BOARD_SOUTHWEST; j != kpos[turn]; j += BOARD_SOUTHWEST) {
+					if (DIAGslide(i, kingPos[turn]) && NESWslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
+						for (j = i + BOARD_SOUTHWEST; j != kingPos[turn]; j += BOARD_SOUTHWEST) {
 							if (grid[j]) { goto failSW; }
 						}
-						pins[cpins] = i;
-						pins[5 + cpins++] = BOARD_SOUTHWEST;
+						pinnedPieces[pinCount] = i;
+						pinnedPieces[5 + pinCount++] = BOARD_SOUTHWEST;
 					}
 					break;
 				}

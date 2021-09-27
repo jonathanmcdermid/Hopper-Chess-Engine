@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bot.h"
+#include "Engine.h"
 #include <string>
 
 namespace Hopper 
@@ -18,8 +18,8 @@ namespace Hopper
 		void self();
 		bool playerMove(std::string input);
 		void botMove();
-		Board game;
-		Bot ai = Bot(&game);
-		Move m;
+		Board myBoard;
+		Engine myEngine = Engine(&myBoard);
+		Move nextMove;
 	};
 }

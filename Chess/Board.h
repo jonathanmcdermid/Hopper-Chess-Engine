@@ -12,13 +12,13 @@ namespace Hopper
 		U64 zHist = 0;
 		U64 pHist = 0;
 		Move mHist = NULLMOVE;
-		historyInfo(int f, int c, int v, U64 z, U64 p, Move m) {
+		historyInfo(int f, int c, int v, U64 myZobrist, U64 p, Move nextMove) {
 			fHist = f;
 			cHist = c;
 			vHist = v;
-			zHist = z;
+			zHist = myZobrist;
 			pHist = p;
-			mHist = m;
+			mHist = nextMove;
 		}
 	};
 
@@ -31,45 +31,45 @@ namespace Hopper
 		bool isRepititionDraw();
 		bool isMaterialDraw();
 		bool isEndgame();
-		bool isCheck() const { return threatened[!turn * SPACES + kpos[turn]]; }
-		int getCurrC() const { return hist.back().cHist; }
-		int getCurrV() const { return hist.back().vHist; }
-		int getCurrF() const { return hist.back().fHist; }
-		U64 getCurrZ() const { return hist.back().zHist; }
-		U64 getCurrP() const { return hist.back().pHist; }
-		Move getCurrM() const { return hist.back().mHist; }
+		bool isCheck() const { return threatened[!turn * SPACES + kingPos[turn]]; }
+		int getCurrC() const { return myHistory.back().cHist; }
+		int getCurrV() const { return myHistory.back().vHist; }
+		int getCurrF() const { return myHistory.back().fHist; }
+		U64 getCurrZ() const { return myHistory.back().zHist; }
+		U64 getCurrP() const { return myHistory.back().pHist; }
+		Move getCurrM() const { return myHistory.back().mHist; }
 		bool getTurn() const { return turn; }
-		int gridAt(int x)const { return (int) grid[x]; }
-		int threatenedAt(bool team, int x)const { return threatened[team * SPACES + x]; }
-		int getAttackers(int x, int y, int z)const { return attackers[x][y][z]; }
-		void setAttackers(int x, int y, int z, int val) { attackers[x][y][z] = val; }
-		int pinsAt(int x)const { return pins[x]; }
-		int rolesAt(int x)const { return roles[x]; }
-		int cpinsAt()const { return cpins; }
-		int kposAt(int x)const { return kpos[x]; }
-		void movePiece(Move m);
+		int getGridAt(int position)const { return (int) grid[position]; }
+		int getThreatenedAt(bool team, int position)const { return threatened[team * SPACES + position]; }
+		int getAttackersAt(int x, int y, int myZobrist)const { return attackers[x][y][myZobrist]; }
+		void setAttackersAt(int x, int y, int myZobrist, int val) { attackers[x][y][myZobrist] = val; }
+		int getPinsAt(int position)const { return pinnedPieces[position]; }
+		int getRolesAt(int position)const { return roleCounts[position]; }
+		int getPinCount()const { return pinCount; }
+		int getKingPosAt(int position)const { return kingPos[position]; }
+		void movePiece(Move nextMove);
 		void unmovePiece();
-		bool validateMove(const Move m);
+		bool validateMove(const Move nextMove);
 		Move createMove(int from, int to);
-		int genAll(Move* m);
-		int genAllCaps(Move* m);
-		int genAllNonCaps(Move* m);
+		int genAllMoves(Move* nextMove);
+		int genAllCapMoves(Move* nextMove);
+		int genAllNonCapMoves(Move* nextMove);
 	private:
 		void pieceThreats(int from);
 		void allThreats();
-		int pieceCapMoves(Move* m, int from);
-		int pieceNonCapMoves(Move* m, int from);
-		int pieceMoves(Move* m, int from);
-		int removeIllegal(Move* m, int cmove);
-		Zobrist z;
-		std::vector<historyInfo> hist;
+		int genCapMovesAt(Move* nextMove, int from);
+		int genNonCapMovesAt(Move* nextMove, int from);
+		int genAllMovesAt(Move* nextMove, int from);
+		int removeIllegalMoves(Move* nextMove, int moveCount);
+		Zobrist myZobrist;
+		std::vector<historyInfo> myHistory;
 		enum::role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
 		int threatened[SPACES * 2];
-		int pins[10];
-		int roles[10];
-		int kpos[2];
+		int pinnedPieces[10];
+		int roleCounts[10];
+		int kingPos[2];
 		bool turn;
-		int cpins;
+		int pinCount;
 	};
 }

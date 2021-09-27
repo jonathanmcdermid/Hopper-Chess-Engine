@@ -8,20 +8,20 @@ namespace Hopper
     {
     public:
         Hashentry() { refresh(); }
-        void refresh() { zob = 0; depth = 0; eval = 0; flags = 0; m = NULLMOVE; }
-        Hashentry(U64 z, int d, int e, int f, Move b) { zob = z; depth = d; eval = e; flags = f; m = b; }
-        void operator=(Hashentry a) { zob = a.zob; depth = a.depth; eval = a.eval; flags = a.flags; m = a.m; }
-        U64 getZobrist() const { return zob; }
-        int getDepth() const { return depth; }
-        int getEval() const { return eval; }
-        int getFlags() const { return flags; }
-        Move getMove() const { return m; }
-        void setDepth(int d) { depth = d; }
+        void refresh() { hashZobristKey = 0; hashDepth = 0; hashEval = 0; hashFlags = 0; hashentryMove = NULLMOVE; }
+        Hashentry(U64 myZobrist, int d, int e, int f, Move b) { hashZobristKey = myZobrist; hashDepth = d; hashEval = e; hashFlags = f; hashentryMove = b; }
+        void operator=(Hashentry a) { hashZobristKey = a.hashZobristKey; hashDepth = a.hashDepth; hashEval = a.hashEval; hashFlags = a.hashFlags; hashentryMove = a.hashentryMove; }
+        U64 getZobrist() const { return hashZobristKey; }
+        int getDepth() const { return hashDepth; }
+        int getEval() const { return hashEval; }
+        int getFlags() const { return hashFlags; }
+        Move getMove() const { return hashentryMove; }
+        void setDepth(int d) { hashDepth = d; }
     private:
-        U64 zob;
-        int depth;
-        int eval;
-        int flags;
-        Move m;
+        U64 hashZobristKey;
+        int hashDepth;
+        int hashEval;
+        int hashFlags;
+        Move hashentryMove;
     };
 }

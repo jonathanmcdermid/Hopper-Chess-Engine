@@ -9,7 +9,7 @@ namespace Hopper
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
 		std::uniform_int_distribution<std::uintmax_t> dis;
-		side = dis(gen);
+		turn = dis(gen);
 		for (int i = 0; i < 6 * 2 * SPACES; ++i)
 			pieces[i] = dis(gen);
 		for (int i = 0; i < SPACES; ++i)
@@ -23,8 +23,8 @@ namespace Hopper
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->gridAt(i)) {
-				key ^= piecesAt(abs(b->gridAt(i)) % 10, b->gridAt(i) > 0, i);
+			if (b->getGridAt(i)) {
+				key ^= piecesAt(abs(b->getGridAt(i)) % 10, b->getGridAt(i) > 0, i);
 			}
 		}
 		for (int i = 0; i < 4; ++i) {
@@ -34,7 +34,7 @@ namespace Hopper
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)
 			key ^= enPassant[b->getCurrM().getTo()];
 		if (b->getTurn())
-			key ^= side;
+			key ^= turn;
 		return key;
 	}
 
@@ -42,9 +42,9 @@ namespace Hopper
 	{
 		U64 key = 0;
 		for (int i = 0; i < SPACES; i++) {
-			if (b->gridAt(i) == W_PAWN) 
+			if (b->getGridAt(i) == W_PAWN) 
 				key ^= piecesAt(PINDEX, WHITE, i);
-			else if (b->gridAt(i) == B_PAWN) 
+			else if (b->getGridAt(i) == B_PAWN) 
 				key ^= piecesAt(PINDEX, BLACK, i);
 		}
 		return key;

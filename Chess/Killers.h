@@ -8,13 +8,12 @@ namespace Hopper
 	{
 	public:
 		Killers();
-		Move getPrimary(int ply) const { return m[ply + primaryindex[ply] * MAXDEPTH]; }
+		Move getPrimary(int ply) const { return killerMoves[ply + primaryindex[ply] * MAXDEPTH]; }
 		void cutoff(Move cm, int ply);
 		void chrono();
 	private:
-		Move m[MAXDEPTH * MEMORY];
+		Move killerMoves[MAXDEPTH * MEMORY];
 		int primaryindex[MAXDEPTH];
-		int s[MAXDEPTH * MEMORY];
-		int max;
+		int killerMoveScores[MAXDEPTH * MEMORY];
 	};
 }

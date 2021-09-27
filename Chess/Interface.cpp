@@ -24,8 +24,8 @@ namespace Hopper
 					std::getline(std::cin, input);
 					if (input.at(0) > '0' && input.at(0) <= '9') {
 						int time = (input.at(0) - '0') * 30000;
-						ai.lim.time[WHITE] = time;
-						ai.lim.time[BLACK] = time;
+						myEngine.lim.time[WHITE] = time;
+						myEngine.lim.time[BLACK] = time;
 						return;
 					}
 				}
@@ -41,27 +41,27 @@ namespace Hopper
 		while (is >> word) 
 		{
 			if (word == "wtime")		
-				is >> ai.lim.time[WHITE];
+				is >> myEngine.lim.time[WHITE];
 			else if (word == "btime")		
-				is >> ai.lim.time[BLACK];
+				is >> myEngine.lim.time[BLACK];
 			else if (word == "winc")		
-				is >> ai.lim.inc[WHITE];
+				is >> myEngine.lim.inc[WHITE];
 			else if (word == "binc")		
-				is >> ai.lim.inc[BLACK];
+				is >> myEngine.lim.inc[BLACK];
 			else if (word == "movestogo")	
-				is >> ai.lim.movesleft;
+				is >> myEngine.lim.movesleft;
 			else if (word == "depth")		
-				is >> ai.lim.depth;
+				is >> myEngine.lim.depth;
 			else if (word == "nodes")		
-				is >> ai.lim.nodes;
+				is >> myEngine.lim.nodes;
 			else if (word == "movetime")	
-				is >> ai.lim.movetime;
+				is >> myEngine.lim.movetime;
 			else if (word == "mate")		
-				is >> ai.lim.mate;
+				is >> myEngine.lim.mate;
 			else if (word == "perft")		
-				is >> ai.lim.perft;
+				is >> myEngine.lim.perft;
 			else if (word == "infinite")	
-				ai.lim.infinite = true;
+				myEngine.lim.infinite = true;
 		}
 		Interface::botMove();
 	}
@@ -75,7 +75,7 @@ namespace Hopper
 			std::cout << "\n---------------------------------\n|";
 			for (int j = 0; j < WIDTH; ++j) 
 			{
-				switch (game.gridAt(i * WIDTH  + j)) 
+				switch (myBoard.getGridAt(i * WIDTH  + j)) 
 				{
 				case W_PAWN: 
 					letter = 'P'; break;
@@ -125,7 +125,7 @@ namespace Hopper
 				fen += word + " ";
 		else 
 			return;
-		game.fenSet((const char*)fen.c_str());
+		myBoard.fenSet((const char*)fen.c_str());
 		while (is >> word) {
 			if (!playerMove(word))
 				return;
@@ -151,7 +151,7 @@ namespace Hopper
 			else if (word == "position")
 				position(is);
 			else if (word == "ucinewgame")
-				game.fenSet(STARTFEN);
+				myBoard.fenSet(STARTFEN);
 			else if (word == "isready")
 				std::cout << "readyok\n";
 			else if (word == "print")
@@ -171,11 +171,11 @@ namespace Hopper
 				while (!playerMove(input)) 
 					std::getline(std::cin, input);
 				drawBoard();
-				if (game.isCheckMate()) 
+				if (myBoard.isCheckMate()) 
 					break;
 				Interface::botMove();
 				drawBoard();
-				if (game.isCheckMate()) 
+				if (myBoard.isCheckMate()) 
 					break;
 			}
 		}
@@ -194,7 +194,7 @@ namespace Hopper
 				while (!playerMove(input))
 					std::getline(std::cin, input);
 				drawBoard();
-				if (game.isCheckMate() || game.isMaterialDraw() || game.isRepititionDraw())
+				if (myBoard.isCheckMate() || myBoard.isMaterialDraw() || myBoard.isRepititionDraw())
 					break;
 			}
 		}
@@ -208,10 +208,10 @@ namespace Hopper
 			int to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) 
 			{
-				m = game.createMove(from, to);
-				if (m.getFlags() < NULLFLAGS) 
+				nextMove = myBoard.createMove(from, to);
+				if (nextMove.getFlags() < NULLFLAGS) 
 				{
-					game.movePiece(m);
+					myBoard.movePiece(nextMove);
 					return true;
 				}
 			}
@@ -223,25 +223,25 @@ namespace Hopper
 			char flags = input.c_str()[4];
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) 
 			{
-				m = game.createMove(from, to);
-				if (m.getFlags() >= NPROMOTE) 
+				nextMove = myBoard.createMove(from, to);
+				if (nextMove.getFlags() >= NPROMOTE) 
 				{
 					switch (flags) 
 					{
 					case 'n': 
-						m = (m.getFlags() == QPROMOTEC) ? Move(m.getFrom(), m.getTo(), NPROMOTEC) : Move(m.getFrom(), m.getTo(), NPROMOTE); 
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTE); 
 						break;
 					case 'b': 
-						m = (m.getFlags() == QPROMOTEC) ? Move(m.getFrom(), m.getTo(), BPROMOTEC) : Move(m.getFrom(), m.getTo(), BPROMOTE); 
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTE); 
 						break;
 					case 'r': 
-						m = (m.getFlags() == QPROMOTEC) ? Move(m.getFrom(), m.getTo(), RPROMOTEC) : Move(m.getFrom(), m.getTo(), RPROMOTE); 
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTE); 
 						break;
 					case 'q': 
-						m = (m.getFlags() == QPROMOTEC) ? Move(m.getFrom(), m.getTo(), QPROMOTEC) : Move(m.getFrom(), m.getTo(), QPROMOTE); 
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE); 
 						break;
 					}
-					game.movePiece(m); 
+					myBoard.movePiece(nextMove); 
 					return true;
 				}
 			}
@@ -249,12 +249,12 @@ namespace Hopper
 		else if (input == "fenset") 
 		{
 			std::getline(std::cin, input);
-			game.fenSet(input.c_str());
+			myBoard.fenSet(input.c_str());
 			drawBoard();
 		}
 		else if (input == "unmove")
 		{
-			game.unmovePiece();
+			myBoard.unmovePiece();
 			drawBoard();
 		}
 		return false;
@@ -262,10 +262,10 @@ namespace Hopper
 
 	void Interface::botMove() 
 	{//generates internal moves
-		ai.makeMove();
-		std::string message = { (char)(game.getCurrM().getFrom() % WIDTH + 'a'), (char)(WIDTH - game.getCurrM().getFrom() / WIDTH + '0'),(char)(game.getCurrM().getTo() % WIDTH + 'a'),(char)(WIDTH - game.getCurrM().getTo() / WIDTH + '0') };
+		myEngine.makeMove();
+		std::string message = { (char)(myBoard.getCurrM().getFrom() % WIDTH + 'a'), (char)(WIDTH - myBoard.getCurrM().getFrom() / WIDTH + '0'),(char)(myBoard.getCurrM().getTo() % WIDTH + 'a'),(char)(WIDTH - myBoard.getCurrM().getTo() / WIDTH + '0') };
 		std::cout << "bestmove " << message;
-		switch (game.getCurrM().getFlags()) 
+		switch (myBoard.getCurrM().getFlags()) 
 		{
 		case NPROMOTE:
 		case NPROMOTEC:

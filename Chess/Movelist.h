@@ -11,17 +11,17 @@ namespace Hopper
 	public:
 		MoveList(Board* bd, Move pv, Move hash, Move killer);
 		MoveList(Board* bd);
-		void moveOrder(int genstate);
-		bool staticExchange(Move m, int threshold);
-		bool movesLeft() const { return index[state] < limit[state]; }
+		void moveOrder(int genState);
+		bool staticExchange(Move myMove, int threshold);
+		bool movesLeft() const { return index[generationState] < limit[generationState]; }
 		const bool noMoves();
-		Move getCurrMove() const { return moves[state][index[state]]; }
-		void increment() { ++index[state]; }
+		Move getCurrMove() const { return sortedMoves[generationState][index[generationState]]; }
+		void increment() { ++index[generationState]; }
 	private:
-		Board* b;
-		Move moves[GENEND][SPACES];
+		Board* myBoard;
+		Move sortedMoves[GENEND][SPACES];
 		int index[GENEND];
 		int limit[GENEND];
-		int state;
+		int generationState;
 	};
 }

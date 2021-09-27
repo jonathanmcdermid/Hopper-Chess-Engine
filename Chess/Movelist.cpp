@@ -7,33 +7,33 @@ namespace Hopper
 {
 	MoveList::MoveList(Board* bd, Move pv, Move hash, Move killer) 
 	{
-		b = bd;
+		generationState = GENPV;
+		myBoard = bd;
 		for (int i = 0; i < GENEND; ++i) 
 		{
 			index[i] = 0;
 			limit[i] = 0;
-			//for (int j = 0; j < SPACES; ++j) 
-			//	moves[i][j] = NULLMOVE;
+			for (int j = 0; j < SPACES; ++j) 
+				sortedMoves[i][j] = NULLMOVE;
 		}
-		state = GENPV;
-		moves[GENPV][0] = pv;
+		sortedMoves[GENPV][0] = pv;
 		if (pv != hash) 
-			moves[GENHASH][0] = hash;
+			sortedMoves[GENHASH][0] = hash;
 		if (pv != killer && hash != killer) 
-			moves[GENKILLS][0] = killer;
+			sortedMoves[GENKILLS][0] = killer;
 	}
 
 	MoveList::MoveList(Board* bd) 
 	{ 
-		b = bd;
+		generationState = GENPV;
+		myBoard = bd;
 		for (int i = 0; i < GENEND; ++i) 
 		{
 			index[i] = 0;
 			limit[i] = 0;
-			//for (int j = 0; j < SPACES; ++j) 
-			//	moves[i][j] = NULLMOVE;
+			for (int j = 0; j < SPACES; ++j) 
+				sortedMoves[i][j] = NULLMOVE;
 		}
-		state = GENPV;
 	}
 
 
@@ -47,115 +47,115 @@ namespace Hopper
 
 	void MoveList::moveOrder(int genstate) 
 	{
+		generationState = genstate;
 		int i;
-		state = genstate;
 		switch (genstate) 
 		{
 		case GENPV:
 		case GENHASH:
 		case GENKILLS:
-			if (b->validateMove(moves[genstate][0]))
-				++limit[genstate];
-			return;
+			if (myBoard->validateMove(sortedMoves[generationState][0]))
+				++limit[generationState];
+			break;
 		case GENWINCAPS:
 			for (int j = 0; j < SPACES; ++j)
-				moves[genstate][j] = NULLMOVE;
-			limit[GENWINCAPS] = b->genAllCaps(moves[GENWINCAPS]);
-			if (limit[GENPV] && moves[GENPV][0].isCap()) 
+				sortedMoves[generationState][j] = NULLMOVE;
+			limit[GENWINCAPS] = myBoard->genAllCapMoves(sortedMoves[GENWINCAPS]);
+			if (limit[GENPV] && sortedMoves[GENPV][0].isCap()) 
 			{
 				for (i = 0; i < limit[GENWINCAPS]; ++i) 
 				{
-					if (moves[GENWINCAPS][i] == moves[GENPV][0]) 
+					if (sortedMoves[GENWINCAPS][i] == sortedMoves[GENPV][0]) 
 					{
-						moves[GENWINCAPS][i] = moves[GENWINCAPS][--limit[GENWINCAPS]];
+						sortedMoves[GENWINCAPS][i] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
 						break;
 					}
 				}
 			}
-			if (limit[GENHASH] && moves[GENHASH][0].isCap()) 
+			if (limit[GENHASH] && sortedMoves[GENHASH][0].isCap()) 
 			{
 				for (i = 0; i < limit[GENWINCAPS]; ++i) 
 				{
-					if (moves[GENWINCAPS][i] == moves[GENHASH][0]) 
+					if (sortedMoves[GENWINCAPS][i] == sortedMoves[GENHASH][0]) 
 					{
-						moves[GENWINCAPS][i] = moves[GENWINCAPS][--limit[GENWINCAPS]];
+						sortedMoves[GENWINCAPS][i] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
 						break;
 					}
 				}
 			}
 			for (i = 0; i < limit[GENWINCAPS]; ++i) 
 			{
-				if (!staticExchange(moves[GENWINCAPS][i], -30)) 
+				if (!staticExchange(sortedMoves[GENWINCAPS][i], -30)) 
 				{
-					moves[GENLOSECAPS][limit[GENLOSECAPS]++] = moves[GENWINCAPS][i];
-					moves[GENWINCAPS][i--] = moves[GENWINCAPS][--limit[GENWINCAPS]];
+					sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
+					sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
 				}
 			}
-			return;
+			break;
 		case GENWINNONCAPS:
-			limit[GENWINNONCAPS] = b->genAllNonCaps(moves[GENWINNONCAPS]);
-			if (limit[GENPV] && !moves[GENPV][0].isCap()) 
+			limit[GENWINNONCAPS] = myBoard->genAllNonCapMoves(sortedMoves[GENWINNONCAPS]);
+			if (limit[GENPV] && !sortedMoves[GENPV][0].isCap()) 
 			{
 				for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 				{
-					if (moves[GENWINNONCAPS][i] == moves[GENPV][0]) 
+					if (sortedMoves[GENWINNONCAPS][i] == sortedMoves[GENPV][0]) 
 					{
-						moves[GENWINNONCAPS][i] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
+						sortedMoves[GENWINNONCAPS][i] = sortedMoves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
 						break;
 					}
 				}
 			}
-			if (limit[GENHASH] && !moves[GENHASH][0].isCap()) 
+			if (limit[GENHASH] && !sortedMoves[GENHASH][0].isCap()) 
 			{
 				for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 				{
-					if (moves[GENWINNONCAPS][i] == moves[GENHASH][0]) 
+					if (sortedMoves[GENWINNONCAPS][i] == sortedMoves[GENHASH][0]) 
 					{
-						moves[GENWINNONCAPS][i] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
+						sortedMoves[GENWINNONCAPS][i] = sortedMoves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
 						break;
 					}
 				}
 			}
-			if (limit[GENKILLS] && !moves[GENKILLS][0].isCap()) 
+			if (limit[GENKILLS] && !sortedMoves[GENKILLS][0].isCap()) 
 			{
 				for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 				{
-					if (moves[GENWINNONCAPS][i] == moves[GENKILLS][0]) 
+					if (sortedMoves[GENWINNONCAPS][i] == sortedMoves[GENKILLS][0]) 
 					{
-						moves[GENWINNONCAPS][i] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
+						sortedMoves[GENWINNONCAPS][i] = sortedMoves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
 						break;
 					}
 				}
 			}
 			for (i = 0; i < limit[GENWINNONCAPS]; ++i) 
 			{
-				if (b->threatenedAt(!b->getTurn(), moves[GENWINNONCAPS][i].getTo()) && moves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
+				if (myBoard->getThreatenedAt(!myBoard->getTurn(), sortedMoves[GENWINNONCAPS][i].getTo()) && sortedMoves[GENWINNONCAPS][i].getFlags() < NPROMOTE)
 				{
-					moves[GENLOSENONCAPS][limit[GENLOSENONCAPS]++] = moves[GENWINNONCAPS][i];
-					moves[GENWINNONCAPS][i--] = moves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
+					sortedMoves[GENLOSENONCAPS][limit[GENLOSENONCAPS]++] = sortedMoves[GENWINNONCAPS][i];
+					sortedMoves[GENWINNONCAPS][i--] = sortedMoves[GENWINNONCAPS][--limit[GENWINNONCAPS]];
 				}
 			}
-			return;
+			break;
 		case GENLOSENONCAPS:
-			return;
+			break;
 		case GENLOSECAPS:
-			return;
+			break;
 		}
 	}
 
-	bool MoveList::staticExchange(Move m, int threshold)
+	bool MoveList::staticExchange(Move nextMove, int threshold)
 	{
-		if (!b->threatenedAt(!b->getTurn(), m.getTo()) || abs(b->gridAt(m.getTo())) >= abs(b->gridAt(m.getFrom())))
+		if (!myBoard->getThreatenedAt(!myBoard->getTurn(), nextMove.getTo()) || abs(myBoard->getGridAt(nextMove.getTo())) >= abs(myBoard->getGridAt(nextMove.getFrom())))
 			return true;
-		if (abs(b->gridAt(m.getTo())) <= abs(b->gridAt(m.getFrom()) && b->threatenedAt(!b->getTurn(), m.getTo()) > b->threatenedAt(b->getTurn(), m.getTo())))
+		if (abs(myBoard->getGridAt(nextMove.getTo())) <= abs(myBoard->getGridAt(nextMove.getFrom()) && myBoard->getThreatenedAt(!myBoard->getTurn(), nextMove.getTo()) > myBoard->getThreatenedAt(myBoard->getTurn(), nextMove.getTo())))
 			return false;
-		bool tomove = b->getTurn();
-		int to = m.getTo(), from = m.getFrom(), attackers[WIDTH * 2], total[2], see = abs(b->gridAt(to)), trophy = abs(b->gridAt(from)), smallestindex;
+		bool tomove = myBoard->getTurn();
+		int to = nextMove.getTo(), from = nextMove.getFrom(), attackers[WIDTH * 2], total[2], see = abs(myBoard->getGridAt(to)), trophy = abs(myBoard->getGridAt(from)), smallestindex;
 		for (int i = 0; i < 2; ++i)
 		{
-			total[i] = b->threatenedAt(i, to);
+			total[i] = myBoard->getThreatenedAt(i, to);
 			for (int j = 0; j < total[i]; ++j)
-				attackers[i * WIDTH + j] = b->getAttackers(i,j,to);
+				attackers[i * WIDTH + j] = myBoard->getAttackersAt(i,j,to);
 		}
 		for (int i = 0; i < total[tomove]; ++i)
 			if (attackers[tomove * WIDTH + i] == from)
@@ -165,22 +165,22 @@ namespace Hopper
 			tomove = !tomove;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->gridAt(attackers[tomove * WIDTH + i]) < b->gridAt(attackers[tomove * WIDTH + smallestindex]))
+				if (myBoard->getGridAt(attackers[tomove * WIDTH + i]) < myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]))
 					smallestindex = i;
 			see -= trophy;
 			if (see >= threshold)
 				return true;
-			trophy = b->gridAt(attackers[tomove * WIDTH + smallestindex]);
+			trophy = myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]);
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			tomove = !tomove;
 			if (see + trophy < threshold || (!total[tomove] && see < threshold))
 				return false;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)
-				if (b->gridAt(attackers[tomove * WIDTH + i]) < b->gridAt(attackers[tomove * WIDTH + smallestindex]))
+				if (myBoard->getGridAt(attackers[tomove * WIDTH + i]) < myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]))
 					smallestindex = i;
 			see += trophy;
-			trophy = b->gridAt(attackers[tomove * WIDTH + smallestindex]);
+			trophy = myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]);
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 			if (see - trophy >= threshold)
 				return true;

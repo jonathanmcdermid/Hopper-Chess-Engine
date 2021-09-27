@@ -2,34 +2,34 @@
 
 namespace Hopper 
 {
-    Hashtable::Hashtable() 
+    HashTable::HashTable() 
     {
         for (int i = 0; i < HASHSIZE; ++i) 
-            table[i] = Hashentry();
+            myHashTable[i] = Hashentry();
         master = true;
     }
 
-    void Hashtable::clean() 
+    void HashTable::clean() 
     {
         for (int i = (int) master; i < HASHSIZE; i += 2) 
-            table[i].setDepth(0);
+            myHashTable[i].setDepth(0);
         master = !master;
     }
 
-    void Hashtable::extractPV(Board* b, line* l) 
+    void HashTable::extractPV(Board* b, line* l) 
     {
-        Move m;
+        Move nextMove;
         int index = 0;
         int depth = getDepth(b->getCurrZ() % HASHSIZE);
         do 
         {
-            m = getMove(b->getCurrZ() % HASHSIZE);
-            if (b->getCurrZ() != getZobrist(b->getCurrZ() % HASHSIZE) || !b->validateMove(m)) 
+            nextMove = getMove(b->getCurrZ() % HASHSIZE);
+            if (b->getCurrZ() != getZobrist(b->getCurrZ() % HASHSIZE) || !b->validateMove(nextMove)) 
                 break;
-            l->movelink[index++] = m;
-            b->movePiece(m);
+            l->moveLink[index++] = nextMove;
+            b->movePiece(nextMove);
         } while (--depth);
-        l->cmove = index;
+        l->moveCount = index;
         for (int i = 0; i < index; ++i) 
             b->unmovePiece();
     }
