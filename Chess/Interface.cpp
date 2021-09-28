@@ -24,8 +24,8 @@ namespace Hopper
 					std::getline(std::cin, input);
 					if (input.at(0) > '0' && input.at(0) <= '9') {
 						int time = (input.at(0) - '0') * 30000;
-						myEngine.lim.time[WHITE] = time;
-						myEngine.lim.time[BLACK] = time;
+						myEngine.myLimits.time[WHITE] = time;
+						myEngine.myLimits.time[BLACK] = time;
 						return;
 					}
 				}
@@ -41,27 +41,27 @@ namespace Hopper
 		while (is >> word) 
 		{
 			if (word == "wtime")		
-				is >> myEngine.lim.time[WHITE];
+				is >> myEngine.myLimits.time[WHITE];
 			else if (word == "btime")		
-				is >> myEngine.lim.time[BLACK];
+				is >> myEngine.myLimits.time[BLACK];
 			else if (word == "winc")		
-				is >> myEngine.lim.inc[WHITE];
+				is >> myEngine.myLimits.inc[WHITE];
 			else if (word == "binc")		
-				is >> myEngine.lim.inc[BLACK];
+				is >> myEngine.myLimits.inc[BLACK];
 			else if (word == "movestogo")	
-				is >> myEngine.lim.movesleft;
+				is >> myEngine.myLimits.movesleft;
 			else if (word == "depth")		
-				is >> myEngine.lim.depth;
+				is >> myEngine.myLimits.depth;
 			else if (word == "nodes")		
-				is >> myEngine.lim.nodes;
+				is >> myEngine.myLimits.nodes;
 			else if (word == "movetime")	
-				is >> myEngine.lim.movetime;
+				is >> myEngine.myLimits.movetime;
 			else if (word == "mate")		
-				is >> myEngine.lim.mate;
+				is >> myEngine.myLimits.mate;
 			else if (word == "perft")		
-				is >> myEngine.lim.perft;
+				is >> myEngine.myLimits.perft;
 			else if (word == "infinite")	
-				myEngine.lim.infinite = true;
+				myEngine.myLimits.infinite = true;
 		}
 		Interface::botMove();
 	}

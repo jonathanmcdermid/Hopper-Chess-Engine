@@ -42,7 +42,7 @@ namespace Hopper
 			{
 				if (nextMove[j].getFrom() == pinnedPieces[i])
 				{
-					switch (pinnedPieces[i + 5])
+					switch (pinnedPieces[i + KINDEX])
 					{
 					case BOARD_SOUTH:
 					case BOARD_NORTH:

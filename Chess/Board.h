@@ -63,7 +63,7 @@ namespace Hopper
 		int removeIllegalMoves(Move* nextMove, int moveCount);
 		Zobrist myZobrist;
 		std::vector<historyInfo> myHistory;
-		enum::role_enum grid[SPACES];
+		role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
 		int threatened[SPACES * 2];
 		int pinnedPieces[10];
