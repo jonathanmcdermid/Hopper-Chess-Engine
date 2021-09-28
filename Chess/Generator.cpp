@@ -220,8 +220,8 @@ namespace Hopper
 					nextMove[moveCount++] = Move(from, from + i + BOARD_EAST, RPROMOTEC);
 				}
 			}
-			if (myHistory.back().mHist.getFlags() == DOUBLEPUSH && ((myHistory.back().mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (myHistory.back().mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
-				nextMove[moveCount++] = Move(from, myHistory.back().mHist.getTo() + i, ENPASSANT);
+			if (myHistory[halfMoveClock].mHist.getFlags() == DOUBLEPUSH && ((myHistory[halfMoveClock].mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (myHistory[halfMoveClock].mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
+				nextMove[moveCount++] = Move(from, myHistory[halfMoveClock].mHist.getTo() + i, ENPASSANT);
 			return moveCount;
 		case W_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)))
@@ -332,9 +332,9 @@ namespace Hopper
 			{
 				if (from == 60 && !threatened[60])
 				{
-					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory.back().cHist & 1 << 0))
+					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory[halfMoveClock].cHist & 1 << 0))
 						nextMove[moveCount++] = Move(60, 62, KCASTLE);
-					if (!grid[59] && !grid[58] && !grid[57] && !threatened[59] && !threatened[58] && (myHistory.back().cHist & 1 << 1))
+					if (!grid[59] && !grid[58] && !grid[57] && !threatened[59] && !threatened[58] && (myHistory[halfMoveClock].cHist & 1 << 1))
 						nextMove[moveCount++] = Move(60, 58, QCASTLE);
 				}
 			}
@@ -342,9 +342,9 @@ namespace Hopper
 			{
 				if (from == 4 && !threatened[SPACES + 4])
 				{
-					if (!grid[5] && !grid[6] && !threatened[SPACES + 5] && !threatened[SPACES + 6] && (myHistory.back().cHist & 1 << 2))
+					if (!grid[5] && !grid[6] && !threatened[SPACES + 5] && !threatened[SPACES + 6] && (myHistory[halfMoveClock].cHist & 1 << 2))
 						nextMove[moveCount++] = Move(4, 6, KCASTLE);
-					if (!grid[3] && !grid[2] && !grid[1] && !threatened[SPACES + 3] && !threatened[SPACES + 2] && (myHistory.back().cHist & 1 << 3))
+					if (!grid[3] && !grid[2] && !grid[1] && !threatened[SPACES + 3] && !threatened[SPACES + 2] && (myHistory[halfMoveClock].cHist & 1 << 3))
 						nextMove[moveCount++] = Move(4, 2, QCASTLE);
 				}
 			}
@@ -477,9 +477,9 @@ namespace Hopper
 			{
 				if (from == 60 && !threatened[60])
 				{
-					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory.back().cHist & 1 << 0))
+					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory[halfMoveClock].cHist & 1 << 0))
 						nextMove[moveCount++] = Move(60, 62, KCASTLE);
-					if (!grid[59] && !grid[58] && !grid[57] && !threatened[59] && !threatened[58] && (myHistory.back().cHist & 1 << 1))
+					if (!grid[59] && !grid[58] && !grid[57] && !threatened[59] && !threatened[58] && (myHistory[halfMoveClock].cHist & 1 << 1))
 						nextMove[moveCount++] = Move(60, 58, QCASTLE);
 				}
 			}
@@ -487,9 +487,9 @@ namespace Hopper
 			{
 				if (from == 4 && !threatened[SPACES + 4])
 				{
-					if (!grid[5] && !grid[6] && !threatened[SPACES + 5] && !threatened[SPACES + 6] && (myHistory.back().cHist & 1 << 2))
+					if (!grid[5] && !grid[6] && !threatened[SPACES + 5] && !threatened[SPACES + 6] && (myHistory[halfMoveClock].cHist & 1 << 2))
 						nextMove[moveCount++] = Move(4, 6, KCASTLE);
-					if (!grid[3] && !grid[2] && !grid[1] && !threatened[SPACES + 3] && !threatened[SPACES + 2] && (myHistory.back().cHist & 1 << 3))
+					if (!grid[3] && !grid[2] && !grid[1] && !threatened[SPACES + 3] && !threatened[SPACES + 2] && (myHistory[halfMoveClock].cHist & 1 << 3))
 						nextMove[moveCount++] = Move(4, 2, QCASTLE);
 				}
 			}
@@ -620,8 +620,8 @@ namespace Hopper
 					nextMove[moveCount++] = Move(from, from + i, RPROMOTE);
 				}
 			}
-			if (myHistory.back().mHist.getFlags() == DOUBLEPUSH && ((myHistory.back().mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (myHistory.back().mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
-				nextMove[moveCount++] = Move(from, myHistory.back().mHist.getTo() + i, ENPASSANT);
+			if (myHistory[halfMoveClock].mHist.getFlags() == DOUBLEPUSH && ((myHistory[halfMoveClock].mHist.getTo() == from + BOARD_EAST && from % WIDTH != 7) || (myHistory[halfMoveClock].mHist.getTo() == from + BOARD_WEST && from % WIDTH)))
+				nextMove[moveCount++] = Move(from, myHistory[halfMoveClock].mHist.getTo() + i, ENPASSANT);
 			return moveCount;
 		case W_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54)

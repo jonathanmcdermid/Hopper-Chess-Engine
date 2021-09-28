@@ -3,9 +3,7 @@
 #include "board.h"
 #include "macros.h"
 #include "move.h"
-#include <vector>
 #include <algorithm>
-#include <map>
 
 namespace Hopper 
 {

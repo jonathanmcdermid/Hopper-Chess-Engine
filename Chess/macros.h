@@ -47,7 +47,7 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 
 #define NULLMOVE	28672
 
-#define MEMORY		512
+#define MEMORY		128
 
 #define PAWN_PASSED					5
 #define PAWN_ROOK_ON_PASSED			25

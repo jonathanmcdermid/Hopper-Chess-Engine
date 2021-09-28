@@ -1,7 +1,6 @@
 #pragma once
 
 #include "zobrist.h"
-#include <vector>
 
 namespace Hopper 
 {
@@ -12,7 +11,7 @@ namespace Hopper
 		U64 zHist = 0;
 		U64 pHist = 0;
 		Move mHist = NULLMOVE;
-		historyInfo(int f, int c, int v, U64 myZobrist, U64 p, Move nextMove) {
+		historyInfo(int f = 0, int c = 0, int v = 0, U64 myZobrist = 0, U64 p = 0, Move nextMove = NULLMOVE) {
 			fHist = f;
 			cHist = c;
 			vHist = v;
@@ -32,12 +31,12 @@ namespace Hopper
 		bool isMaterialDraw();
 		bool isEndgame();
 		bool isCheck() const { return threatened[!turn * SPACES + kingPos[turn]]; }
-		int getCurrC() const { return myHistory.back().cHist; }
-		int getCurrV() const { return myHistory.back().vHist; }
-		int getCurrF() const { return myHistory.back().fHist; }
-		U64 getCurrZ() const { return myHistory.back().zHist; }
-		U64 getCurrP() const { return myHistory.back().pHist; }
-		Move getCurrM() const { return myHistory.back().mHist; }
+		int getCurrC() const { return myHistory[halfMoveClock].cHist; }
+		int getCurrV() const { return myHistory[halfMoveClock].vHist; }
+		int getCurrF() const { return myHistory[halfMoveClock].fHist; }
+		U64 getCurrZ() const { return myHistory[halfMoveClock].zHist; }
+		U64 getCurrP() const { return myHistory[halfMoveClock].pHist; }
+		Move getCurrM() const { return myHistory[halfMoveClock].mHist; }
 		bool getTurn() const { return turn; }
 		int getGridAt(int position)const { return (int) grid[position]; }
 		int getThreatenedAt(bool team, int position)const { return threatened[team * SPACES + position]; }
@@ -62,7 +61,7 @@ namespace Hopper
 		int genAllMovesAt(Move* nextMove, int from);
 		int removeIllegalMoves(Move* nextMove, int moveCount);
 		Zobrist myZobrist;
-		std::vector<historyInfo> myHistory;
+		historyInfo myHistory[256];
 		role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
 		int threatened[SPACES * 2];
@@ -71,5 +70,6 @@ namespace Hopper
 		int kingPos[2];
 		bool turn;
 		int pinCount;
+		int halfMoveClock;
 	};
 }
