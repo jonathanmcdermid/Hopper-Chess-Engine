@@ -13,6 +13,8 @@ namespace Hopper
 		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move killer = NULLMOVE);
 		void moveOrder(int genState);
 		bool staticExchange(Move myMove, int threshold);
+		void removeDuplicate(int gs);
+		void staticSort();
 		bool movesLeft()const { return index[generationState] < limit[generationState]; }
 		bool noMoves()const;
 		Move getCurrMove()const { return sortedMoves[generationState][index[generationState]]; }

@@ -2,13 +2,6 @@
 
 namespace Hopper 
 {
-    HashTable::HashTable() 
-    {
-        for (int i = 0; i < HASHSIZE; ++i) 
-            myHashTable[i] = Hashentry();
-        master = true;
-    }
-
     void HashTable::clean() 
     {
         for (int i = (int) master; i < HASHSIZE; i += 2) 
@@ -30,7 +23,7 @@ namespace Hopper
             b->movePiece(nextMove);
         } while (--depth);
         l->moveCount = index;
-        for (int i = 0; i < index; ++i) 
+        while(index--)
             b->unmovePiece();
     }
 }

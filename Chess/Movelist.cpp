@@ -4,6 +4,15 @@
 
 namespace Hopper 
 {
+	template <typename Iter>
+	int index_of(Iter first, Iter last, typename std::iterator_traits<Iter>::value_type& x)
+	{
+		int i = 0;
+		while (first != last && *first != x)
+			++first, ++i;
+		return i;
+	}
+
 	MoveList::MoveList(Board* bd, Move pv, Move hash, Move killer)
 	{
 		generationState = GENPV;
@@ -15,12 +24,9 @@ namespace Hopper
 			for (int j = 0; j < SPACES; ++j)
 				sortedMoves[i][j] = NULLMOVE;
 		}
-		if(pv != NULLMOVE)
-			sortedMoves[GENPV][0] = pv;
-		if (pv != hash && hash != NULLMOVE)
-			sortedMoves[GENHASH][0] = hash;
-		if (pv != killer && hash != killer && killer != NULLMOVE)
-			sortedMoves[GENKILLS][0] = killer;
+		sortedMoves[GENPV][0] = pv;
+		sortedMoves[GENHASH][0] = hash;
+		sortedMoves[GENKILLS][0] = killer;
 	}
 
 	bool MoveList::noMoves()const
@@ -31,92 +37,53 @@ namespace Hopper
 		return true;
 	}
 
-	bool moveFlagSort(Move const& lhs, Move const& rhs) {
+	inline bool moveFlagSort(Move const& lhs, Move const& rhs) {
 		return lhs.getFlags() > rhs.getFlags();
 	}
 
-	void MoveList::moveOrder(int genstate)
+	void MoveList::removeDuplicate(int gs) {
+		if (limit[gs])
+		{
+			int i = index_of(sortedMoves[generationState], sortedMoves[generationState] + limit[generationState], sortedMoves[gs][0]);
+			if (i != limit[generationState]) {
+				sortedMoves[generationState][i] = sortedMoves[generationState][--limit[generationState]];
+			}
+		}
+	}
+
+	void MoveList::staticSort() {
+		for (int i = 0; i < limit[GENWINCAPS]; ++i)
+		{
+			if (!staticExchange(sortedMoves[GENWINCAPS][i], -30))
+			{
+				sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
+				sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
+			}
+		}
+	}
+
+	void MoveList::moveOrder(int gs)
 	{
-		generationState = genstate;
-		int i;
-		switch (genstate)
+		generationState = gs;
+		switch (gs)
 		{
 		case GENPV:
 		case GENHASH:
 		case GENKILLS:
-			if (myBoard->validateMove(sortedMoves[generationState][0]))
+			if (sortedMoves[generationState][0] != NULLMOVE && myBoard->validateMove(sortedMoves[generationState][0]))
 				++limit[generationState];
 			break;
 		case GENWINCAPS:
-			for (int i = 0; i < SPACES; ++i)
-				sortedMoves[generationState][i] = NULLMOVE;
 			limit[GENWINCAPS] = myBoard->genAllCapMoves(sortedMoves[GENWINCAPS]);
-			if (limit[GENPV] && sortedMoves[GENPV][0].isCap())
-			{
-				for (i = 0; i < limit[GENWINCAPS]; ++i)
-				{
-					if (sortedMoves[GENWINCAPS][i] == sortedMoves[GENPV][0])
-					{
-						sortedMoves[GENWINCAPS][i] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
-						break;
-					}
-				}
-			}
-			if (limit[GENHASH] && sortedMoves[GENHASH][0].isCap())
-			{
-				for (i = 0; i < limit[GENWINCAPS]; ++i)
-				{
-					if (sortedMoves[GENWINCAPS][i] == sortedMoves[GENHASH][0])
-					{
-						sortedMoves[GENWINCAPS][i] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
-						break;
-					}
-				}
-			}
-			for (i = 0; i < limit[GENWINCAPS]; ++i)
-			{
-				if (!staticExchange(sortedMoves[GENWINCAPS][i], -30))
-				{
-					sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
-					sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
-				}
-			}
+			removeDuplicate(GENPV);
+			removeDuplicate(GENHASH);
+			staticSort();
 			break;
 		case GENNONCAPS:
 			limit[GENNONCAPS] = myBoard->genAllNonCapMoves(sortedMoves[GENNONCAPS]);
-			if (limit[GENPV] && !sortedMoves[GENPV][0].isCap())
-			{
-				for (i = 0; i < limit[GENNONCAPS]; ++i)
-				{
-					if (sortedMoves[GENNONCAPS][i] == sortedMoves[GENPV][0])
-					{
-						sortedMoves[GENNONCAPS][i] = sortedMoves[GENNONCAPS][--limit[GENNONCAPS]];
-						break;
-					}
-				}
-			}
-			if (limit[GENHASH] && !sortedMoves[GENHASH][0].isCap())
-			{
-				for (i = 0; i < limit[GENNONCAPS]; ++i)
-				{
-					if (sortedMoves[GENNONCAPS][i] == sortedMoves[GENHASH][0])
-					{
-						sortedMoves[GENNONCAPS][i] = sortedMoves[GENNONCAPS][--limit[GENNONCAPS]];
-						break;
-					}
-				}
-			}
-			if (limit[GENKILLS] && !sortedMoves[GENKILLS][0].isCap())
-			{
-				for (i = 0; i < limit[GENNONCAPS]; ++i)
-				{
-					if (sortedMoves[GENNONCAPS][i] == sortedMoves[GENKILLS][0])
-					{
-						sortedMoves[GENNONCAPS][i] = sortedMoves[GENNONCAPS][--limit[GENNONCAPS]];
-						break;
-					}
-				}
-			}
+			removeDuplicate(GENPV);
+			removeDuplicate(GENHASH);
+			removeDuplicate(GENKILLS);
 			std::sort(sortedMoves[GENNONCAPS], sortedMoves[GENNONCAPS] + limit[GENNONCAPS], moveFlagSort);
 			break;
 		case GENLOSECAPS:

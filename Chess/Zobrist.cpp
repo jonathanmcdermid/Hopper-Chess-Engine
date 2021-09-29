@@ -38,7 +38,7 @@ namespace Hopper
 		return key;
 	}
 
-	U64 Zobrist::newPawnKey(Board* b) 
+	U64 Zobrist::newPawnKey(Board* b)
 	{
 		U64 key = 0;
 		for (int i = 0; i < SPACES; i++) {

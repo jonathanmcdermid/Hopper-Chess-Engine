@@ -13,7 +13,7 @@ namespace Hopper
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 10000, 10000 };
 		int movetime = 0;
-		int movesleft = 40;
+		int movesleft = 30;
 		int depth = MAXDEPTH;
 		int nodes = 0;
 		int perft = 0;

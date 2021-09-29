@@ -335,10 +335,10 @@ namespace Hopper
 			{
 				switch (index) 
 				{
-				case 2:
+				case 1:
 					sum += PAWN_DOUBLED;
 					break;
-				case 3:
+				case 2:
 					sum += PAWN_TRIPLED;
 					break;
 				}
@@ -417,10 +417,10 @@ namespace Hopper
 			{
 				switch (index) 
 				{
-				case 2:
+				case 1:
 					sum -= PAWN_DOUBLED;
 					break;
-				case 3:
+				case 2:
 					sum -= PAWN_TRIPLED;
 					break;
 				}

@@ -23,7 +23,7 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 #define BLACK		false
 #define WHITE		true
 
-#define HASHSIZE	24000
+#define HASHSIZE	30000
 
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
@@ -43,6 +43,7 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 #define BOARD_NORTHWEST		-9
 #define BOARD_SOUTHEAST		9
 #define BOARD_SOUTHWEST		7
+
 #define BOARD_LEAP			0
 
 #define NULLMOVE	28672

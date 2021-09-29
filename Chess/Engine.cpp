@@ -12,7 +12,7 @@ namespace Hopper
 	void Engine::makeMove() 
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		int timeallotted = (myBoard->getTurn()) ? myLimits.time[WHITE] / (myLimits.movesleft + 10) : myLimits.time[BLACK] / (myLimits.movesleft + 10);
+		int timeallotted = (myBoard->isEndgame()) ? myLimits.time[myBoard->getTurn()] / 5 : myLimits.time[myBoard->getTurn()] / myLimits.movesleft;
 		int window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;

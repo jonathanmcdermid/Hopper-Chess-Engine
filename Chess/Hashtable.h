@@ -13,7 +13,7 @@ namespace Hopper
     class HashTable 
     {
     public:
-        HashTable();
+        HashTable() { master = true; }
         void clean();
         void extractPV(Board* b, line* l);
         void newEntry(int index, Hashentry& h) { myHashTable[index] = h; }
