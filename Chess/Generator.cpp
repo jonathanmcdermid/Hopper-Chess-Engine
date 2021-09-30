@@ -35,7 +35,7 @@ namespace Hopper
 
 	int Board::removeIllegalMoves(Move* nextMove, int moveCount)
 	{
-		int checktype, to, from;
+		int checktype;
 		for (int i = 0; i < pinCount; ++i)
 		{
 			for (int j = 0; j < moveCount; ++j)
@@ -47,29 +47,28 @@ namespace Hopper
 					case BOARD_SOUTH:
 					case BOARD_NORTH:
 						if (!(NSslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							goto remove;
+							break;
 						else
 							continue;
 					case BOARD_WEST:
 					case BOARD_EAST:
 						if (!(EWslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							goto remove;
+							break;
 						else
 							continue;
 					case BOARD_NORTHEAST:
 					case BOARD_SOUTHWEST:
 						if (!(NESWslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							goto remove;
+							break;
 						else
 							continue;
 					case BOARD_NORTHWEST:
 					case BOARD_SOUTHEAST:
 						if (!(NWSEslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							goto remove;
+							break;
 						else
 							continue;
 					}
-				remove:
 					nextMove[j--] = nextMove[--moveCount];
 				}
 			}
@@ -88,16 +87,16 @@ namespace Hopper
 				checktype = (attackers[!turn][i][kingPos[turn]] > kingPos[turn]) ? BOARD_NORTHWEST : BOARD_SOUTHEAST;
 			for (int j = 0; j < moveCount; ++j)
 			{
-				to = nextMove[j].getTo();
-				from = nextMove[j].getFrom();
-				if (from != kingPos[turn])
+				if (nextMove[j].getFrom() != kingPos[turn])
 				{
-					if (checktype != BOARD_LEAP && ((to - attackers[!turn][i][kingPos[turn]]) % checktype || (to < attackers[!turn][i][kingPos[turn]] && to < kingPos[turn]) || (to > attackers[!turn][i][kingPos[turn]] && to > kingPos[turn])))
+					if (checktype != BOARD_LEAP && ((nextMove[j].getTo() - attackers[!turn][i][kingPos[turn]]) % checktype 
+						|| (nextMove[j].getTo() < attackers[!turn][i][kingPos[turn]] && nextMove[j].getTo() < kingPos[turn]) 
+						|| (nextMove[j].getTo() > attackers[!turn][i][kingPos[turn]] && nextMove[j].getTo() > kingPos[turn])))
 						nextMove[j--] = nextMove[--moveCount];
-					else if (checktype == BOARD_LEAP && to != attackers[!turn][i][kingPos[turn]] && nextMove[j].getFlags() != ENPASSANT)
+					else if (checktype == BOARD_LEAP && nextMove[j].getTo() != attackers[!turn][i][kingPos[turn]] && nextMove[j].getFlags() != ENPASSANT)
 						nextMove[j--] = nextMove[--moveCount];
 				}
-				else if (checktype != BOARD_LEAP && to - from == checktype)
+				else if (checktype != BOARD_LEAP && nextMove[j].getTo() - nextMove[j].getFrom() == checktype)
 					nextMove[j--] = nextMove[--moveCount];
 			}
 		}

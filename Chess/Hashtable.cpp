@@ -14,8 +14,7 @@ namespace Hopper
         Move nextMove;
         int index = 0;
         int depth = getDepth(b->getCurrZ() % HASHSIZE);
-        do 
-        {
+        do {
             nextMove = getMove(b->getCurrZ() % HASHSIZE);
             if (b->getCurrZ() != getZobrist(b->getCurrZ() % HASHSIZE) || !b->validateMove(nextMove)) 
                 break;
@@ -23,7 +22,8 @@ namespace Hopper
             b->movePiece(nextMove);
         } while (--depth);
         l->moveCount = index;
-        while(index--)
+        do {
             b->unmovePiece();
+        } while (--index);
     }
 }
