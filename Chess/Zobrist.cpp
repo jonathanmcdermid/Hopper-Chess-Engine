@@ -2,9 +2,9 @@
 #include "Board.h"
 #include "Zobrist.h"
 
-namespace Hopper 
+namespace Hopper
 {
-	Zobrist::Zobrist() 
+	Zobrist::Zobrist()
 	{//generates pseudo random template
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
@@ -14,21 +14,19 @@ namespace Hopper
 			pieces[i] = dis(gen);
 		for (int i = 0; i < SPACES; ++i)
 			enPassant[i] = dis(gen);
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 4; ++i)
 			castle[i] = dis(gen);
-		}
 	}
 
 	U64 Zobrist::newKey(Board* b)
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (int i = 0; i < SPACES; ++i) {
-			if (b->getGridAt(i)) {
+			if (b->getGridAt(i))
 				key ^= piecesAt(abs(b->getGridAt(i)) % 10, b->getGridAt(i) > 0, i);
-			}
 		}
 		for (int i = 0; i < 4; ++i) {
-			if (b->getCurrC() & (int) ( 1 << i))
+			if (b->getCurrC() & (int)(1 << i))
 				key ^= castle[i];
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)
@@ -42,9 +40,9 @@ namespace Hopper
 	{
 		U64 key = 0;
 		for (int i = 0; i < SPACES; i++) {
-			if (b->getGridAt(i) == W_PAWN) 
+			if (b->getGridAt(i) == W_PAWN)
 				key ^= piecesAt(PINDEX, WHITE, i);
-			else if (b->getGridAt(i) == B_PAWN) 
+			else if (b->getGridAt(i) == B_PAWN)
 				key ^= piecesAt(PINDEX, BLACK, i);
 		}
 		return key;

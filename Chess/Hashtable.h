@@ -3,14 +3,14 @@
 #include "Hashentry.h"
 #include "Board.h"
 
-namespace Hopper 
+namespace Hopper
 {
     typedef struct line {
         int moveCount = 0;
         Move moveLink[MAXDEPTH];
     }line;
 
-    class HashTable 
+    class HashTable
     {
     public:
         HashTable() { master = true; }

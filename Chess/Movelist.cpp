@@ -2,7 +2,7 @@
 #include "Board.h"
 #include "Move.h"
 
-namespace Hopper 
+namespace Hopper
 {
 	template <typename Iter>
 	int index_of(Iter first, Iter last, typename std::iterator_traits<Iter>::value_type& x)
@@ -17,13 +17,9 @@ namespace Hopper
 	{
 		generationState = GENPV;
 		myBoard = bd;
-		for (int i = 0; i < GENEND; ++i)
-		{
-			index[i] = 0;
-			limit[i] = 0;
-			for (int j = 0; j < SPACES; ++j)
-				sortedMoves[i][j] = NULLMOVE;
-		}
+		memset(index, 0, sizeof(index));
+		memset(limit, 0, sizeof(limit));
+		memset(sortedMoves, 0, sizeof(sortedMoves));
 		sortedMoves[GENPV][0] = pv;
 		sortedMoves[GENHASH][0] = hash;
 		sortedMoves[GENKILLS][0] = killer;
@@ -31,9 +27,10 @@ namespace Hopper
 
 	bool MoveList::noMoves()const
 	{
-		for (int i = 0; i < GENEND; ++i)
+		for (int i = 0; i < GENEND; ++i) {
 			if (limit[i])
 				return false;
+		}
 		return true;
 	}
 
@@ -42,20 +39,16 @@ namespace Hopper
 	}
 
 	void MoveList::removeDuplicate(int gs) {
-		if (limit[gs])
-		{
+		if (limit[gs]) {
 			int i = index_of(sortedMoves[generationState], sortedMoves[generationState] + limit[generationState], sortedMoves[gs][0]);
-			if (i != limit[generationState]) {
+			if (i != limit[generationState])
 				sortedMoves[generationState][i] = sortedMoves[generationState][--limit[generationState]];
-			}
 		}
 	}
 
 	void MoveList::staticSort() {
-		for (int i = 0; i < limit[GENWINCAPS]; ++i)
-		{
-			if (!staticExchange(sortedMoves[GENWINCAPS][i], -30))
-			{
+		for (int i = 0; i < limit[GENWINCAPS]; ++i) {
+			if (!staticExchange(sortedMoves[GENWINCAPS][i], -30)) {
 				sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
 				sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
 			}
@@ -65,8 +58,7 @@ namespace Hopper
 	void MoveList::moveOrder(int gs)
 	{
 		generationState = gs;
-		switch (gs)
-		{
+		switch (gs) {
 		case GENPV:
 		case GENHASH:
 		case GENKILLS:
@@ -100,8 +92,7 @@ namespace Hopper
 		int see = abs(myBoard->getGridAt(to));
 		int trophy = abs(myBoard->getGridAt(from));
 		int smallestindex;
-		for (int i = 0; i < 2; ++i)
-		{
+		for (int i = 0; i < 2; ++i) {
 			total[i] = myBoard->getThreatenedAt(i, to);
 			for (int j = 0; j < total[i]; ++j)
 				attackers[i * WIDTH + j] = myBoard->getAttackersAt(i, j, to);
@@ -109,8 +100,7 @@ namespace Hopper
 		for (int i = 0; i < total[tomove]; ++i)
 			if (attackers[tomove * WIDTH + i] == from)
 				attackers[tomove * WIDTH + i] = attackers[tomove * WIDTH + --total[tomove]];
-		while (total[!tomove])
-		{
+		while (total[!tomove]) {
 			tomove = !tomove;
 			smallestindex = 0;
 			for (int i = 1; i < total[tomove]; ++i)

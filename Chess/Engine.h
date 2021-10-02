@@ -6,9 +6,9 @@
 #include "Killers.h"
 #include "Movelist.h"
 
-namespace Hopper 
+namespace Hopper
 {
-	typedef struct limits 
+	typedef struct limits
 	{
 		int time[2] = { 300000, 300000 };
 		int inc[2] = { 10000, 10000 };
@@ -21,7 +21,7 @@ namespace Hopper
 		bool infinite = false;
 	} limits;
 
-	class Engine 
+	class Engine
 	{
 	public:
 		Engine(Board* bd);

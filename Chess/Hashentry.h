@@ -2,9 +2,9 @@
 
 #include "Move.h"
 
-namespace Hopper 
+namespace Hopper
 {
-    class Hashentry 
+    class Hashentry
     {
     public:
         Hashentry() { refresh(); }

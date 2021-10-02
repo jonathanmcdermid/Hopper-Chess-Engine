@@ -5,20 +5,18 @@
 
 namespace Hopper
 {
-	Interface::Interface(int argc, char* argv[]) 
+	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
 		std::string input;
-		while (1) 
-		{
+		while (1) {
 			std::getline(std::cin, input);
-			if (input == "uci") 
+			if (input == "uci")
 				uci(argc, argv);
 			if (input == "local")
 				local();
 			if (input == "self")
 				self();
-			if (input == "3d" || input == "3D")
-			{
+			if (input == "3d" || input == "3D") {
 				std::cout << "Select opponent difficulty from 1 to 9\n";
 				while (1) {
 					std::getline(std::cin, input);
@@ -30,79 +28,75 @@ namespace Hopper
 					}
 				}
 			}
-			if (input == "quit") 
+			if (input == "quit")
 				exit(1);
 		}
 	}
 
-	void Interface::go(std::istringstream& is) 
+	void Interface::go(std::istringstream& is)
 	{//most options are not implemented yet
 		std::string word;
-		while (is >> word) 
-		{
-			if (word == "wtime")		
+		while (is >> word) {
+			if (word == "wtime")
 				is >> myEngine.myLimits.time[WHITE];
-			else if (word == "btime")		
+			else if (word == "btime")
 				is >> myEngine.myLimits.time[BLACK];
-			else if (word == "winc")		
+			else if (word == "winc")
 				is >> myEngine.myLimits.inc[WHITE];
-			else if (word == "binc")		
+			else if (word == "binc")
 				is >> myEngine.myLimits.inc[BLACK];
-			else if (word == "movestogo")	
+			else if (word == "movestogo")
 				is >> myEngine.myLimits.movesleft;
-			else if (word == "depth")		
+			else if (word == "depth")
 				is >> myEngine.myLimits.depth;
-			else if (word == "nodes")		
+			else if (word == "nodes")
 				is >> myEngine.myLimits.nodes;
-			else if (word == "movetime")	
+			else if (word == "movetime")
 				is >> myEngine.myLimits.movetime;
-			else if (word == "mate")		
+			else if (word == "mate")
 				is >> myEngine.myLimits.mate;
-			else if (word == "perft")		
+			else if (word == "perft")
 				is >> myEngine.myLimits.perft;
-			else if (word == "infinite")	
+			else if (word == "infinite")
 				myEngine.myLimits.infinite = true;
 		}
 		Interface::botMove();
 	}
 
-	void Interface::drawBoard() 
+	void Interface::drawBoard()
 	{//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (int i = 0; i < WIDTH; ++i) 
-		{
+		for (int i = 0; i < WIDTH; ++i) {
 			std::cout << "\n---------------------------------\n|";
-			for (int j = 0; j < WIDTH; ++j) 
-			{
-				switch (myBoard.getGridAt(i * WIDTH  + j)) 
-				{
-				case W_PAWN: 
+			for (int j = 0; j < WIDTH; ++j) {
+				switch (myBoard.getGridAt(i * WIDTH + j)) {
+				case W_PAWN:
 					letter = 'P'; break;
-				case W_ROOK: 
+				case W_ROOK:
 					letter = 'R'; break;
-				case W_KNIGHT: 
+				case W_KNIGHT:
 					letter = 'N'; break;
-				case W_BISHOP: 
+				case W_BISHOP:
 					letter = 'B'; break;
-				case W_QUEEN: 
+				case W_QUEEN:
 					letter = 'Q'; break;
-				case W_KING: 
-					letter = 'K'; break; 
-				case B_PAWN: 
-					letter = 'p'; break; 
-				case B_ROOK: 
-					letter = 'r'; break; 
-				case B_KNIGHT: 
-					letter = 'n'; break; 
-				case B_BISHOP: 
-					letter = 'b'; break; 
-				case B_QUEEN: 
-					letter = 'q'; break; 
-				case B_KING: 
-					letter = 'k'; break; 
-				default:  
-					letter = ' '; 
+				case W_KING:
+					letter = 'K'; break;
+				case B_PAWN:
+					letter = 'p'; break;
+				case B_ROOK:
+					letter = 'r'; break;
+				case B_KNIGHT:
+					letter = 'n'; break;
+				case B_BISHOP:
+					letter = 'b'; break;
+				case B_QUEEN:
+					letter = 'q'; break;
+				case B_KING:
+					letter = 'k'; break;
+				default:
+					letter = ' ';
 				}
 				std::cout << " " << letter << " |";
 			}
@@ -111,19 +105,18 @@ namespace Hopper
 		std::cout << "\n---------------------------------\n";
 	}
 
-	void Interface::position(std::istringstream& is) 
+	void Interface::position(std::istringstream& is)
 	{
 		std::string word, fen;
 		is >> word;
-		if (word == "startpos") 
-		{
+		if (word == "startpos") {
 			fen = STARTFEN;
 			is >> word;
 		}
-		else if (word == "fen") 
-			while (is >> word && word != "moves") 
+		else if (word == "fen")
+			while (is >> word && word != "moves")
 				fen += word + " ";
-		else 
+		else
 			return;
 		myBoard.fenSet((const char*)fen.c_str());
 		while (is >> word) {
@@ -132,11 +125,11 @@ namespace Hopper
 		}
 	}
 
-	void Interface::uci(int argc, char* argv[]) 
+	void Interface::uci(int argc, char* argv[])
 	{//uci communication loop, some options non functioning
 		std::string word, cmd;
 		std::cout << "id name Hopper Engine \nid author Jonathan M\nuciok\n";
-		for (int i = 1; i < argc; ++i) 
+		for (int i = 1; i < argc; ++i)
 			cmd += std::string(argv[i]) + " ";
 		do {
 			if (argc == 1 && !getline(std::cin, cmd))
@@ -159,23 +152,21 @@ namespace Hopper
 		} while (word != "quit" && argc == 1);
 	}
 
-	void Interface::local() 
+	void Interface::local()
 	{//for play without uci
 		std::string input;
 		drawBoard();
-		while (1) 
-		{
+		while (1) {
 			std::getline(std::cin, input);
-			if (input.length()) 
-			{
-				while (!playerMove(input)) 
+			if (input.length()) {
+				while (!playerMove(input))
 					std::getline(std::cin, input);
 				drawBoard();
-				if (myBoard.isCheckMate()) 
+				if (myBoard.isCheckMate())
 					break;
 				Interface::botMove();
 				drawBoard();
-				if (myBoard.isCheckMate()) 
+				if (myBoard.isCheckMate())
 					break;
 			}
 		}
@@ -186,11 +177,9 @@ namespace Hopper
 	{//for play without uci
 		std::string input;
 		drawBoard();
-		while (1)
-		{
+		while (1) {
 			std::getline(std::cin, input);
-			if (input.length())
-			{
+			if (input.length()) {
 				while (!playerMove(input))
 					std::getline(std::cin, input);
 				drawBoard();
@@ -202,71 +191,62 @@ namespace Hopper
 	}
 
 	bool Interface::playerMove(std::string input) {//makes external moves
-		if (input.length() == 4) 
-		{
+		if (input.length() == 4) {
 			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
-			int to	 = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
-			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) 
-			{
+			int to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
+			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				nextMove = myBoard.createMove(from, to);
-				if (nextMove.getFlags() < NULLFLAGS) 
-				{
+				if (nextMove.getFlags() < NULLFLAGS) {
 					myBoard.movePiece(nextMove);
 					return true;
 				}
 			}
 		}
-		else if (input.length() == 5) 
+		else if (input.length() == 5)
 		{
 			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
 			int to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			char flags = input.c_str()[4];
-			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) 
-			{
+			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				nextMove = myBoard.createMove(from, to);
-				if (nextMove.getFlags() >= NPROMOTE) 
-				{
-					switch (flags) 
-					{
-					case 'n': 
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTE); 
+				if (nextMove.getFlags() >= NPROMOTE) {
+					switch (flags) {
+					case 'n':
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTE);
 						break;
-					case 'b': 
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTE); 
+					case 'b':
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTE);
 						break;
-					case 'r': 
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTE); 
+					case 'r':
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTE);
 						break;
-					case 'q': 
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE); 
+					case 'q':
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE);
 						break;
 					}
-					myBoard.movePiece(nextMove); 
+					myBoard.movePiece(nextMove);
 					return true;
 				}
 			}
 		}
-		else if (input == "fenset") 
-		{
+		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			myBoard.fenSet(input.c_str());
 			drawBoard();
 		}
-		else if (input == "unmove")
-		{
+		else if (input == "unmove") {
 			myBoard.unmovePiece();
 			drawBoard();
 		}
 		return false;
 	}
 
-	void Interface::botMove() 
+	void Interface::botMove()
 	{//generates internal moves
 		myEngine.makeMove();
 		std::string message = { (char)(myBoard.getCurrM().getFrom() % WIDTH + 'a'), (char)(WIDTH - myBoard.getCurrM().getFrom() / WIDTH + '0'),(char)(myBoard.getCurrM().getTo() % WIDTH + 'a'),(char)(WIDTH - myBoard.getCurrM().getTo() / WIDTH + '0') };
 		std::cout << "bestmove " << message;
-		switch (myBoard.getCurrM().getFlags()) 
-		{
+		switch (myBoard.getCurrM().getFlags()) {
 		case NPROMOTE:
 		case NPROMOTEC:
 			std::cout << "n\n";

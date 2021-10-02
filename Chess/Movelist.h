@@ -5,9 +5,9 @@
 #include "move.h"
 #include <algorithm>
 
-namespace Hopper 
+namespace Hopper
 {
-	class MoveList 
+	class MoveList
 	{
 	public:
 		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move killer = NULLMOVE);

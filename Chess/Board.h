@@ -2,7 +2,7 @@
 
 #include "zobrist.h"
 
-namespace Hopper 
+namespace Hopper
 {
 	struct historyInfo {
 		int fHist = 0;
@@ -21,7 +21,7 @@ namespace Hopper
 		}
 	};
 
-	class Board 
+	class Board
 	{
 	public:
 		Board();
@@ -38,7 +38,7 @@ namespace Hopper
 		U64 getCurrP() const { return myHistory[halfMoveClock].pHist; }
 		Move getCurrM() const { return myHistory[halfMoveClock].mHist; }
 		bool getTurn() const { return turn; }
-		int getGridAt(int position)const { return (int) grid[position]; }
+		int getGridAt(int position)const { return (int)grid[position]; }
 		int getThreatenedAt(bool team, int position)const { return threatened[team * SPACES + position]; }
 		int getAttackersAt(int x, int y, int myZobrist)const { return attackers[x][y][myZobrist]; }
 		void setAttackersAt(int x, int y, int myZobrist, int val) { attackers[x][y][myZobrist] = val; }
@@ -61,7 +61,7 @@ namespace Hopper
 		int genAllMovesAt(Move* nextMove, int from);
 		int removeIllegalMoves(Move* nextMove, int moveCount);
 		Zobrist myZobrist;
-		historyInfo myHistory[256];
+		historyInfo myHistory[512];
 		role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
 		int threatened[SPACES * 2];

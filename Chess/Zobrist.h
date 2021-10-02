@@ -2,7 +2,7 @@
 
 #include "move.h"
 
-namespace Hopper 
+namespace Hopper
 {
 	class Board;
 	class Zobrist

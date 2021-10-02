@@ -2,18 +2,18 @@
 
 #include "Move.h"
 
-namespace Hopper 
+namespace Hopper
 {
-	class Killers 
+	class Killers
 	{
 	public:
 		Killers();
-		Move getPrimary(int ply) const { return killerMoves[ply + primaryindex[ply] * MAXDEPTH]; }
+		Move getPrimary(int ply) const { return killerMoves[ply][primaryindex[ply]]; }
 		void cutoff(Move cm, int ply);
 		void chrono();
 	private:
-		Move killerMoves[MAXDEPTH * MEMORY];
+		Move killerMoves[MAXDEPTH][MEMORY];
 		int primaryindex[MAXDEPTH];
-		int killerMoveScores[MAXDEPTH * MEMORY];
+		int killerMoveScores[MAXDEPTH][MEMORY];
 	};
 }

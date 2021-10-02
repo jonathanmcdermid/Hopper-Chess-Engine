@@ -1,84 +1,74 @@
 #include "Board.h"
 #include <cmath>
+#include <string>
 
 namespace Hopper {
 
-	Board::Board() 
+	Board::Board()
 	{
 		fenSet((const char*)STARTFEN);
 	}
 
-	void Board::fenSet(const char* fs) 
+	void Board::fenSet(const char* fs)
 	{//sets board to state outlined in FEN string
 		halfMoveClock = 0;
-		for (int i = PINDEX; i < KINDEX * 2; ++i) {
-			roleCounts[i] = 0;
-			pinnedPieces[i] = 0;
-		}
-		for (int i = 0; i < 2; ++i) {
-			kingPos[i] = 0;
-			for (int j = 0; j < WIDTH; ++j) {
-				for (int k = 0; k < SPACES; ++k) {
-					attackers[i][j][k] = 0;
-				}
-			}
-		}
-		for (int i = 0; i < SPACES * 2; ++i) {
-			threatened[i] = 0;
-		}
+		memset(roleCounts, 0, sizeof(roleCounts));
+		memset(threatened, 0, sizeof(threatened));
+		memset(pinnedPieces, 0, sizeof(pinnedPieces));
+		memset(attackers, 0, sizeof(attackers));
 		int index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
-			case 'P':  
-				grid[counter++] = W_PAWN; 
+			case 'P':
+				grid[counter++] = W_PAWN;
 				++roleCounts[KINDEX + PINDEX];
-				break; 
-			case 'R': 
+				break;
+			case 'R':
 				grid[counter++] = W_ROOK;
 				++roleCounts[KINDEX + RINDEX];
 				break;
-			case 'N':  
-				grid[counter++] = W_KNIGHT; 
+			case 'N':
+				grid[counter++] = W_KNIGHT;
 				++roleCounts[KINDEX + NINDEX];
 				break;
-			case 'B':  
-				grid[counter++] = W_BISHOP; 
+			case 'B':
+				grid[counter++] = W_BISHOP;
 				++roleCounts[KINDEX + BINDEX];
 				break;
-			case 'Q':  
-				grid[counter++] = W_QUEEN; 
+			case 'Q':
+				grid[counter++] = W_QUEEN;
 				++roleCounts[KINDEX + QINDEX];
 				break;
-			case 'K':  
+			case 'K':
 				kingPos[WHITE] = counter;
-				grid[counter++] = W_KING; 
-				break; 
-			case 'p':  
-				grid[counter++] = B_PAWN; 
+				grid[counter++] = W_KING;
+				break;
+			case 'p':
+				grid[counter++] = B_PAWN;
 				++roleCounts[PINDEX];
 				break;
-			case 'r':  
-				grid[counter++] = B_ROOK; 
+			case 'r':
+				grid[counter++] = B_ROOK;
 				++roleCounts[RINDEX];
 				break;
-			case 'n':  
-				grid[counter++] = B_KNIGHT; 
+			case 'n':
+				grid[counter++] = B_KNIGHT;
 				++roleCounts[NINDEX];
 				break;
 			case 'b':
-				grid[counter++] = B_BISHOP; 
+				grid[counter++] = B_BISHOP;
 				++roleCounts[BINDEX];
 				break;
-			case 'q':  
-				grid[counter++] = B_QUEEN; 
+			case 'q':
+				grid[counter++] = B_QUEEN;
 				++roleCounts[QINDEX];
 				break;
-			case 'k':  
+			case 'k':
 				kingPos[BLACK] = counter;
 				grid[counter++] = B_KING;
-				break; 
-			case '/':  
-				break; 
+				break;
+			case '/':
+				break;
 			default:
 				helper = fs[index] - '0';
 				while (helper--) { grid[counter++] = EMPTY; }
@@ -90,17 +80,17 @@ namespace Hopper {
 		myHistory[halfMoveClock].cHist = 0;
 		do {
 			switch (fs[index++]) {
-			case 'K': 
-				myHistory[halfMoveClock].cHist |= 1 << 0; 
+			case 'K':
+				myHistory[halfMoveClock].cHist |= 1 << 0;
 				break;
-			case 'Q': 
-				myHistory[halfMoveClock].cHist |= 1 << 1; 
+			case 'Q':
+				myHistory[halfMoveClock].cHist |= 1 << 1;
 				break;
-			case 'k': 
-				myHistory[halfMoveClock].cHist |= 1 << 2; 
+			case 'k':
+				myHistory[halfMoveClock].cHist |= 1 << 2;
 				break;
-			case 'q': 
-				myHistory[halfMoveClock].cHist |= 1 << 3; 
+			case 'q':
+				myHistory[halfMoveClock].cHist |= 1 << 3;
 				break;
 			}
 		} while (fs[index] != ' ');
@@ -112,10 +102,8 @@ namespace Hopper {
 		index += 2;
 		myHistory[halfMoveClock].fHist = fs[index] - '0';
 		myHistory[halfMoveClock].vHist = 0;
-		for (int i = 0; i < SPACES; ++i) 
-		{ 
-			myHistory[halfMoveClock].vHist += grid[i]; 
-		}
+		for (int i = 0; i < SPACES; ++i)
+			myHistory[halfMoveClock].vHist += grid[i];
 		myHistory[halfMoveClock].zHist = myZobrist.newKey(this);
 		myHistory[halfMoveClock].pHist = myZobrist.newPawnKey(this);
 		allThreats();
@@ -137,18 +125,17 @@ namespace Hopper {
 		return true;
 	}
 
-	bool Board::isRepititionDraw() 
+	bool Board::isRepititionDraw()
 	{
-		if (myHistory[halfMoveClock].fHist >= 100) { return true; }
+		if (myHistory[halfMoveClock].fHist >= 100)
+			return true;
 		bool once = false;
 		for (int i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
 			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist) {
-				if (once) { 
-					return true; 
-				}
-				else { 
-					once = true; 
-				}
+				if (once)
+					return true;
+				else
+					once = true;
 			}
 		}
 		return false;
@@ -168,15 +155,15 @@ namespace Hopper {
 		return true;
 	}
 
-	bool Board::isEndgame() 
+	bool Board::isEndgame()
 	{
 		for (int i = 0; i < 2; ++i) {
 			if (roleCounts[i + QINDEX]) {
 				for (int j = NINDEX; j < QINDEX; ++j) {
-					if (roleCounts[i + j]) 
+					if (roleCounts[i + j])
 						return false;
 				}
-				if (roleCounts[i + QINDEX] > 1) 
+				if (roleCounts[i + QINDEX] > 1)
 					return false;
 			}
 		}
@@ -185,14 +172,14 @@ namespace Hopper {
 
 	void Board::movePiece(Move nextMove)
 	{//executes a move if legal
-		myHistory[halfMoveClock + 1] =(historyInfo(
+		myHistory[halfMoveClock + 1] = historyInfo(
 			(nextMove.getFlags() == STANDARD && abs(grid[nextMove.getFrom()]) != W_PAWN) ? myHistory[halfMoveClock].fHist + 1 : 0,
 			myHistory[halfMoveClock].cHist,
 			myHistory[halfMoveClock].vHist,
 			(myHistory[halfMoveClock].mHist.getFlags() == DOUBLEPUSH) ? myHistory[halfMoveClock].zHist ^ myZobrist.sideAt() ^ myZobrist.enPassantAt(myHistory[halfMoveClock].mHist.getTo()) : myHistory[halfMoveClock].zHist ^ myZobrist.sideAt(),
 			myHistory[halfMoveClock].pHist,
 			nextMove
-		));
+		);
 		++halfMoveClock;
 		switch (nextMove.getFlags()) {
 		case STANDARD:
@@ -200,8 +187,8 @@ namespace Hopper {
 			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getTo());
 			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
 			grid[nextMove.getFrom()] = EMPTY;
-			if (abs(grid[nextMove.getTo()]) == W_KING) { 
-				kingPos[turn] = nextMove.getTo(); 
+			if (abs(grid[nextMove.getTo()]) == W_KING) {
+				kingPos[turn] = nextMove.getTo();
 			}
 			else if (abs(grid[nextMove.getTo()]) == W_PAWN) {
 				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
@@ -365,13 +352,13 @@ namespace Hopper {
 			myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(WQUEENSIDE);
 		}
 		if (nextMove.getFrom() == 60) {
-			if (myHistory[halfMoveClock].cHist & 1 << 0) { 
-				myHistory[halfMoveClock].cHist &= ~(1 << 0); 
-				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(WKINGSIDE); 
+			if (myHistory[halfMoveClock].cHist & 1 << 0) {
+				myHistory[halfMoveClock].cHist &= ~(1 << 0);
+				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(WKINGSIDE);
 			}
-			if (myHistory[halfMoveClock].cHist & 1 << 1) { 
-				myHistory[halfMoveClock].cHist &= ~(1 << 1); 
-				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(WQUEENSIDE); 
+			if (myHistory[halfMoveClock].cHist & 1 << 1) {
+				myHistory[halfMoveClock].cHist &= ~(1 << 1);
+				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(WQUEENSIDE);
 			}
 		}
 		if (myHistory[halfMoveClock].cHist & 1 << 2 && (nextMove.getTo() == 7 || nextMove.getFrom() == 7)) {
@@ -384,19 +371,19 @@ namespace Hopper {
 		}
 		if (nextMove.getFrom() == 4) {
 			if (myHistory[halfMoveClock].cHist & 1 << 2) {
-				myHistory[halfMoveClock].cHist &= ~(1 << 2); 
-				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(BKINGSIDE); 
+				myHistory[halfMoveClock].cHist &= ~(1 << 2);
+				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(BKINGSIDE);
 			}
-			if (myHistory[halfMoveClock].cHist & 1 << 3) { 
-				myHistory[halfMoveClock].cHist &= ~(1 << 3); 
-				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(BQUEENSIDE); 
+			if (myHistory[halfMoveClock].cHist & 1 << 3) {
+				myHistory[halfMoveClock].cHist &= ~(1 << 3);
+				myHistory[halfMoveClock].zHist ^= myZobrist.castleAt(BQUEENSIDE);
 			}
 		}
 		turn = (!turn);
 		allThreats();
 	}
 
-	void Board::unmovePiece() 
+	void Board::unmovePiece()
 	{//unmakes a move
 		turn = (!turn);
 		switch (myHistory[halfMoveClock].mHist.getFlags()) {
@@ -425,7 +412,7 @@ namespace Hopper {
 			break;
 		case CAPTURE:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum) (myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist);
+			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist);
 			if (abs(grid[myHistory[halfMoveClock].mHist.getFrom()]) == W_KING) { kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); }
 			++roleCounts[!turn * KINDEX + abs(grid[myHistory[halfMoveClock].mHist.getTo()]) % 10];
 			break;
@@ -466,14 +453,14 @@ namespace Hopper {
 			break;
 		case NPROMOTEC:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (turn) ? (role_enum)( myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + W_KNIGHT - W_PAWN) : (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + B_KNIGHT + W_PAWN);
+			grid[myHistory[halfMoveClock].mHist.getTo()] = (turn) ? (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + W_KNIGHT - W_PAWN) : (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + B_KNIGHT + W_PAWN);
 			++roleCounts[!turn * KINDEX + abs(grid[myHistory[halfMoveClock].mHist.getTo()]) % 10];
 			++roleCounts[turn * KINDEX + PINDEX];
 			--roleCounts[turn * KINDEX + NINDEX];
 			break;
 		case BPROMOTEC:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (turn) ? (role_enum) (myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + W_BISHOP - W_PAWN) : (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + B_BISHOP + W_PAWN);
+			grid[myHistory[halfMoveClock].mHist.getTo()] = (turn) ? (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + W_BISHOP - W_PAWN) : (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + B_BISHOP + W_PAWN);
 			++roleCounts[!turn * KINDEX + abs(grid[myHistory[halfMoveClock].mHist.getTo()]) % 10];
 			++roleCounts[turn * KINDEX + PINDEX];
 			--roleCounts[turn * KINDEX + BINDEX];
@@ -497,16 +484,13 @@ namespace Hopper {
 		allThreats();
 	}
 
-	void Board::allThreats() 
+	void Board::allThreats()
 	{
 		pinCount = 0;
-		for (int i = 0; i < SPACES * 2; ++i)
-			threatened[i] = 0;
+		memset(threatened, 0, sizeof(threatened));
 		for (int from = 0; from < SPACES; ++from) {
-			if (grid[from]) 
-			{ 
-				pieceThreats(from); 
-			}
+			if (grid[from])
+				pieceThreats(from);
 		}
 	}
 

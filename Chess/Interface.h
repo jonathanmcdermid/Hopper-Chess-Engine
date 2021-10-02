@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Engine.h"
-#include <string>
 
-namespace Hopper 
+namespace Hopper
 {
-	class Interface 
+	class Interface
 	{
 	public:
 		Interface(int argc, char* argv[]);

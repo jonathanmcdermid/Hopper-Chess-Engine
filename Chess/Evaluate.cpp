@@ -1,7 +1,8 @@
 #include "Engine.h"
 #include <cmath>
+#include <string>
 
-namespace Hopper 
+namespace Hopper
 {
 	static int WPAWNBIT[SPACES] = {
 		 0,  0,  0,  0,  0,  0,  0,  0,
@@ -157,57 +158,49 @@ namespace Hopper
 		-50,-40,-30,-20,-20,-30,-40,-50
 	};
 
-	int Engine::negaEval() 
+	int Engine::negaEval()
 	{//negamax evaluation using material sum of pieces and bonus boards
-		if (myBoard->isRepititionDraw() || myBoard->isMaterialDraw()) 
+		if (myBoard->isRepititionDraw() || myBoard->isMaterialDraw())
 			return CONTEMPT;
 		bool endgame = myBoard->isEndgame();
 		int sum = 0, helper;
 		int cfile[WIDTH * 2];
-		for (int i = 0; i < WIDTH * 2; ++i)
-			cfile[i] = 0;
-		for (int i = 0; i < SPACES; ++i){
-			if (myBoard->getGridAt(i) == W_PAWN) 
+		memset(cfile, 0, sizeof(cfile));
+		for (int i = 0; i < SPACES; ++i) {
+			if (myBoard->getGridAt(i) == W_PAWN)
 				++cfile[i % WIDTH + WIDTH];
-			else if (myBoard->getGridAt(i) == B_PAWN) 
+			else if (myBoard->getGridAt(i) == B_PAWN)
 				++cfile[i % WIDTH];
 		}
-		for (int i = 0; i < SPACES; ++i) 
-		{
-			switch (myBoard->getGridAt(i)) 
-			{
+		for (int i = 0; i < SPACES; ++i) {
+			switch (myBoard->getGridAt(i)) {
 			case W_PAWN:
 				sum += WPAWNBIT[i];
-				if (myBoard->getGridAt(i + BOARD_NORTH) == B_PAWN || !cfile[i % WIDTH]) 
-				{
-					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 2])) 
-					{
-						if (myBoard->getGridAt(i + BOARD_NORTHEAST) == W_KNIGHT) 
-							sum += PAWN_KNIGHT_OUTPOST; 
-						else if (myBoard->getGridAt(i + BOARD_NORTHEAST) == W_BISHOP) 
+				if (myBoard->getGridAt(i + BOARD_NORTH) == B_PAWN || !cfile[i % WIDTH]) {
+					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 2])) {
+						if (myBoard->getGridAt(i + BOARD_NORTHEAST) == W_KNIGHT)
+							sum += PAWN_KNIGHT_OUTPOST;
+						else if (myBoard->getGridAt(i + BOARD_NORTHEAST) == W_BISHOP)
 							sum += PAWN_BISHOP_OUTPOST;
 					}
-					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH - 2])) 
-					{
-						if (myBoard->getGridAt(i + BOARD_NORTHWEST) == W_KNIGHT) 
+					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH - 2])) {
+						if (myBoard->getGridAt(i + BOARD_NORTHWEST) == W_KNIGHT)
 							sum += PAWN_KNIGHT_OUTPOST;
-						else if (myBoard->getGridAt(i + BOARD_NORTHWEST) == W_BISHOP) 
+						else if (myBoard->getGridAt(i + BOARD_NORTHWEST) == W_BISHOP)
 							sum += PAWN_BISHOP_OUTPOST;
 					}
 				}
 				break;
 			case B_PAWN:
 				sum -= BPAWNBIT[i];
-				if (myBoard->getGridAt(i + BOARD_SOUTH) == W_PAWN || !cfile[i % WIDTH + WIDTH]) 
-				{
-					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 10])) 
-					{
-						if (myBoard->getGridAt(i + BOARD_SOUTHEAST) == B_KNIGHT) 
+				if (myBoard->getGridAt(i + BOARD_SOUTH) == W_PAWN || !cfile[i % WIDTH + WIDTH]) {
+					if (i % WIDTH != 7 && (i % WIDTH == 6 || !cfile[i % WIDTH + 10])) {
+						if (myBoard->getGridAt(i + BOARD_SOUTHEAST) == B_KNIGHT)
 							sum -= PAWN_KNIGHT_OUTPOST;
-						else if (myBoard->getGridAt(i + BOARD_SOUTHEAST) == B_BISHOP) 
+						else if (myBoard->getGridAt(i + BOARD_SOUTHEAST) == B_BISHOP)
 							sum -= PAWN_BISHOP_OUTPOST;
 					}
-					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH + 6])) { 
+					if (i % WIDTH && (i % WIDTH == 1 || !cfile[i % WIDTH + 6])) {
 						if (myBoard->getGridAt(i + BOARD_SOUTHWEST) == B_KNIGHT)
 							sum -= PAWN_KNIGHT_OUTPOST;
 						else if (myBoard->getGridAt(i + BOARD_SOUTHWEST) == B_BISHOP)
@@ -230,46 +223,41 @@ namespace Hopper
 			case W_ROOK:
 				sum += WROOKBIT[i] + hypotenuse(myBoard->getKingPosAt(BLACK), i) * 3;
 				helper = i % WIDTH;
-				if (!cfile[helper + WIDTH] || !cfile[helper]) 
-				{
-					if (!cfile[helper + WIDTH] && !cfile[helper]) 
+				if (!cfile[helper + WIDTH] || !cfile[helper]) {
+					if (!cfile[helper + WIDTH] && !cfile[helper])
 						sum += BONUS_ROOK_OPEN_FILE;
-					else 
-					{ 
-						if (cfile[helper] && (!helper || !cfile[helper + 7]) && (helper == 7 || !cfile[helper + 9])) 
+					else {
+						if (cfile[helper] && (!helper || !cfile[helper + 7]) && (helper == 7 || !cfile[helper + 9]))
 							sum += PAWN_ROOK_ON_PASSED;
-						else if (cfile[helper + WIDTH] && (!helper || !cfile[helper - 1]) && (helper == 7 || !cfile[helper + 1])) 
+						else if (cfile[helper + WIDTH] && (!helper || !cfile[helper - 1]) && (helper == 7 || !cfile[helper + 1]))
 							sum += PAWN_ROOK_ON_PASSED;
-						sum += BONUS_ROOK_HALF_OPEN_FILE; 
+						sum += BONUS_ROOK_HALF_OPEN_FILE;
 					}
-					if (myBoard->getKingPosAt(BLACK) % WIDTH == i % WIDTH) 
+					if (myBoard->getKingPosAt(BLACK) % WIDTH == i % WIDTH)
 						sum += BONUS_ROOK_ON_KING_FILE;
 				}
 				break;
 			case B_ROOK:
 				sum -= BROOKBIT[i] + hypotenuse(myBoard->getKingPosAt(WHITE), i) * 3;
 				helper = i % WIDTH;
-				if (!cfile[helper + WIDTH] || !cfile[helper]) 
-				{
-					if (!cfile[helper + WIDTH] && !cfile[helper]) 
+				if (!cfile[helper + WIDTH] || !cfile[helper]) {
+					if (!cfile[helper + WIDTH] && !cfile[helper])
 						sum -= BONUS_ROOK_OPEN_FILE;
-					else { 
-						if (cfile[helper] && (!helper || !cfile[helper + 7]) && (helper == 7 || !cfile[helper + 9])) 
+					else {
+						if (cfile[helper] && (!helper || !cfile[helper + 7]) && (helper == 7 || !cfile[helper + 9]))
 							sum -= PAWN_ROOK_ON_PASSED;
-						else if (cfile[helper + WIDTH] && (!helper || !cfile[helper - 1]) && (helper == 7 || !cfile[helper + 1])) 
+						else if (cfile[helper + WIDTH] && (!helper || !cfile[helper - 1]) && (helper == 7 || !cfile[helper + 1]))
 							sum -= PAWN_ROOK_ON_PASSED;
-						sum -= BONUS_ROOK_HALF_OPEN_FILE; 
+						sum -= BONUS_ROOK_HALF_OPEN_FILE;
 					}
-					if (myBoard->getKingPosAt(WHITE) % WIDTH == i % WIDTH) 
+					if (myBoard->getKingPosAt(WHITE) % WIDTH == i % WIDTH)
 						sum -= BONUS_ROOK_ON_KING_FILE;
 				}
 				break;
 			case W_QUEEN:
 				sum += WW_QUEENBIT[i] + hypotenuse(myBoard->getKingPosAt(BLACK), i) * 4;
-				for (helper = 0; helper < myBoard->getThreatenedAt(WHITE, i); ++helper) 
-				{
-					if (myBoard->getGridAt(myBoard->getAttackersAt(WHITE,helper,i)) == W_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(WHITE,helper,i)) == W_BISHOP) 
-					{
+				for (helper = 0; helper < myBoard->getThreatenedAt(WHITE, i); ++helper) {
+					if (myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_BISHOP) {
 						sum += BONUS_QUEEN_SUPPORT;
 						break;
 					}
@@ -277,10 +265,8 @@ namespace Hopper
 				break;
 			case B_QUEEN:
 				sum -= BW_QUEENBIT[i] + hypotenuse(myBoard->getKingPosAt(WHITE), i) * 4;
-				for (helper = 0; helper < myBoard->getThreatenedAt(BLACK, i); ++helper) 
-				{
-					if (myBoard->getGridAt(myBoard->getAttackersAt(BLACK,helper,i)) == B_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(BLACK,helper,i)) == B_BISHOP) 
-					{
+				for (helper = 0; helper < myBoard->getThreatenedAt(BLACK, i); ++helper) {
+					if (myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_BISHOP) {
 						sum -= BONUS_QUEEN_SUPPORT;
 						break;
 					}
@@ -294,47 +280,39 @@ namespace Hopper
 				break;
 			}
 		}
-		if (myBoard->getRolesAt(KINDEX + BINDEX) > 1) 
+		if (myBoard->getRolesAt(KINDEX + BINDEX) > 1)
 			sum += BONUS_BISHOP_PAIR;
-		if (myBoard->getRolesAt(BINDEX) > 1) 
+		if (myBoard->getRolesAt(BINDEX) > 1)
 			sum -= BONUS_BISHOP_PAIR;
 		return (myBoard->getTurn()) ? myBoard->getCurrV() + sum : -myBoard->getCurrV() - sum;
 	}
 
-	int Engine::hypotenuse(int a, int b) 
+	int Engine::hypotenuse(int a, int b)
 	{
 		int xc = WIDTH - abs(a % WIDTH - b % WIDTH);
 		int yc = WIDTH - abs(a / WIDTH - b / WIDTH);
 		int c = xc * xc + yc * yc;
-		c = (int) std::sqrt(c);
+		c = (int)std::sqrt(c);
 		return c;
 	}
 
-	int Engine::pawnEval() 
+	int Engine::pawnEval()
 	{
 		int sum = 0;
 		int cfile[WIDTH * 2];
 		int rank[WIDTH * 2][3];
 		int helper;
-		for (int i = 0; i < WIDTH * 2; ++i)
-		{
-			cfile[i] = 0;
-			for (int j = 0; j < 3; ++j)
-				rank[i][j] = 0;
-		}
-		for (int i = 0; i < SPACES; ++i) 
-		{
-			if (myBoard->getGridAt(i) == W_PAWN) 
+		memset(cfile, 0, sizeof(cfile));
+		memset(rank, 0, sizeof(rank));
+		for (int i = 0; i < SPACES; ++i) {
+			if (myBoard->getGridAt(i) == W_PAWN)
 				rank[i % WIDTH + WIDTH][cfile[i % WIDTH + WIDTH]++] = i / WIDTH;
-			else if (myBoard->getGridAt(i) == B_PAWN) 
+			else if (myBoard->getGridAt(i) == B_PAWN)
 				rank[i % WIDTH][cfile[i % WIDTH]++] = i / WIDTH;
 		}
-		for (int file = 0; file < WIDTH; ++file) 
-		{
-			for (int index = 0; index < cfile[file + WIDTH]; ++index) 
-			{
-				switch (index) 
-				{
+		for (int file = 0; file < WIDTH; ++file) {
+			for (int index = 0; index < cfile[file + WIDTH]; ++index) {
+				switch (index) {
 				case 1:
 					sum += PAWN_DOUBLED;
 					break;
@@ -344,17 +322,15 @@ namespace Hopper
 				}
 				switch (file) {
 				case 0:
-					if (!cfile[9]) 
+					if (!cfile[9])
 						sum += PAWN_ISOLATED * cfile[WIDTH];
-					if ((!cfile[0] || rank[0][0] > rank[WIDTH][index]) && (!cfile[1] || rank[1][0] > rank[WIDTH][index])) 
+					if ((!cfile[0] || rank[0][0] > rank[WIDTH][index]) && (!cfile[1] || rank[1][0] > rank[WIDTH][index]))
 						sum += PAWN_PASSED * (WIDTH - rank[WIDTH][index]) * (WIDTH - rank[WIDTH][index]);
-					for (helper = 0; helper < cfile[WIDTH]; ++helper) 
-					{
-						if (abs(rank[WIDTH][index] - rank[WIDTH][helper]) < 2) 
-						{
-							if (!abs(rank[WIDTH][index] - rank[9][helper])) 
+					for (helper = 0; helper < cfile[WIDTH]; ++helper) {
+						if (abs(rank[WIDTH][index] - rank[WIDTH][helper]) < 2) {
+							if (!abs(rank[WIDTH][index] - rank[9][helper]))
 								sum += PAWN_PHALANX;
-							if (rank[WIDTH][index] - rank[9][helper] == 1 && myBoard->getGridAt(rank[9][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
+							if (rank[WIDTH][index] - rank[9][helper] == 1 && myBoard->getGridAt(rank[9][helper] * WIDTH + BOARD_NORTH) == B_PAWN)
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -362,17 +338,15 @@ namespace Hopper
 					}
 					break;
 				case 7:
-					if (!cfile[14]) 
+					if (!cfile[14])
 						sum += PAWN_ISOLATED * cfile[15];
-					if ((!cfile[7] || rank[7][0] > rank[15][index]) && (!cfile[6] || rank[6][0] > rank[15][index])) 
+					if ((!cfile[7] || rank[7][0] > rank[15][index]) && (!cfile[6] || rank[6][0] > rank[15][index]))
 						sum += PAWN_PASSED * (WIDTH - rank[15][index]) * (WIDTH - rank[15][index]);
-					for (helper = 0; helper < cfile[14]; ++helper) 
-					{
-						if (abs(rank[15][index] - rank[14][helper]) < 2) 
-						{
-							if (!abs(rank[15][index] - rank[14][helper])) 
+					for (helper = 0; helper < cfile[14]; ++helper) {
+						if (abs(rank[15][index] - rank[14][helper]) < 2) {
+							if (!abs(rank[15][index] - rank[14][helper]))
 								sum += PAWN_PHALANX;
-							if (rank[15][index] - rank[14][helper] == 1 && myBoard->getGridAt(7 + rank[14][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
+							if (rank[15][index] - rank[14][helper] == 1 && myBoard->getGridAt(7 + rank[14][helper] * WIDTH + BOARD_NORTH) == B_PAWN)
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -380,29 +354,25 @@ namespace Hopper
 					}
 					break;
 				default:
-					if (!cfile[file + 7] && !cfile[file + 9]) 
+					if (!cfile[file + 7] && !cfile[file + 9])
 						sum += PAWN_ISOLATED * cfile[file + WIDTH];
-					if ((!cfile[file] || rank[file][0] > rank[file + WIDTH][index]) && (!cfile[file + 1] || rank[file + 1][0] > rank[WIDTH][index]) && (!cfile[file - 1] || rank[file - 1][0] > rank[WIDTH][index])) 
+					if ((!cfile[file] || rank[file][0] > rank[file + WIDTH][index]) && (!cfile[file + 1] || rank[file + 1][0] > rank[WIDTH][index]) && (!cfile[file - 1] || rank[file - 1][0] > rank[WIDTH][index]))
 						sum += PAWN_PASSED * (WIDTH - rank[file + WIDTH][index]) * (WIDTH - rank[file + WIDTH][index]);
-					for (helper = 0; helper < cfile[file + 9]; ++helper) 
-					{
-						if (abs(rank[file + WIDTH][index] - rank[file + 9][helper]) < 2) 
-						{
-							if (!abs(rank[file + WIDTH][index] - rank[file + 9][helper])) 
+					for (helper = 0; helper < cfile[file + 9]; ++helper) {
+						if (abs(rank[file + WIDTH][index] - rank[file + 9][helper]) < 2) {
+							if (!abs(rank[file + WIDTH][index] - rank[file + 9][helper]))
 								sum += PAWN_PHALANX;
-							if (rank[file + WIDTH][index] - rank[file + 9][helper] == 1 && myBoard->getGridAt(file + rank[file + 9][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
+							if (rank[file + WIDTH][index] - rank[file + 9][helper] == 1 && myBoard->getGridAt(file + rank[file + 9][helper] * WIDTH + BOARD_NORTH) == B_PAWN)
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
 						}
 					}
-					for (helper = 0; helper < cfile[file + 7]; ++helper) 
-					{
-						if (abs(rank[file + WIDTH][index] - rank[file + 7][helper]) < 2) 
-						{
-							if (!abs(rank[file + WIDTH][index] - rank[file + 7][helper])) 
+					for (helper = 0; helper < cfile[file + 7]; ++helper) {
+						if (abs(rank[file + WIDTH][index] - rank[file + 7][helper]) < 2) {
+							if (!abs(rank[file + WIDTH][index] - rank[file + 7][helper]))
 								sum += PAWN_PHALANX;
-							if (rank[file + WIDTH][index] - rank[file + 7][helper] == 1 && myBoard->getGridAt(file + rank[file + 7][helper] * WIDTH + BOARD_NORTH) == B_PAWN) 
+							if (rank[file + WIDTH][index] - rank[file + 7][helper] == 1 && myBoard->getGridAt(file + rank[file + 7][helper] * WIDTH + BOARD_NORTH) == B_PAWN)
 								sum += PAWN_BACKWARD;
 							sum += PAWN_CONNECTED;
 							break;
@@ -411,12 +381,9 @@ namespace Hopper
 				}
 			}
 		}
-		for (int file = 0; file < WIDTH; ++file) 
-		{
-			for (int index = 0; index < cfile[file]; ++index) 
-			{
-				switch (index) 
-				{
+		for (int file = 0; file < WIDTH; ++file) {
+			for (int index = 0; index < cfile[file]; ++index) {
+				switch (index) {
 				case 1:
 					sum -= PAWN_DOUBLED;
 					break;
@@ -424,20 +391,18 @@ namespace Hopper
 					sum -= PAWN_TRIPLED;
 					break;
 				}
-				switch (file) 
+				switch (file)
 				{
 				case 0:
-					if (!cfile[1]) 
+					if (!cfile[1])
 						sum -= PAWN_ISOLATED * cfile[0];
-					if ((!cfile[WIDTH] || rank[WIDTH][0] > rank[0][index]) && (!cfile[9] || rank[9][0] > rank[0][index])) 
+					if ((!cfile[WIDTH] || rank[WIDTH][0] > rank[0][index]) && (!cfile[9] || rank[9][0] > rank[0][index]))
 						sum -= PAWN_PASSED * (WIDTH - rank[0][index]) * (WIDTH - rank[0][index]);
-					for (helper = 0; helper < cfile[1]; ++helper) 
-					{
-						if (abs(rank[0][index] - rank[1][helper]) < 2) 
-						{
-							if (!abs(rank[0][index] - rank[1][helper])) 
+					for (helper = 0; helper < cfile[1]; ++helper) {
+						if (abs(rank[0][index] - rank[1][helper]) < 2) {
+							if (!abs(rank[0][index] - rank[1][helper]))
 								sum -= PAWN_PHALANX;
-							if (rank[0][index] - rank[1][helper] == 1 && myBoard->getGridAt(rank[1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
+							if (rank[0][index] - rank[1][helper] == 1 && myBoard->getGridAt(rank[1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN)
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
@@ -445,17 +410,15 @@ namespace Hopper
 					}
 					break;
 				case 7:
-					if (!cfile[6]) 
+					if (!cfile[6])
 						sum -= PAWN_ISOLATED * cfile[7];
-					if ((!cfile[15] || rank[15][0] > rank[7][index]) && (!cfile[14] || rank[14][0] > rank[7][index])) 
+					if ((!cfile[15] || rank[15][0] > rank[7][index]) && (!cfile[14] || rank[14][0] > rank[7][index]))
 						sum -= PAWN_PASSED * (WIDTH - rank[7][index]) * (WIDTH - rank[7][index]);
-					for (helper = 0; helper < cfile[6]; ++helper) 
-					{
-						if (abs(rank[7][index] - rank[6][helper]) < 2) 
-						{
-							if (!abs(rank[7][index] - rank[6][helper])) 
+					for (helper = 0; helper < cfile[6]; ++helper) {
+						if (abs(rank[7][index] - rank[6][helper]) < 2) {
+							if (!abs(rank[7][index] - rank[6][helper]))
 								sum -= PAWN_PHALANX;
-							if (rank[7][index] - rank[6][helper] == 1 && myBoard->getGridAt(7 + rank[6][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
+							if (rank[7][index] - rank[6][helper] == 1 && myBoard->getGridAt(7 + rank[6][helper] * WIDTH + BOARD_SOUTH) == W_PAWN)
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
@@ -463,29 +426,25 @@ namespace Hopper
 					}
 					break;
 				default:
-					if (!cfile[file - 1] && !cfile[file + 1]) 
+					if (!cfile[file - 1] && !cfile[file + 1])
 						sum -= PAWN_ISOLATED * cfile[file];
-					if ((!cfile[file + WIDTH] || rank[file + WIDTH][0] > rank[file][index]) && (!cfile[file + 9] || rank[file + 9][0] > rank[0][index]) && (!cfile[file + 7] || rank[file + 7][0] > rank[0][index])) 
+					if ((!cfile[file + WIDTH] || rank[file + WIDTH][0] > rank[file][index]) && (!cfile[file + 9] || rank[file + 9][0] > rank[0][index]) && (!cfile[file + 7] || rank[file + 7][0] > rank[0][index]))
 						sum -= PAWN_PASSED * (WIDTH - rank[file][index]) * (WIDTH - rank[file][index]);
-					for (helper = 0; helper < cfile[file + 1]; ++helper) 
-					{
-						if (abs(rank[file][index] - rank[file + 1][helper]) < 2) 
-						{
-							if (!abs(rank[file][index] - rank[file + 1][helper])) 
+					for (helper = 0; helper < cfile[file + 1]; ++helper) {
+						if (abs(rank[file][index] - rank[file + 1][helper]) < 2) {
+							if (!abs(rank[file][index] - rank[file + 1][helper]))
 								sum -= PAWN_PHALANX;
-							if (rank[file][index] - rank[file + 1][helper] == 1 && myBoard->getGridAt(file + rank[file + 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
+							if (rank[file][index] - rank[file + 1][helper] == 1 && myBoard->getGridAt(file + rank[file + 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN)
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
 						}
 					}
-					for (helper = 0; helper < cfile[file - 1]; ++helper) 
-					{
-						if (abs(rank[file][index] - rank[file - 1][helper]) < 2) 
-						{
-							if (!abs(rank[file][index] - rank[file - 1][helper])) 
+					for (helper = 0; helper < cfile[file - 1]; ++helper) {
+						if (abs(rank[file][index] - rank[file - 1][helper]) < 2) {
+							if (!abs(rank[file][index] - rank[file - 1][helper]))
 								sum -= PAWN_PHALANX;
-							if (rank[file][index] - rank[file - 1][helper] == 1 && myBoard->getGridAt(file + rank[file - 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN) 
+							if (rank[file][index] - rank[file - 1][helper] == 1 && myBoard->getGridAt(file + rank[file - 1][helper] * WIDTH + BOARD_SOUTH) == W_PAWN)
 								sum -= PAWN_BACKWARD;
 							sum -= PAWN_CONNECTED;
 							break;
