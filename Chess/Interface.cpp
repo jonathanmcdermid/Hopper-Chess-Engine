@@ -123,6 +123,7 @@ namespace Hopper
 			if (!playerMove(word))
 				return;
 		}
+		//drawBoard();
 	}
 
 	void Interface::uci(int argc, char* argv[])

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Movelist.h"
 #include "Board.h"
 #include "Move.h"
@@ -13,7 +14,7 @@ namespace Hopper
 		return i;
 	}
 
-	MoveList::MoveList(Board* bd, Move pv, Move hash, Move killer)
+	MoveList::MoveList(Board* bd, Move pv, Move hash, Move primary, Move secondary)
 	{
 		generationState = GENPV;
 		myBoard = bd;
@@ -22,7 +23,8 @@ namespace Hopper
 		memset(sortedMoves, 0, sizeof(sortedMoves));
 		sortedMoves[GENPV][0] = pv;
 		sortedMoves[GENHASH][0] = hash;
-		sortedMoves[GENKILLS][0] = killer;
+		sortedMoves[GENKILLPRIMARY][0] = primary;
+		sortedMoves[GENKILLSECONDARY][0] = secondary;
 	}
 
 	bool MoveList::noMoves()const
@@ -34,7 +36,7 @@ namespace Hopper
 		return true;
 	}
 
-	inline bool moveFlagSort(Move const& lhs, Move const& rhs) {
+	inline static bool moveFlagSort(Move const& lhs, Move const& rhs) {
 		return lhs.getFlags() > rhs.getFlags();
 	}
 
@@ -61,7 +63,8 @@ namespace Hopper
 		switch (gs) {
 		case GENPV:
 		case GENHASH:
-		case GENKILLS:
+		case GENKILLPRIMARY:
+		case GENKILLSECONDARY:
 			if (sortedMoves[generationState][0] != NULLMOVE && myBoard->validateMove(sortedMoves[generationState][0]))
 				++limit[generationState];
 			break;
@@ -75,7 +78,8 @@ namespace Hopper
 			limit[GENNONCAPS] = myBoard->genAllNonCapMoves(sortedMoves[GENNONCAPS]);
 			removeDuplicate(GENPV);
 			removeDuplicate(GENHASH);
-			removeDuplicate(GENKILLS);
+			removeDuplicate(GENKILLPRIMARY);
+			removeDuplicate(GENKILLSECONDARY);
 			std::sort(sortedMoves[GENNONCAPS], sortedMoves[GENNONCAPS] + limit[GENNONCAPS], moveFlagSort);
 			break;
 		case GENLOSECAPS:

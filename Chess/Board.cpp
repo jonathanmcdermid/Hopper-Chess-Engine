@@ -141,6 +141,17 @@ namespace Hopper {
 		return false;
 	}
 
+	bool Board::isPseudoRepititionDraw()
+	{
+		if (myHistory[halfMoveClock].fHist >= 100)
+			return true;
+		for (int i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
+			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist)
+				return true;
+		}
+		return false;
+	}
+
 	bool Board::isMaterialDraw()
 	{
 		if (roleCounts[KINDEX + PINDEX] || roleCounts[PINDEX] || roleCounts[KINDEX + QINDEX] || roleCounts[QINDEX]) { return false; }
@@ -390,7 +401,7 @@ namespace Hopper {
 		case STANDARD:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
 			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			if (abs(grid[myHistory[halfMoveClock].mHist.getFrom()]) == W_KING) { kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); }
+			if (grid[myHistory[halfMoveClock].mHist.getFrom()] == W_KING || grid[myHistory[halfMoveClock].mHist.getFrom()] == B_KING) { kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); }
 			break;
 		case DOUBLEPUSH:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];

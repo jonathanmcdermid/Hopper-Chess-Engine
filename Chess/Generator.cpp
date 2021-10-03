@@ -68,7 +68,7 @@ namespace Hopper
 			}
 		}
 		for (int i = 0; i < threatened[!turn * SPACES + kingPos[turn]]; ++i) {
-			if (abs(grid[attackers[!turn][i][kingPos[turn]]]) <= W_KNIGHT)
+			if (grid[attackers[!turn][i][kingPos[turn]]] <= W_KNIGHT && grid[attackers[!turn][i][kingPos[turn]]] >= B_KNIGHT)
 				checktype = BOARD_LEAP;
 			else if (NSslide(attackers[!turn][i][kingPos[turn]], kingPos[turn]))
 				checktype = (attackers[!turn][i][kingPos[turn]] > kingPos[turn]) ? BOARD_NORTH : BOARD_SOUTH;
@@ -130,8 +130,9 @@ namespace Hopper
 	int Board::genCapMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal capture moves for one piece
 		int i, moveCount = 0;
-		switch (abs(grid[from])) {
+		switch (grid[from]) {
 		case W_KING:
+		case B_KING:
 			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn * SPACES + from + BOARD_SOUTHEAST] && ((turn && grid[from + BOARD_SOUTHEAST] < 0) || (!turn && grid[from + BOARD_SOUTHEAST] > 0)))
 				nextMove[moveCount++] = Move(from, from + BOARD_SOUTHEAST, CAPTURE);
 			if ((from + BOARD_EAST) % WIDTH > from % WIDTH && !threatened[!turn * SPACES + from + BOARD_EAST] && ((turn && grid[from + BOARD_EAST] < 0) || (!turn && grid[from + BOARD_EAST] > 0)))
@@ -150,6 +151,7 @@ namespace Hopper
 				nextMove[moveCount++] = Move(from, from + BOARD_NORTH, CAPTURE);
 			return moveCount;
 		case W_PAWN:
+		case B_PAWN:
 			i = (turn) ? BOARD_NORTH : BOARD_SOUTH;
 			if (from % WIDTH && ((turn && grid[from + i + BOARD_WEST] < 0) || (!turn && grid[from + i + BOARD_WEST] > 0))) {
 				if ((turn && from > 15) || (!turn && from < 48))
@@ -175,6 +177,7 @@ namespace Hopper
 				nextMove[moveCount++] = Move(from, myHistory[halfMoveClock].mHist.getTo() + i, ENPASSANT);
 			return moveCount;
 		case W_KNIGHT:
+		case B_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && ((turn && grid[from + 10] < 0) || (!turn && grid[from + 10] > 0)))
 				nextMove[moveCount++] = Move(from, from + 10, CAPTURE);
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && ((turn && grid[from + 17] < 0) || (!turn && grid[from + 17] > 0)))
@@ -193,7 +196,9 @@ namespace Hopper
 				nextMove[moveCount++] = Move(from, from - 15, CAPTURE);
 			return moveCount;
 		case W_QUEEN:
-		case W_ROOK://REPLATE WITH INCREMENTAL FUNCTION
+		case W_ROOK:
+		case B_QUEEN:
+		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
@@ -225,6 +230,7 @@ namespace Hopper
 			if (abs(grid[from]) != W_QUEEN)
 				return moveCount;
 		case W_BISHOP:
+		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
 				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
@@ -260,9 +266,10 @@ namespace Hopper
 	int Board::genNonCapMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal non capture moves for one piece
 		int i, moveCount = 0;
-		switch (abs(grid[from]))
+		switch (grid[from])
 		{
 		case W_KING:
+		case B_KING:
 			if (turn) {
 				if (from == 60 && !threatened[60]) {
 					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory[halfMoveClock].cHist & 1 << 0))
@@ -297,6 +304,7 @@ namespace Hopper
 				nextMove[moveCount++] = Move(from, from + BOARD_NORTH, STANDARD);
 			return moveCount;
 		case W_PAWN:
+		case B_PAWN:
 			i = (turn) ? BOARD_NORTH : BOARD_SOUTH;
 			if (!grid[from + i])
 			{
@@ -314,6 +322,7 @@ namespace Hopper
 			}
 			return moveCount;
 		case W_KNIGHT:
+		case B_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54 && !grid[from + 10])
 				nextMove[moveCount++] = Move(from, from + 10, STANDARD);
 			if ((from + 17) % WIDTH > from % WIDTH && from < 47 && !grid[from + 17])
@@ -333,6 +342,8 @@ namespace Hopper
 			return moveCount;
 		case W_QUEEN:
 		case W_ROOK:
+		case B_QUEEN:
+		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
 				if (!grid[i])
 					nextMove[moveCount++] = Move(from, i, STANDARD);
@@ -360,6 +371,7 @@ namespace Hopper
 			if (abs(grid[from]) != W_QUEEN)
 				return moveCount;
 		case W_BISHOP:
+		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
 				if (!grid[i])
 					nextMove[moveCount++] = Move(from, i, STANDARD);
@@ -391,8 +403,9 @@ namespace Hopper
 	int Board::genAllMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal moves for one piece
 		int i, moveCount = 0;
-		switch (abs(grid[from])) {
+		switch (grid[from]) {
 		case W_KING:
+		case B_KING:
 			if (turn) {
 				if (from == 60 && !threatened[60]) {
 					if (!grid[61] && !grid[62] && !threatened[61] && !threatened[62] && (myHistory[halfMoveClock].cHist & 1 << 0))
@@ -435,6 +448,7 @@ namespace Hopper
 					nextMove[moveCount++] = !grid[from + BOARD_NORTH] ? Move(from, from + BOARD_NORTH, STANDARD) : Move(from, from + BOARD_NORTH, CAPTURE);
 			return moveCount;
 		case W_PAWN:
+		case B_PAWN:
 			i = (turn) ? BOARD_NORTH : BOARD_SOUTH;
 			if (from % WIDTH) {
 				if ((turn && grid[from + i + BOARD_WEST] < 0) || (!turn && grid[from + i + BOARD_WEST] > 0)) {
@@ -477,6 +491,7 @@ namespace Hopper
 				nextMove[moveCount++] = Move(from, myHistory[halfMoveClock].mHist.getTo() + i, ENPASSANT);
 			return moveCount;
 		case W_KNIGHT:
+		case B_KNIGHT:
 			if ((from + 10) % WIDTH > from % WIDTH && from < 54) {
 				if (!grid[from + 10])
 					nextMove[moveCount++] = Move(from, from + 10, STANDARD);
@@ -528,6 +543,8 @@ namespace Hopper
 			return moveCount;
 		case W_QUEEN:
 		case W_ROOK:
+		case B_QUEEN:
+		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
 				if (!grid[i])
 					nextMove[moveCount++] = Move(from, i, STANDARD);
@@ -567,6 +584,7 @@ namespace Hopper
 			if (abs(grid[from]) != W_QUEEN)
 				return moveCount;
 		case W_BISHOP:
+		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
 				if (!grid[i])
 					nextMove[moveCount++] = Move(from, i, STANDARD);
