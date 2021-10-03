@@ -28,6 +28,7 @@ namespace Hopper
 		void fenSet(const char* fs);
 		bool isCheckMate();
 		bool isRepititionDraw();
+		bool isPseudoRepititionDraw();
 		bool isMaterialDraw();
 		bool isEndgame();
 		bool isCheck() const { return threatened[!turn * SPACES + kingPos[turn]]; }

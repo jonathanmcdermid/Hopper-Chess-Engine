@@ -1,48 +1,47 @@
-#include "Killers.h"
 #include <string>
+#include <algorithm>
+#include "Killers.h"
 
 namespace Hopper
 {
 	Killers::Killers()
 	{
-		memset(primaryindex, 0, sizeof(primaryindex));
-		memset(killerMoveScores, 0, sizeof(killerMoveScores));
+		memset(index, 0, sizeof(index));
+	}
+
+	inline static bool killerSort(trackedMove const& lhs, trackedMove const& rhs) {
+		return lhs.appearances > rhs.appearances;
 	}
 
 	void Killers::cutoff(Move cm, int ply)
 	{
 		int i = 0;
-		do {
-			if (killerMoves[ply][i] == cm) {
-				++killerMoveScores[ply][i];
-				if (killerMoveScores[ply][primaryindex[ply]] < killerMoveScores[ply][i])
-					primaryindex[ply] = i;
+		while(i < index[ply]) {
+			if (trackedKillers[ply][i].myMove == cm) {
+				++trackedKillers[ply][i].appearances;
+				std::sort(trackedKillers[ply], trackedKillers[ply] + index[ply], killerSort);
 				return;
 			}
-			else if (killerMoves[ply][i] == NULLMOVE) {
-				killerMoves[ply][i] = cm;
-				++killerMoveScores[ply][i];
-				return;
-			}
-		} while (++i < MEMORY);
+			++i;
+		}
+		if (i < MEMORY) {
+			trackedKillers[ply][i].myMove = cm;
+			++trackedKillers[ply][i].appearances;
+			++index[ply];
+		}
 	}
 
 	void Killers::chrono()
 	{
 		for (int i = 0; i < MAXDEPTH - 2; ++i) {
-			primaryindex[i] = primaryindex[i + 2];
+			index[i] = index[i + 2];
 			for (int j = 0; j < MEMORY; ++j) {
-				killerMoves[i][j] = killerMoves[i + 2][j];
-				killerMoveScores[i][j] = killerMoveScores[i + 2][j];
+				trackedKillers[i][j] = trackedKillers[i + 2][j];
 			}
 		}
-		primaryindex[MAXDEPTH - 1] = 0;
-		primaryindex[MAXDEPTH - 2] = 0;
-		memset(killerMoveScores[MAXDEPTH - 1], 0, sizeof(killerMoveScores[MAXDEPTH - 1]));
-		memset(killerMoveScores[MAXDEPTH - 2], 0, sizeof(killerMoveScores[MAXDEPTH - 2]));
-		for (int j = 0; j < MEMORY; ++j) {
-			killerMoves[MAXDEPTH - 1][j] = NULLMOVE;
-			killerMoves[MAXDEPTH - 2][j] = NULLMOVE;
-		}
+		index[MAXDEPTH - 1] = 0;
+		index[MAXDEPTH - 2] = 0;
+		memset(trackedKillers[MAXDEPTH - 1], 0, sizeof(trackedKillers[MAXDEPTH - 1]));
+		memset(trackedKillers[MAXDEPTH - 2], 0, sizeof(trackedKillers[MAXDEPTH - 2]));
 	}
 }

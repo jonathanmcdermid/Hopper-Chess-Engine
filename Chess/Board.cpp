@@ -141,6 +141,17 @@ namespace Hopper {
 		return false;
 	}
 
+	bool Board::isPseudoRepititionDraw()
+	{
+		if (myHistory[halfMoveClock].fHist >= 100)
+			return true;
+		for (int i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
+			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist)
+				return true;
+		}
+		return false;
+	}
+
 	bool Board::isMaterialDraw()
 	{
 		if (roleCounts[KINDEX + PINDEX] || roleCounts[PINDEX] || roleCounts[KINDEX + QINDEX] || roleCounts[QINDEX]) { return false; }
@@ -148,7 +159,7 @@ namespace Hopper {
 		for (int i = 0; i < 2; ++i) {
 			helper = 0;
 			for (int j = NINDEX; j < QINDEX; ++j)
-				helper += j * roleCounts[i + j];
+				helper += j * roleCounts[i * KINDEX + j];
 			if (helper > BINDEX)
 				return false;
 		}
@@ -158,12 +169,12 @@ namespace Hopper {
 	bool Board::isEndgame()
 	{
 		for (int i = 0; i < 2; ++i) {
-			if (roleCounts[i + QINDEX]) {
+			if (roleCounts[KINDEX * i + QINDEX]) {
 				for (int j = NINDEX; j < QINDEX; ++j) {
-					if (roleCounts[i + j])
+					if (roleCounts[KINDEX * i + j])
 						return false;
 				}
-				if (roleCounts[i + QINDEX] > 1)
+				if (roleCounts[KINDEX * i + QINDEX] > 1)
 					return false;
 			}
 		}
@@ -390,7 +401,7 @@ namespace Hopper {
 		case STANDARD:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
 			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			if (abs(grid[myHistory[halfMoveClock].mHist.getFrom()]) == W_KING) { kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); }
+			if (grid[myHistory[halfMoveClock].mHist.getFrom()] == W_KING || grid[myHistory[halfMoveClock].mHist.getFrom()] == B_KING) { kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); }
 			break;
 		case DOUBLEPUSH:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];

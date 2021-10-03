@@ -3,14 +3,13 @@
 #include "board.h"
 #include "macros.h"
 #include "move.h"
-#include <algorithm>
 
 namespace Hopper
 {
 	class MoveList
 	{
 	public:
-		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move killer = NULLMOVE);
+		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
 		void moveOrder(int genState);
 		bool staticExchange(Move myMove, int threshold);
 		void removeDuplicate(int gs);

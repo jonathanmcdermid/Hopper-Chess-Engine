@@ -12,7 +12,7 @@ namespace Hopper
 	void Engine::makeMove()
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		int timeallotted = myLimits.time[myBoard->getTurn()] / (myLimits.movesleft + 10);
+		int timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft);
 		int window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
@@ -82,7 +82,7 @@ namespace Hopper
 			if (score >= beta)
 				return score;
 		}
-		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(keyIndex), myKillers.getPrimary(ply));
+		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(keyIndex), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
 		int evaltype = HASHALPHA;
 		for (int genstate = GENPV; genstate != GENEND; ++genstate)
 		{
@@ -90,7 +90,7 @@ namespace Hopper
 			while (localMoveList.movesLeft()) {
 				myBoard->movePiece(localMoveList.getCurrMove());
 				++nodes;
-				if (myBoard->isRepititionDraw() || myBoard->isMaterialDraw())
+				if (myBoard->isPseudoRepititionDraw() || myBoard->isMaterialDraw())
 					score = CONTEMPT;
 				else if (genstate > GENHASH) {
 					score = (depth > 1) ?
@@ -121,7 +121,7 @@ namespace Hopper
 			}
 		}
 		if (localMoveList.noMoves())
-			return (myBoard->isCheck()) ? -MATE - depth : -CONTEMPT;
+			return (myBoard->isCheck()) ? -MATE - depth : CONTEMPT;
 		else if (myHashTable.getDepth(keyIndex) < depth)
 			myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
 		return alpha;
@@ -155,7 +155,7 @@ namespace Hopper
 		MoveList localMoveList(myBoard);
 		localMoveList.moveOrder(GENWINCAPS);
 		if (!localMoveList.movesLeft())
-			return (myBoard->isCheckMate()) ? (myBoard->isCheck()) ? -MATE : -CONTEMPT : score;
+			return (myBoard->isCheckMate()) ? (myBoard->isCheck()) ? -MATE : CONTEMPT : score;
 		do {
 			myBoard->movePiece(localMoveList.getCurrMove());
 			score = -quiescentSearch(-beta, -alpha);
