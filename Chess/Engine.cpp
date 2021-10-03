@@ -7,6 +7,7 @@ namespace Hopper
 	Engine::Engine(Board* bd)
 	{
 		myBoard = bd;
+		myHashTable.setSize(myLimits.hashbytes);
 	}
 
 	void Engine::makeMove()
@@ -45,13 +46,15 @@ namespace Hopper
 				break;
 			}
 			if (score <= alpha || score >= beta) {
-				if (abs(score) >= MATE)
+				if (abs(score) >= MATE )
 					break;
 				alpha = LOWERLIMIT;
 				beta = UPPERLIMIT;
 				--depth;
 			}
 			else {
+				if(score == CONTEMPT && principalVariation.moveCount == 1 && depth != 1)
+					break;
 				alpha = score - window;
 				beta = score + window;
 			}
@@ -65,7 +68,7 @@ namespace Hopper
 	{
 		if (!depth)
 			return quiescentSearch(alpha, beta);
-		int keyIndex = myBoard->getCurrZ() % HASHSIZE;
+		unsigned keyIndex = (unsigned) (myBoard->getCurrZ() % myHashTable.getSize());
 		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
 			if (myHashTable.getFlags(keyIndex) == HASHEXACT || (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta) || (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
 				pline->moveLink[0] = myHashTable.getMove(keyIndex);
@@ -144,10 +147,10 @@ namespace Hopper
 	int Engine::quiescentSearch(int alpha, int beta)
 	{
 		int score = negaEval();
-		if (myPawnHashTable.getEntry(myBoard->getCurrP() % HASHSIZE) == myBoard->getCurrP())
-			score += (myBoard->getTurn()) ? myPawnHashTable.getEntry(myBoard->getCurrP() % HASHSIZE) : -myPawnHashTable.getEntry(myBoard->getCurrP() % HASHSIZE);
+		if (myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize()) == myBoard->getCurrP())
+			score += (myBoard->getTurn()) ? myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize()) : -myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize());
 		else
-			myPawnHashTable.newEntry(myBoard->getCurrP() % HASHSIZE, pawnEval());
+			myHashTable.newPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize(), pawnEval());
 		if (score >= beta)
 			return score;
 		if (score > alpha)

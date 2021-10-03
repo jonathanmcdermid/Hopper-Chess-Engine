@@ -2,7 +2,6 @@
 
 #include "Board.h"
 #include "Hashtable.h"
-#include "Pawnhash.h"
 #include "Killers.h"
 #include "Movelist.h"
 
@@ -18,6 +17,7 @@ namespace Hopper
 		int nodes = 0;
 		int perft = 0;
 		int mate = 0;
+		int hashbytes = 220000000;
 		bool infinite = false;
 	} limits;
 
@@ -37,7 +37,6 @@ namespace Hopper
 		Board* myBoard;
 		Killers myKillers;
 		HashTable myHashTable;
-		Pawnhash myPawnHashTable;
 		int nodes = 0;
 	};
 }

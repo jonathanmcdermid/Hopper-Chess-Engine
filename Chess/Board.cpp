@@ -177,6 +177,8 @@ namespace Hopper {
 				if (roleCounts[KINDEX * i + QINDEX] > 1)
 					return false;
 			}
+			if (roleCounts[KINDEX * i + NINDEX] + roleCounts[KINDEX * i + BINDEX] + 2 * roleCounts[KINDEX * i + RINDEX] > 5)
+				return false;
 		}
 		return true;
 	}

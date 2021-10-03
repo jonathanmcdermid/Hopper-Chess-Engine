@@ -11,13 +11,13 @@ namespace Hopper
 		U64 zHist = 0;
 		U64 pHist = 0;
 		Move mHist = NULLMOVE;
-		historyInfo(int f = 0, int c = 0, int v = 0, U64 myZobrist = 0, U64 p = 0, Move nextMove = NULLMOVE) {
+		historyInfo(int f = 0, int c = 0, int v = 0, U64 z = 0, U64 p = 0, Move m = NULLMOVE) {
 			fHist = f;
 			cHist = c;
 			vHist = v;
-			zHist = myZobrist;
+			zHist = z;
 			pHist = p;
-			mHist = nextMove;
+			mHist = m;
 		}
 	};
 

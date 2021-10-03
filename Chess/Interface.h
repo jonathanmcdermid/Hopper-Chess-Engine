@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <iostream>
 #include "Engine.h"
 
 namespace Hopper

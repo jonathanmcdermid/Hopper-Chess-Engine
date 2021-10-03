@@ -22,9 +22,12 @@ namespace Hopper
 		memset(limit, 0, sizeof(limit));
 		memset(sortedMoves, 0, sizeof(sortedMoves));
 		sortedMoves[GENPV][0] = pv;
-		sortedMoves[GENHASH][0] = hash;
-		sortedMoves[GENKILLPRIMARY][0] = primary;
-		sortedMoves[GENKILLSECONDARY][0] = secondary;
+		if(hash != pv)
+			sortedMoves[GENHASH][0] = hash;
+		if (primary != hash && primary != pv)
+			sortedMoves[GENKILLPRIMARY][0] = primary;
+		if (secondary != primary && secondary != hash && secondary != pv)
+			sortedMoves[GENKILLSECONDARY][0] = secondary;
 	}
 
 	bool MoveList::noMoves()const

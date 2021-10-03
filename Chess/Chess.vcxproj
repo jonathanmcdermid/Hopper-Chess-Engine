@@ -40,7 +40,6 @@
     <ClInclude Include="macros.h" />
     <ClInclude Include="Move.h" />
     <ClInclude Include="Movelist.h" />
-    <ClInclude Include="Pawnhash.h" />
     <ClInclude Include="Zobrist.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

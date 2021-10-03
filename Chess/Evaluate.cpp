@@ -160,8 +160,6 @@ namespace Hopper
 
 	int Engine::negaEval()
 	{//negamax evaluation using material sum of pieces and bonus boards
-		//if (myBoard->isPseudoRepititionDraw() || myBoard->isMaterialDraw())
-		//	return CONTEMPT;
 		bool endgame = myBoard->isEndgame();
 		int sum = 0, helper;
 		int cfile[WIDTH * 2];

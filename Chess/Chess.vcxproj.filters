@@ -64,9 +64,6 @@
     <ClInclude Include="Movelist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Pawnhash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Zobrist.h">
       <Filter>Header Files</Filter>
     </ClInclude>

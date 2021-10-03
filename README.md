@@ -1,6 +1,6 @@
 ![](images/hopperImage.png)
 
-This is an amateur chess engine, and still in development. It has an ELO of ~ 2000. UCI compatibility for Arena is limited, but functional for standard play. The engine can run locally, so an external program like Arena is not required to play. 
+This is an amateur chess engine, and still in development. UCI compatibility for Arena is limited, but functional for standard play. The engine can run locally, so an external program like Arena is not required to play. 
 
 ## Playing In Arena
 
@@ -37,4 +37,5 @@ perft
 principal variation search
 static exchange evaluation
 ```
-Better UCI compatibility and history heuristics are at the top of the to do list. The code commented out in bot.cpp getMove function runs perft. From the tests I've run, the move generation for perft is perfect, but if you find an error please let me know!
+
+After dynamically allocated hashtables were added, the engine was played against Nejmet 3.01 in blitz for 50 games with the result being W8-L41-D1. This puts the engines strength at ~2150 ELO. Neural net evaluation is coming soon. Maybe.

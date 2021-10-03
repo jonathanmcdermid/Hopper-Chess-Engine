@@ -1,7 +1,4 @@
 #include "Interface.h"
-#include <string>
-#include <sstream>
-#include <iostream>
 
 namespace Hopper
 {

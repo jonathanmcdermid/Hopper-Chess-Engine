@@ -23,8 +23,6 @@ enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 #define BLACK		false
 #define WHITE		true
 
-#define HASHSIZE	30000
-
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
 #define MATE		25000
