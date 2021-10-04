@@ -38,4 +38,4 @@ principal variation search
 static exchange evaluation
 ```
 
-After dynamically allocated hashtables were added, the engine was played against Nejmet 3.01 in blitz for 50 games with the result being W8-L41-D1. This puts the engines strength at ~2150 ELO. Neural net evaluation is coming soon. Maybe.
+After dynamically allocated hashtables were added, the engine was played against Nejmet 3.07 in blitz for 50 games with the result being W8-L41-D1. This puts the engines strength at ~2150 ELO. Neural net evaluation is coming soon. Maybe.
