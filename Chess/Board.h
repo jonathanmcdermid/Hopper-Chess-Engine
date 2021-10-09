@@ -5,13 +5,13 @@
 namespace Hopper
 {
 	struct historyInfo {
-		int fHist = 0;
-		int cHist = 0;
+		unsigned fHist = 0;
+		unsigned cHist = 0;
 		int vHist = 0;
 		U64 zHist = 0;
 		U64 pHist = 0;
 		Move mHist = NULLMOVE;
-		historyInfo(int f = 0, int c = 0, int v = 0, U64 z = 0, U64 p = 0, Move m = NULLMOVE) {
+		historyInfo(unsigned f = 0, unsigned c = 0, int v = 0, U64 z = 0, U64 p = 0, Move m = NULLMOVE) {
 			fHist = f;
 			cHist = c;
 			vHist = v;
@@ -41,8 +41,8 @@ namespace Hopper
 		bool getTurn() const { return turn; }
 		int getGridAt(int position)const { return (int)grid[position]; }
 		int getThreatenedAt(bool team, int position)const { return threatened[team * SPACES + position]; }
-		int getAttackersAt(int x, int y, int myZobrist)const { return attackers[x][y][myZobrist]; }
-		void setAttackersAt(int x, int y, int myZobrist, int val) { attackers[x][y][myZobrist] = val; }
+		int getAttackersAt(int x, int y, int z)const { return attackers[x][y][z]; }
+		void setAttackersAt(int x, int y, int z, int val) { attackers[x][y][z] = val; }
 		int getPinsAt(int position)const { return pinnedPieces[position]; }
 		int getRolesAt(int position)const { return roleCounts[position]; }
 		int getPinCount()const { return pinCount; }

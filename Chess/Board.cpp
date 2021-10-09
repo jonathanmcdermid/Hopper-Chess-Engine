@@ -130,7 +130,7 @@ namespace Hopper {
 		if (myHistory[halfMoveClock].fHist >= 100)
 			return true;
 		bool once = false;
-		for (int i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
+		for (unsigned i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
 			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist) {
 				if (once)
 					return true;
@@ -145,7 +145,7 @@ namespace Hopper {
 	{
 		if (myHistory[halfMoveClock].fHist >= 100)
 			return true;
-		for (int i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
+		for (unsigned i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
 			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist)
 				return true;
 		}

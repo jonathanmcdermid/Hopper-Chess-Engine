@@ -10,10 +10,10 @@ namespace Hopper
 	{
 	public:
 		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
-		void moveOrder(int genState);
+		void moveOrder(unsigned genState);
 		bool staticExchange(Move myMove, int threshold);
-		void removeDuplicate(int gs);
 		void staticSort();
+		void removeDuplicate(unsigned gs);
 		bool movesLeft()const { return index[generationState] < limit[generationState]; }
 		bool noMoves()const;
 		Move getCurrMove()const { return sortedMoves[generationState][index[generationState]]; }
@@ -21,8 +21,8 @@ namespace Hopper
 	private:
 		Board* myBoard;
 		Move sortedMoves[GENEND][SPACES];
-		int index[GENEND];
-		int limit[GENEND];
-		int generationState;
+		unsigned index[GENEND];
+		unsigned limit[GENEND];
+		unsigned generationState;
 	};
 }

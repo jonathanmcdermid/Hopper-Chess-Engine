@@ -64,9 +64,9 @@ namespace Hopper
 	{//prints board in cmd
 		char letter;
 		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (int i = 0; i < WIDTH; ++i) {
+		for (unsigned i = 0; i < WIDTH; ++i) {
 			std::cout << "\n---------------------------------\n|";
-			for (int j = 0; j < WIDTH; ++j) {
+			for (unsigned j = 0; j < WIDTH; ++j) {
 				switch (myBoard.getGridAt(i * WIDTH + j)) {
 				case W_PAWN:
 					letter = 'P'; break;
@@ -190,8 +190,8 @@ namespace Hopper
 
 	bool Interface::playerMove(std::string input) {//makes external moves
 		if (input.length() == 4) {
-			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
-			int to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
+			unsigned from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
+			unsigned to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				nextMove = myBoard.createMove(from, to);
 				if (nextMove.getFlags() < NULLFLAGS) {
@@ -202,8 +202,8 @@ namespace Hopper
 		}
 		else if (input.length() == 5)
 		{
-			int from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
-			int to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
+			unsigned from = (WIDTH - (input.c_str()[1] - '0')) * WIDTH + input.c_str()[0] - 'a';
+			unsigned to = (WIDTH - (input.c_str()[3] - '0')) * WIDTH + input.c_str()[2] - 'a';
 			char flags = input.c_str()[4];
 			if (from >= 0 && from < SPACES && to >= 0 && to < SPACES) {
 				nextMove = myBoard.createMove(from, to);

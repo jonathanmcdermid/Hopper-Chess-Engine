@@ -33,7 +33,6 @@
   <ItemGroup>
     <ClInclude Include="Board.h" />
     <ClInclude Include="Engine.h" />
-    <ClInclude Include="Hashentry.h" />
     <ClInclude Include="Hashtable.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Killers.h" />

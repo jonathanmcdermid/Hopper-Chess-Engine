@@ -13,9 +13,9 @@ namespace Hopper
 		return lhs.appearances > rhs.appearances;
 	}
 
-	void Killers::cutoff(Move cm, int ply)
+	void Killers::cutoff(Move cm, unsigned ply)
 	{
-		int i = 0;
+		unsigned i = 0;
 		while(i < index[ply]) {
 			if (trackedKillers[ply][i].myMove == cm) {
 				++trackedKillers[ply][i].appearances;
@@ -33,9 +33,9 @@ namespace Hopper
 
 	void Killers::chrono()
 	{
-		for (int i = 0; i < MAXDEPTH - 2; ++i) {
+		for (unsigned i = 0; i < MAXDEPTH - 2; ++i) {
 			index[i] = index[i + 2];
-			for (int j = 0; j < MEMORY; ++j) {
+			for (unsigned j = 0; j < MEMORY; ++j) {
 				trackedKillers[i][j] = trackedKillers[i + 2][j];
 			}
 		}

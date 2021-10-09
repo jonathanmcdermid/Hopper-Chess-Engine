@@ -21,12 +21,12 @@ namespace Hopper
 	{
 	public:
 		Killers();
-		Move getPrimary(int ply) const { return trackedKillers[ply][0].myMove; }
-		Move getSecondary(int ply) const { return trackedKillers[ply][1].myMove; }
-		void cutoff(Move cm, int ply);
+		Move getPrimary(unsigned ply) const { return trackedKillers[ply][0].myMove; }
+		Move getSecondary(unsigned ply) const { return trackedKillers[ply][1].myMove; }
+		void cutoff(Move cm, unsigned ply);
 		void chrono();
 	private:
 		trackedMove trackedKillers[MAXDEPTH][MEMORY];
-		int index[MAXDEPTH];
+		unsigned index[MAXDEPTH];
 	};
 }

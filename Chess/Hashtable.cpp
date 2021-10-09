@@ -4,16 +4,27 @@ namespace Hopper
 {
     void HashTable::clean()
     {
-        for (int i = (int)master; i < myHashTable.size(); i += 2)
-            myHashTable[i].setDepth(0);
+        for (unsigned i = master; i < myHashTable.size(); i += 2)
+            myHashTable[i].hashDepth = 0;
         master = !master;
+    }
+
+    void HashTable::setSize(unsigned bytes) {
+        unsigned i;
+        for (i = 31; i > 0; --i) {
+            if (bytes & 1 << i)
+                break;
+        }
+        i = 1 << i;
+        myHashTable.resize(i / 32);
+        myPawnHashTable.resize(i / 32);
     }
 
     void HashTable::extractPV(Board* b, line* l)
     {
         Move nextMove;
-        int index = 0;
-        int depth = getDepth(b->getCurrZ() % myHashTable.size());
+        unsigned index = 0;
+        unsigned depth = getDepth(b->getCurrZ() % myHashTable.size());
         do {
             nextMove = getMove(b->getCurrZ() % myHashTable.size());
             if (b->getCurrZ() != getZobrist(b->getCurrZ() % myHashTable.size()) || !b->validateMove(nextMove))

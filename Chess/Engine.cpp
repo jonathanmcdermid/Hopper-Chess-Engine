@@ -14,24 +14,26 @@ namespace Hopper
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
 		int timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft);
-		int window = 45;
+		unsigned window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
 		line principalVariation;
 		nodes = 0;
-		/*for (int depth = 1; depth < myLimits.depth; ++depth)
+		/*
+		for (unsigned depth = 1; depth < myLimits.depth; ++depth)
 		{
-			int n = perft(depth);
-			auto stop = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+			unsigned n = perft(depth);
+			auto stopTime = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
 			std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() <<"\n";
-		}*/
-		for (int depth = 1; depth < myLimits.depth; ++depth) {
+		}
+		*/
+		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
 			myHashTable.extractPV(myBoard, &principalVariation);
 			std::string message;
 			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
-			for (int i = 0; i < principalVariation.moveCount; ++i) {
+			for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
 				message += { (char)(principalVariation.moveLink[i].getFrom() % WIDTH + 'a'),
 					(char)(WIDTH - (int)(principalVariation.moveLink[i].getFrom() / WIDTH) + '0'),
 					(char)(principalVariation.moveLink[i].getTo() % WIDTH + 'a'),
@@ -64,11 +66,11 @@ namespace Hopper
 		myKillers.chrono();
 	}
 
-	int Engine::alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull)
+	int Engine::alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull)
 	{
 		if (!depth)
 			return quiescentSearch(alpha, beta);
-		unsigned keyIndex = (unsigned) (myBoard->getCurrZ() % myHashTable.getSize());
+		U64 keyIndex = myBoard->getCurrZ();
 		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
 			if (myHashTable.getFlags(keyIndex) == HASHEXACT || (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta) || (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
 				pline->moveLink[0] = myHashTable.getMove(keyIndex);
@@ -86,8 +88,8 @@ namespace Hopper
 				return score;
 		}
 		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(keyIndex), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
-		int evaltype = HASHALPHA;
-		for (int genstate = GENPV; genstate != GENEND; ++genstate)
+		unsigned evaltype = HASHALPHA;
+		for (unsigned genstate = GENPV; genstate != GENEND; ++genstate)
 		{
 			localMoveList.moveOrder(genstate);
 			while (localMoveList.movesLeft()) {
@@ -114,7 +116,7 @@ namespace Hopper
 						myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
 						return score;
 					}
-					for (int j = 1; j < depth; ++j)
+					for (unsigned j = 1; j < depth; ++j)
 						pline->moveLink[j] = localLine.moveLink[j - 1];
 					pline->moveCount = localLine.moveCount + 1;
 					evaltype = HASHEXACT;
@@ -130,13 +132,14 @@ namespace Hopper
 		return alpha;
 	}
 
-	int Engine::perft(int depth)
+	unsigned Engine::perft(unsigned depth)
 	{
 		if (!depth)
 			return 1;
 		Move allMoves[MEMORY];
-		int moveCount = myBoard->genAllMoves(allMoves), n = 0;
-		for (int i = 0; i < moveCount; ++i) {
+		unsigned moveCount = myBoard->genAllMoves(allMoves);
+		unsigned n = 0;
+		for (unsigned i = 0; i < moveCount; ++i) {
 			myBoard->movePiece(allMoves[i]);
 			n += perft(depth - 1);
 			myBoard->unmovePiece();
@@ -147,10 +150,10 @@ namespace Hopper
 	int Engine::quiescentSearch(int alpha, int beta)
 	{
 		int score = negaEval();
-		if (myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize()) == myBoard->getCurrP())
-			score += (myBoard->getTurn()) ? myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize()) : -myHashTable.getPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize());
+		if (myHashTable.getPawnEntry(myBoard->getCurrP()) == myBoard->getCurrP())
+			score += (myBoard->getTurn()) ? myHashTable.getPawnEntry(myBoard->getCurrP()) : -myHashTable.getPawnEntry(myBoard->getCurrP());
 		else
-			myHashTable.newPawnEntry(myBoard->getCurrP() % myHashTable.getPawnSize(), pawnEval());
+			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
 		if (score >= beta)
 			return score;
 		if (score > alpha)

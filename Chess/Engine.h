@@ -9,15 +9,15 @@ namespace Hopper
 {
 	typedef struct limits
 	{
-		int time[2] = { 300000, 300000 };
-		int inc[2] = { 10000, 10000 };
-		int movetime = 0;
-		int movesleft = 20;
-		int depth = MAXDEPTH;
-		int nodes = 0;
-		int perft = 0;
-		int mate = 0;
-		int hashbytes = 220000000;
+		unsigned time[2] = { 300000, 300000 };
+		unsigned inc[2] = { 10000, 10000 };
+		unsigned movetime = 0;
+		unsigned movesleft = 20;
+		unsigned depth = MAXDEPTH;
+		unsigned nodes = 0;
+		unsigned perft = 0;
+		unsigned mate = 0;
+		unsigned hashbytes = 220000000;
 		bool infinite = false;
 	} limits;
 
@@ -26,17 +26,17 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
+		int alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
 		limits myLimits;
 	private:
 		static int hypotenuse(const int a, const int b);
-		int perft(int depth);
+		unsigned perft(unsigned depth);
 		int quiescentSearch(int alpha, int beta);
 		int negaEval();
 		int pawnEval();
 		Board* myBoard;
 		Killers myKillers;
 		HashTable myHashTable;
-		int nodes = 0;
+		unsigned nodes = 0;
 	};
 }
