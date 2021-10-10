@@ -1,12 +1,11 @@
-#include <string>
+#include <cstring>
 #include <algorithm>
 #include "Killers.h"
 
 namespace Hopper
 {
-	Killers::Killers()
-	{
-		memset(index, 0, sizeof(index));
+	Killers::Killers() {
+		memset(killerIndex, 0, sizeof(killerIndex));
 	}
 
 	inline static bool killerSort(trackedMove const& lhs, trackedMove const& rhs) {
@@ -16,10 +15,10 @@ namespace Hopper
 	void Killers::cutoff(Move cm, unsigned ply)
 	{
 		unsigned i = 0;
-		while(i < index[ply]) {
+		while(i < killerIndex[ply]) {
 			if (trackedKillers[ply][i].myMove == cm) {
 				++trackedKillers[ply][i].appearances;
-				std::sort(trackedKillers[ply], trackedKillers[ply] + index[ply], killerSort);
+				std::sort(trackedKillers[ply], trackedKillers[ply] + killerIndex[ply], killerSort);
 				return;
 			}
 			++i;
@@ -27,20 +26,20 @@ namespace Hopper
 		if (i < MEMORY) {
 			trackedKillers[ply][i].myMove = cm;
 			++trackedKillers[ply][i].appearances;
-			++index[ply];
+			++killerIndex[ply];
 		}
 	}
 
 	void Killers::chrono()
 	{
 		for (unsigned i = 0; i < MAXDEPTH - 2; ++i) {
-			index[i] = index[i + 2];
+			killerIndex[i] = killerIndex[i + 2];
 			for (unsigned j = 0; j < MEMORY; ++j) {
 				trackedKillers[i][j] = trackedKillers[i + 2][j];
 			}
 		}
-		index[MAXDEPTH - 1] = 0;
-		index[MAXDEPTH - 2] = 0;
+		killerIndex[MAXDEPTH - 1] = 0;
+		killerIndex[MAXDEPTH - 2] = 0;
 		memset(trackedKillers[MAXDEPTH - 1], 0, sizeof(trackedKillers[MAXDEPTH - 1]));
 		memset(trackedKillers[MAXDEPTH - 2], 0, sizeof(trackedKillers[MAXDEPTH - 2]));
 	}

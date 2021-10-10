@@ -1,3 +1,5 @@
+#include <cstring>
+#include <iostream>
 #include "Interface.h"
 
 namespace Hopper
@@ -5,20 +7,25 @@ namespace Hopper
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
 		std::string input;
+		std::cout << "Hopper Engine v1.0 by Jonathan McDermid\n";
 		while (1) {
 			std::getline(std::cin, input);
-			if (input == "uci")
+			if (input == "uci") {
 				uci(argc, argv);
+				input = "quit";
+			}
 			if (input == "local")
 				local();
 			if (input == "self")
 				self();
+			if (input == "perft")
+				myEngine.perftControl();
 			if (input == "3d" || input == "3D") {
 				std::cout << "Select opponent difficulty from 1 to 9\n";
 				while (1) {
 					std::getline(std::cin, input);
 					if (input.at(0) > '0' && input.at(0) <= '9') {
-						int time = (input.at(0) - '0') * 30000;
+						unsigned time = (input.at(0) - '0') * 30000;
 						myEngine.myLimits.time[WHITE] = time;
 						myEngine.myLimits.time[BLACK] = time;
 						return;
@@ -126,7 +133,7 @@ namespace Hopper
 	void Interface::uci(int argc, char* argv[])
 	{//uci communication loop, some options non functioning
 		std::string word, cmd;
-		std::cout << "id name Hopper Engine \nid author Jonathan M\nuciok\n";
+		std::cout << "id name Hopper Engine v1.0 \nid author Jonathan McDermid\nuciok\n";
 		for (int i = 1; i < argc; ++i)
 			cmd += std::string(argv[i]) + " ";
 		do {
@@ -136,7 +143,7 @@ namespace Hopper
 			word.clear();
 			is >> std::skipws >> word;
 			if (word == "uci")
-				std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
+				std::cout << "id name Hopper Engine v1.0 \nid author Jonathan McDermid\nuciok\n";
 			else if (word == "go")
 				go(is);
 			else if (word == "position")
@@ -210,16 +217,24 @@ namespace Hopper
 				if (nextMove.getFlags() >= NPROMOTE) {
 					switch (flags) {
 					case 'n':
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTE);
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? 
+							Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTEC) : 
+							Move(nextMove.getFrom(), nextMove.getTo(), NPROMOTE);
 						break;
 					case 'b':
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTE);
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? 
+							Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTEC) : 
+							Move(nextMove.getFrom(), nextMove.getTo(), BPROMOTE);
 						break;
 					case 'r':
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTE);
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? 
+							Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTEC) : 
+							Move(nextMove.getFrom(), nextMove.getTo(), RPROMOTE);
 						break;
 					case 'q':
-						nextMove = (nextMove.getFlags() == QPROMOTEC) ? Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTEC) : Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE);
+						nextMove = (nextMove.getFlags() == QPROMOTEC) ? 
+							Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTEC) : 
+							Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE);
 						break;
 					}
 					myBoard.movePiece(nextMove);
@@ -242,7 +257,12 @@ namespace Hopper
 	void Interface::botMove()
 	{//generates internal moves
 		myEngine.makeMove();
-		std::string message = { (char)(myBoard.getCurrM().getFrom() % WIDTH + 'a'), (char)(WIDTH - myBoard.getCurrM().getFrom() / WIDTH + '0'),(char)(myBoard.getCurrM().getTo() % WIDTH + 'a'),(char)(WIDTH - myBoard.getCurrM().getTo() / WIDTH + '0') };
+		std::string message = { 
+			(char)(myBoard.getCurrM().getFrom() % WIDTH + 'a'), 
+			(char)(WIDTH - myBoard.getCurrM().getFrom() / WIDTH + '0'),
+			(char)(myBoard.getCurrM().getTo() % WIDTH + 'a'),
+			(char)(WIDTH - myBoard.getCurrM().getTo() / WIDTH + '0') 
+		};
 		std::cout << "bestmove " << message;
 		switch (myBoard.getCurrM().getFlags()) {
 		case NPROMOTE:

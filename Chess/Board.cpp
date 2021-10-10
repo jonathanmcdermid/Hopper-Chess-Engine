@@ -1,6 +1,6 @@
-#include "Board.h"
 #include <cmath>
-#include <string>
+#include <cstring>
+#include "Board.h"
 
 namespace Hopper {
 
@@ -16,7 +16,7 @@ namespace Hopper {
 		memset(threatened, 0, sizeof(threatened));
 		memset(pinnedPieces, 0, sizeof(pinnedPieces));
 		memset(attackers, 0, sizeof(attackers));
-		int index = 0, counter = 0, helper;
+		unsigned index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
 			case 'P':
@@ -112,13 +112,12 @@ namespace Hopper {
 	bool Board::isCheckMate()
 	{
 		Move nextMove[28];
-		int moveCount;
-		for (int i = 0; i < SPACES; ++i) {
+		unsigned moveCount;
+		for (unsigned i = 0; i < SPACES; ++i) {
 			if ((turn && grid[i] > 0) || (!turn && grid[i] < 0)) {
 				moveCount = genAllMovesAt(nextMove, i);
 				if (moveCount) {
-					moveCount = removeIllegalMoves(nextMove, moveCount);
-					if (moveCount) { return false; }
+					if (removeIllegalMoves(nextMove, moveCount)) { return false; }
 				}
 			}
 		}
@@ -168,9 +167,9 @@ namespace Hopper {
 
 	bool Board::isEndgame()
 	{
-		for (int i = 0; i < 2; ++i) {
+		for (unsigned i = 0; i < 2; ++i) {
 			if (roleCounts[KINDEX * i + QINDEX]) {
-				for (int j = NINDEX; j < QINDEX; ++j) {
+				for (unsigned j = NINDEX; j < QINDEX; ++j) {
 					if (roleCounts[KINDEX * i + j])
 						return false;
 				}
@@ -186,7 +185,7 @@ namespace Hopper {
 	void Board::movePiece(Move nextMove)
 	{//executes a move if legal
 		myHistory[halfMoveClock + 1] = historyInfo(
-			(nextMove.getFlags() == STANDARD && abs(grid[nextMove.getFrom()]) != W_PAWN) ? myHistory[halfMoveClock].fHist + 1 : 0,
+			(nextMove.getFlags() == STANDARD && (grid[nextMove.getFrom()] != W_PAWN && grid[nextMove.getTo()] != B_PAWN)) ? myHistory[halfMoveClock].fHist + 1 : 0,
 			myHistory[halfMoveClock].cHist,
 			myHistory[halfMoveClock].vHist,
 			(myHistory[halfMoveClock].mHist.getFlags() == DOUBLEPUSH) ? myHistory[halfMoveClock].zHist ^ myZobrist.sideAt() ^ myZobrist.enPassantAt(myHistory[halfMoveClock].mHist.getTo()) : myHistory[halfMoveClock].zHist ^ myZobrist.sideAt(),
@@ -200,10 +199,10 @@ namespace Hopper {
 			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getTo());
 			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
 			grid[nextMove.getFrom()] = EMPTY;
-			if (abs(grid[nextMove.getTo()]) == W_KING) {
+			if (grid[nextMove.getTo()] == W_KING || grid[nextMove.getTo()] == B_KING) {
 				kingPos[turn] = nextMove.getTo();
 			}
-			else if (abs(grid[nextMove.getTo()]) == W_PAWN) {
+			else if (grid[nextMove.getTo()] == W_PAWN || grid[nextMove.getTo()] == B_PAWN) {
 				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
 				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
 			}
@@ -241,18 +240,18 @@ namespace Hopper {
 			break;
 		case CAPTURE:
 			--roleCounts[!turn * KINDEX + abs(grid[nextMove.getTo()]) % 10];
-			if (abs(grid[nextMove.getTo()]) == W_PAWN) { myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, !turn, nextMove.getTo()); }
+			if (grid[nextMove.getTo()] == W_PAWN || grid[nextMove.getTo()] == B_PAWN) { myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, !turn, nextMove.getTo()); }
 			myHistory[halfMoveClock].vHist -= grid[nextMove.getTo()];
 			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getFrom());
 			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getTo()]) % 10, !turn, nextMove.getTo());
 			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(abs(grid[nextMove.getFrom()]) % 10, turn, nextMove.getTo());
 			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
 			grid[nextMove.getFrom()] = EMPTY;
-			if (abs(grid[nextMove.getTo()]) == W_PAWN) {
+			if (grid[nextMove.getTo()] == W_PAWN || grid[nextMove.getTo()] == B_PAWN) {
 				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getFrom());
 				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(PINDEX, turn, nextMove.getTo());
 			}
-			else if (abs(grid[nextMove.getTo()]) == W_KING) { kingPos[turn] = nextMove.getTo(); }
+			else if (grid[nextMove.getTo()] == W_KING || grid[nextMove.getTo()] == B_KING) { kingPos[turn] = nextMove.getTo(); }
 			break;
 		case ENPASSANT:
 			--roleCounts[!turn * KINDEX + PINDEX];
@@ -432,12 +431,10 @@ namespace Hopper {
 		case ENPASSANT:
 			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? W_PAWN : B_PAWN;
 			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			if (turn) {
-				grid[myHistory[halfMoveClock].mHist.getTo() + 8] = B_PAWN;
-			}
-			else {
-				grid[myHistory[halfMoveClock].mHist.getTo() - 8] = W_PAWN;
-			}
+			if (turn)
+				grid[myHistory[halfMoveClock].mHist.getTo() + WIDTH] = B_PAWN;
+			else
+				grid[myHistory[halfMoveClock].mHist.getTo() - WIDTH] = W_PAWN;
 			++roleCounts[!turn * KINDEX + PINDEX];
 			break;
 		case NPROMOTE:
@@ -501,7 +498,7 @@ namespace Hopper {
 	{
 		pinCount = 0;
 		memset(threatened, 0, sizeof(threatened));
-		for (int from = 0; from < SPACES; ++from) {
+		for (unsigned from = 0; from < SPACES; ++from) {
 			if (grid[from])
 				pieceThreats(from);
 		}

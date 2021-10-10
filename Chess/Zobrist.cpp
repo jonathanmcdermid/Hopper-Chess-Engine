@@ -26,7 +26,7 @@ namespace Hopper
 				key ^= piecesAt(abs(b->getGridAt(i)) % 10, b->getGridAt(i) > 0, i);
 		}
 		for (unsigned i = 0; i < 4; ++i) {
-			if (b->getCurrC() & (int)(1 << i))
+			if (b->getCurrC() & 1 << i)
 				key ^= castle[i];
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)

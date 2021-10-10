@@ -1,6 +1,6 @@
-#include "Engine.h"
 #include <cmath>
-#include <string>
+#include <cstring>
+#include "Engine.h"
 
 namespace Hopper
 {
@@ -160,17 +160,17 @@ namespace Hopper
 
 	int Engine::negaEval()
 	{//negamax evaluation using material sum of pieces and bonus boards
-		bool endgame = myBoard->isEndgame();
-		int sum = 0, helper;
-		int cfile[WIDTH * 2];
+		int sum = 0;
+		int helper;
+		unsigned cfile[WIDTH * 2];
 		memset(cfile, 0, sizeof(cfile));
-		for (int i = 0; i < SPACES; ++i) {
+		for (unsigned i = 0; i < SPACES; ++i) {
 			if (myBoard->getGridAt(i) == W_PAWN)
 				++cfile[i % WIDTH + WIDTH];
 			else if (myBoard->getGridAt(i) == B_PAWN)
 				++cfile[i % WIDTH];
 		}
-		for (int i = 0; i < SPACES; ++i) {
+		for (unsigned i = 0; i < SPACES; ++i) {
 			switch (myBoard->getGridAt(i)) {
 			case W_PAWN:
 				sum += WPAWNBIT[i];
@@ -255,7 +255,8 @@ namespace Hopper
 			case W_QUEEN:
 				sum += WW_QUEENBIT[i] + hypotenuse(myBoard->getKingPosAt(BLACK), i) * 4;
 				for (helper = 0; helper < myBoard->getThreatenedAt(WHITE, i); ++helper) {
-					if (myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_BISHOP) {
+					if (myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_ROOK 
+					 || myBoard->getGridAt(myBoard->getAttackersAt(WHITE, helper, i)) == W_BISHOP) {
 						sum += BONUS_QUEEN_SUPPORT;
 						break;
 					}
@@ -264,17 +265,18 @@ namespace Hopper
 			case B_QUEEN:
 				sum -= BW_QUEENBIT[i] + hypotenuse(myBoard->getKingPosAt(WHITE), i) * 4;
 				for (helper = 0; helper < myBoard->getThreatenedAt(BLACK, i); ++helper) {
-					if (myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_ROOK || myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_BISHOP) {
+					if (myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_ROOK 
+					 || myBoard->getGridAt(myBoard->getAttackersAt(BLACK, helper, i)) == B_BISHOP) {
 						sum -= BONUS_QUEEN_SUPPORT;
 						break;
 					}
 				}
 				break;
 			case W_KING:
-				sum += (endgame) ? WENDKINGBIT[i] : WKINGBIT[i];
+				sum += (myBoard->isEndgame()) ? WENDKINGBIT[i] : WKINGBIT[i];
 				break;
 			case B_KING:
-				sum -= (endgame) ? BENDKINGBIT[i] : BKINGBIT[i];
+				sum -= (myBoard->isEndgame()) ? BENDKINGBIT[i] : BKINGBIT[i];
 				break;
 			}
 		}
@@ -296,20 +298,20 @@ namespace Hopper
 
 	int Engine::pawnEval()
 	{
+		unsigned helper;
+		unsigned cfile[WIDTH * 2];
 		int sum = 0;
-		int cfile[WIDTH * 2];
 		int rank[WIDTH * 2][3];
-		int helper;
 		memset(cfile, 0, sizeof(cfile));
 		memset(rank, 0, sizeof(rank));
-		for (int i = 0; i < SPACES; ++i) {
+		for (unsigned i = 0; i < SPACES; ++i) {
 			if (myBoard->getGridAt(i) == W_PAWN)
 				rank[i % WIDTH + WIDTH][cfile[i % WIDTH + WIDTH]++] = i / WIDTH;
 			else if (myBoard->getGridAt(i) == B_PAWN)
 				rank[i % WIDTH][cfile[i % WIDTH]++] = i / WIDTH;
 		}
-		for (int file = 0; file < WIDTH; ++file) {
-			for (int index = 0; index < cfile[file + WIDTH]; ++index) {
+		for (unsigned file = 0; file < WIDTH; ++file) {
+			for (unsigned index = 0; index < cfile[file + WIDTH]; ++index) {
 				switch (index) {
 				case 1:
 					sum += PAWN_DOUBLED;
@@ -379,8 +381,8 @@ namespace Hopper
 				}
 			}
 		}
-		for (int file = 0; file < WIDTH; ++file) {
-			for (int index = 0; index < cfile[file]; ++index) {
+		for (unsigned file = 0; file < WIDTH; ++file) {
+			for (unsigned index = 0; index < cfile[file]; ++index) {
 				switch (index) {
 				case 1:
 					sum -= PAWN_DOUBLED;

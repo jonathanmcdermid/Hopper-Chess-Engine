@@ -15,9 +15,9 @@ namespace Hopper
             if (bytes & 1 << i)
                 break;
         }
-        i = 1 << i;
-        myHashTable.resize(i / 32);
-        myPawnHashTable.resize(i / 32);
+        i = 1 << (i - 5);
+        myHashTable.resize(i);
+        myPawnHashTable.resize(i);
     }
 
     void HashTable::extractPV(Board* b, line* l)

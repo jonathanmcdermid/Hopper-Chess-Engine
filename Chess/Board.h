@@ -51,16 +51,16 @@ namespace Hopper
 		void unmovePiece();
 		bool validateMove(const Move nextMove);
 		Move createMove(int from, int to);
-		int genAllMoves(Move* nextMove);
-		int genAllCapMoves(Move* nextMove);
-		int genAllNonCapMoves(Move* nextMove);
+		unsigned genAllMoves(Move* nextMove);
+		unsigned genAllCapMoves(Move* nextMove);
+		unsigned genAllNonCapMoves(Move* nextMove);
 	private:
 		void pieceThreats(int from);
 		void allThreats();
-		int genCapMovesAt(Move* nextMove, int from);
-		int genNonCapMovesAt(Move* nextMove, int from);
-		int genAllMovesAt(Move* nextMove, int from);
-		int removeIllegalMoves(Move* nextMove, int moveCount);
+		unsigned genCapMovesAt(Move* nextMove, int from);
+		unsigned genNonCapMovesAt(Move* nextMove, int from);
+		unsigned genAllMovesAt(Move* nextMove, int from);
+		unsigned removeIllegalMoves(Move* nextMove, unsigned moveCount);
 		Zobrist myZobrist;
 		historyInfo myHistory[512];
 		role_enum grid[SPACES];

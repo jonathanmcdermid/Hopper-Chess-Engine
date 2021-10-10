@@ -1,7 +1,7 @@
 #include <algorithm>
+#include <cstring>
 #include "Movelist.h"
 #include "Board.h"
-#include "Move.h"
 
 namespace Hopper
 {
@@ -53,7 +53,7 @@ namespace Hopper
 
 	void MoveList::staticSort() {
 		for (unsigned i = 0; i < limit[GENWINCAPS]; ++i) {
-			if (!staticExchange(sortedMoves[GENWINCAPS][i], -30)) {
+			if (!staticExchange(sortedMoves[GENWINCAPS][i])) {
 				sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
 				sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
 			}
@@ -90,7 +90,7 @@ namespace Hopper
 		}
 	}
 
-	bool MoveList::staticExchange(Move nextMove, int threshold)
+	bool MoveList::staticExchange(Move nextMove)
 	{
 		bool tomove = myBoard->getTurn();
 		unsigned to = nextMove.getTo(), from = nextMove.getFrom();
@@ -115,9 +115,10 @@ namespace Hopper
 					smallestindex = i;
 			see -= trophy;
 			trophy = abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]));
-			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
+			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + total[tomove] - 1];
+			--total[tomove];
 			tomove = !tomove;
-			if (see > threshold)
+			if (see > SEE_THRESHOLD)
 				return true;
 			else if (!total[tomove])
 				return false;
@@ -129,6 +130,6 @@ namespace Hopper
 			trophy = abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]));
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 		}
-		return see > threshold;
+		return see > SEE_THRESHOLD;
 	}
 }

@@ -5,12 +5,11 @@ namespace Hopper
 {
 	bool Board::validateMove(Move nextMove)
 	{//validates a single move
+		if ((turn && grid[nextMove.getFrom()] < 0) || (!turn && grid[nextMove.getFrom()] > 0))
+			return false;
 		Move temp[28];
 		int moveCount;
-		if ((turn && grid[nextMove.getFrom()] > 0) || (!turn && grid[nextMove.getFrom()] < 0))
-			moveCount = genAllMovesAt(temp, nextMove.getFrom());
-		else
-			return false;
+		moveCount = genAllMovesAt(temp, nextMove.getFrom());
 		moveCount = removeIllegalMoves(temp, moveCount);
 		for (int i = 0; i < moveCount; ++i) {
 			if (temp[i] == nextMove)
@@ -22,46 +21,46 @@ namespace Hopper
 	Move Board::createMove(int from, int to)
 	{
 		Move temp[28];
-		int moveCount = genAllMovesAt(temp, from);
+		unsigned moveCount = genAllMovesAt(temp, from);
 		moveCount = removeIllegalMoves(temp, moveCount);
-		for (int i = 0; i < moveCount; ++i) {
+		for (unsigned i = 0; i < moveCount; ++i) {
 			if (temp[i].getFrom() == from && temp[i].getTo() == to)
 				return temp[i];
 		}
 		return NULLMOVE;
 	}
 
-	int Board::removeIllegalMoves(Move* nextMove, int moveCount)
+	unsigned Board::removeIllegalMoves(Move* nextMove, unsigned moveCount)
 	{
 		int checktype;
 		for (int i = 0; i < pinCount; ++i) {
-			for (int j = 0; j < moveCount; ++j) {
+			for (unsigned j = 0; j < moveCount; ++j) {
 				if (nextMove[j].getFrom() == pinnedPieces[i]) {
 					switch (pinnedPieces[i + KINDEX]) {
 					case BOARD_SOUTH:
 					case BOARD_NORTH:
-						if (!(NSslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							break;
-						else
+						if (NSslide(nextMove[j].getFrom(), nextMove[j].getTo()))
 							continue;
+						else
+							break;
 					case BOARD_WEST:
 					case BOARD_EAST:
-						if (!(EWslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							break;
-						else
+						if (EWslide(nextMove[j].getFrom(), nextMove[j].getTo()))
 							continue;
+						else
+							break;
 					case BOARD_NORTHEAST:
 					case BOARD_SOUTHWEST:
-						if (!(NESWslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							break;
-						else
+						if (NESWslide(nextMove[j].getFrom(), nextMove[j].getTo()))
 							continue;
+						else
+							break;
 					case BOARD_NORTHWEST:
 					case BOARD_SOUTHEAST:
-						if (!(NWSEslide(nextMove[j].getFrom(), nextMove[j].getTo())))
-							break;
-						else
+						if (NWSEslide(nextMove[j].getFrom(), nextMove[j].getTo()))
 							continue;
+						else
+							break;
 					}
 					nextMove[j--] = nextMove[--moveCount];
 				}
@@ -78,7 +77,7 @@ namespace Hopper
 				checktype = (attackers[!turn][i][kingPos[turn]] > kingPos[turn]) ? BOARD_NORTHEAST : BOARD_SOUTHWEST;
 			else
 				checktype = (attackers[!turn][i][kingPos[turn]] > kingPos[turn]) ? BOARD_NORTHWEST : BOARD_SOUTHEAST;
-			for (int j = 0; j < moveCount; ++j) {
+			for (unsigned j = 0; j < moveCount; ++j) {
 				if (nextMove[j].getFrom() != kingPos[turn]) {
 					if (checktype != BOARD_LEAP && ((nextMove[j].getTo() - attackers[!turn][i][kingPos[turn]]) % checktype
 						|| (nextMove[j].getTo() < attackers[!turn][i][kingPos[turn]] && nextMove[j].getTo() < kingPos[turn])
@@ -94,10 +93,10 @@ namespace Hopper
 		return moveCount;
 	}
 
-	int Board::genAllMoves(Move* nextMove)
+	unsigned Board::genAllMoves(Move* nextMove)
 	{//generates all legal moves
-		int moveCount = 0;
-		for (int from = 0; from < SPACES; ++from) {
+		unsigned moveCount = 0;
+		for (unsigned from = 0; from < SPACES; ++from) {
 			if ((grid[from] < 0 && !turn) || (grid[from] > 0 && turn))
 				moveCount += genAllMovesAt(&nextMove[moveCount], from);
 		}
@@ -105,10 +104,10 @@ namespace Hopper
 		return moveCount;
 	}
 
-	int Board::genAllCapMoves(Move* nextMove)
+	unsigned Board::genAllCapMoves(Move* nextMove)
 	{
-		int moveCount = 0;
-		for (int from = 0; from < SPACES; ++from) {
+		unsigned moveCount = 0;
+		for (unsigned from = 0; from < SPACES; ++from) {
 			if ((grid[from] < 0 && !turn) || (grid[from] > 0 && turn))
 				moveCount += genCapMovesAt(&nextMove[moveCount], from);
 		}
@@ -116,10 +115,10 @@ namespace Hopper
 		return moveCount;
 	}
 
-	int Board::genAllNonCapMoves(Move* nextMove)
+	unsigned Board::genAllNonCapMoves(Move* nextMove)
 	{
-		int moveCount = 0;
-		for (int from = 0; from < SPACES; ++from) {
+		unsigned moveCount = 0;
+		for (unsigned from = 0; from < SPACES; ++from) {
 			if ((grid[from] < 0 && !turn) || (grid[from] > 0 && turn))
 				moveCount += genNonCapMovesAt(&nextMove[moveCount], from);
 		}
@@ -127,9 +126,10 @@ namespace Hopper
 		return moveCount;
 	}
 
-	int Board::genCapMovesAt(Move* nextMove, int from)
+	unsigned Board::genCapMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal capture moves for one piece
-		int i, moveCount = 0;
+		int i;
+		unsigned moveCount = 0;
 		switch (grid[from]) {
 		case W_KING:
 		case B_KING:
@@ -227,7 +227,7 @@ namespace Hopper
 					break;
 				}
 			}
-			if (abs(grid[from]) != W_QUEEN)
+			if (grid[from] != W_QUEEN && grid[from] != B_QUEEN)
 				return moveCount;
 		case W_BISHOP:
 		case B_BISHOP:
@@ -263,9 +263,10 @@ namespace Hopper
 		return moveCount;
 	}
 
-	int Board::genNonCapMovesAt(Move* nextMove, int from)
+	unsigned Board::genNonCapMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal non capture moves for one piece
-		int i, moveCount = 0;
+		int i;
+		unsigned moveCount = 0;
 		switch (grid[from])
 		{
 		case W_KING:
@@ -345,64 +346,65 @@ namespace Hopper
 		case B_QUEEN:
 		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
-			if (abs(grid[from]) != W_QUEEN)
+			if (grid[from] != W_QUEEN && grid[from] != B_QUEEN)
 				return moveCount;
 		case W_BISHOP:
 		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else
+				if (grid[i])
 					break;
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 		}
 		return moveCount;
 	}
 
-	int Board::genAllMovesAt(Move* nextMove, int from)
+	unsigned Board::genAllMovesAt(Move* nextMove, int from)
 	{//generates all pseudo legal moves for one piece
-		int i, moveCount = 0;
+		int i;
+		unsigned moveCount = 0;
 		switch (grid[from]) {
 		case W_KING:
 		case B_KING:
@@ -546,80 +548,80 @@ namespace Hopper
 		case B_QUEEN:
 		case B_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
-			if (abs(grid[from]) != W_QUEEN)
+			if (grid[from] != W_QUEEN && grid[from] != B_QUEEN)
 				return moveCount;
 		case W_BISHOP:
 		case B_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 			for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
-				if (!grid[i])
-					nextMove[moveCount++] = Move(from, i, STANDARD);
-				else {
+				if (grid[i]) {
 					if ((turn && grid[i] < 0) || (!turn && grid[i] > 0))
 						nextMove[moveCount++] = Move(from, i, CAPTURE);
 					break;
 				}
+				else
+					nextMove[moveCount++] = Move(from, i, STANDARD);
 			}
 		}
 		return moveCount;
