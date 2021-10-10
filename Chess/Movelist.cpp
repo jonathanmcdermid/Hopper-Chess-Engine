@@ -1,7 +1,7 @@
 #include <algorithm>
+#include <cstring>
 #include "Movelist.h"
 #include "Board.h"
-#include "Move.h"
 
 namespace Hopper
 {
@@ -115,7 +115,8 @@ namespace Hopper
 					smallestindex = i;
 			see -= trophy;
 			trophy = abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]));
-			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
+			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + total[tomove] - 1];
+			--total[tomove];
 			tomove = !tomove;
 			if (see > threshold)
 				return true;

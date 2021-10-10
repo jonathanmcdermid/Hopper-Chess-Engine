@@ -13,21 +13,12 @@ namespace Hopper
 	void Engine::makeMove()
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		int timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft);
+		unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft);
 		unsigned window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
 		line principalVariation;
 		nodes = 0;
-		/*
-		for (unsigned depth = 1; depth < myLimits.depth; ++depth)
-		{
-			unsigned n = perft(depth);
-			auto stopTime = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-			std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() <<"\n";
-		}
-		*/
 		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
 			myHashTable.extractPV(myBoard, &principalVariation);
@@ -72,7 +63,9 @@ namespace Hopper
 			return quiescentSearch(alpha, beta);
 		U64 keyIndex = myBoard->getCurrZ();
 		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
-			if (myHashTable.getFlags(keyIndex) == HASHEXACT || (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta) || (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
+			if (myHashTable.getFlags(keyIndex) == HASHEXACT 
+			|| (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta) 
+			|| (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
 				pline->moveLink[0] = myHashTable.getMove(keyIndex);
 				pline->moveCount = 1;
 				return myHashTable.getEval(keyIndex);
@@ -130,6 +123,16 @@ namespace Hopper
 		else if (myHashTable.getDepth(keyIndex) < depth)
 			myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
 		return alpha;
+	}
+
+	void Engine::perftControl() {
+		auto startTime = std::chrono::high_resolution_clock::now();
+		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
+			unsigned n = perft(depth);
+			auto stopTime = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+			std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() << "\n";
+		}
 	}
 
 	unsigned Engine::perft(unsigned depth)

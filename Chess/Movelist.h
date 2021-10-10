@@ -1,8 +1,6 @@
 #pragma once
 
 #include "board.h"
-#include "macros.h"
-#include "move.h"
 
 namespace Hopper
 {

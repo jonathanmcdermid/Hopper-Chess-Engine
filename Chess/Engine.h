@@ -27,6 +27,7 @@ namespace Hopper
 		Engine(Board* bd);
 		void makeMove();
 		int alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
+		void perftControl();
 		limits myLimits;
 	private:
 		static int hypotenuse(const int a, const int b);

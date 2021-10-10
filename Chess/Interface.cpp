@@ -1,3 +1,5 @@
+#include <cstring>
+#include <iostream>
 #include "Interface.h"
 
 namespace Hopper
@@ -5,6 +7,7 @@ namespace Hopper
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
 		std::string input;
+		std::cout << "Hopper Engine by Jonathan McDermid\n";
 		while (1) {
 			std::getline(std::cin, input);
 			if (input == "uci")
@@ -13,12 +16,14 @@ namespace Hopper
 				local();
 			if (input == "self")
 				self();
+			if (input == "perft")
+				myEngine.perftControl();
 			if (input == "3d" || input == "3D") {
 				std::cout << "Select opponent difficulty from 1 to 9\n";
 				while (1) {
 					std::getline(std::cin, input);
 					if (input.at(0) > '0' && input.at(0) <= '9') {
-						int time = (input.at(0) - '0') * 30000;
+						unsigned time = (input.at(0) - '0') * 30000;
 						myEngine.myLimits.time[WHITE] = time;
 						myEngine.myLimits.time[BLACK] = time;
 						return;
@@ -126,7 +131,7 @@ namespace Hopper
 	void Interface::uci(int argc, char* argv[])
 	{//uci communication loop, some options non functioning
 		std::string word, cmd;
-		std::cout << "id name Hopper Engine \nid author Jonathan M\nuciok\n";
+		std::cout << "id name Hopper Engine\nid author Jonathan McDermid\nuciok\n";
 		for (int i = 1; i < argc; ++i)
 			cmd += std::string(argv[i]) + " ";
 		do {
@@ -136,7 +141,7 @@ namespace Hopper
 			word.clear();
 			is >> std::skipws >> word;
 			if (word == "uci")
-				std::cout << "id name chessbrainlet 1.0\nid author Jonathan M\nuciok\n";
+				std::cout << "id name Hopper Engine\nid author Jonathan McDermid\nuciok\n";
 			else if (word == "go")
 				go(is);
 			else if (word == "position")

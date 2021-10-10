@@ -20,13 +20,13 @@ namespace Hopper
 	class Killers
 	{
 	public:
-		Killers();
+		Killers(){ memset(killerIndex, 0, sizeof(killerIndex)); }
 		Move getPrimary(unsigned ply) const { return trackedKillers[ply][0].myMove; }
 		Move getSecondary(unsigned ply) const { return trackedKillers[ply][1].myMove; }
 		void cutoff(Move cm, unsigned ply);
 		void chrono();
 	private:
 		trackedMove trackedKillers[MAXDEPTH][MEMORY];
-		unsigned index[MAXDEPTH];
+		unsigned killerIndex[MAXDEPTH];
 	};
 }

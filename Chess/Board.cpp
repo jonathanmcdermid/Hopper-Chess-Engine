@@ -1,6 +1,6 @@
-#include "Board.h"
 #include <cmath>
-#include <string>
+#include <cstring>
+#include "Board.h"
 
 namespace Hopper {
 
@@ -16,7 +16,7 @@ namespace Hopper {
 		memset(threatened, 0, sizeof(threatened));
 		memset(pinnedPieces, 0, sizeof(pinnedPieces));
 		memset(attackers, 0, sizeof(attackers));
-		int index = 0, counter = 0, helper;
+		unsigned index = 0, counter = 0, helper;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
 			case 'P':
@@ -112,8 +112,8 @@ namespace Hopper {
 	bool Board::isCheckMate()
 	{
 		Move nextMove[28];
-		int moveCount;
-		for (int i = 0; i < SPACES; ++i) {
+		unsigned moveCount;
+		for (unsigned i = 0; i < SPACES; ++i) {
 			if ((turn && grid[i] > 0) || (!turn && grid[i] < 0)) {
 				moveCount = genAllMovesAt(nextMove, i);
 				if (moveCount) {
@@ -168,9 +168,9 @@ namespace Hopper {
 
 	bool Board::isEndgame()
 	{
-		for (int i = 0; i < 2; ++i) {
+		for (unsigned i = 0; i < 2; ++i) {
 			if (roleCounts[KINDEX * i + QINDEX]) {
-				for (int j = NINDEX; j < QINDEX; ++j) {
+				for (unsigned j = NINDEX; j < QINDEX; ++j) {
 					if (roleCounts[KINDEX * i + j])
 						return false;
 				}
@@ -501,7 +501,7 @@ namespace Hopper {
 	{
 		pinCount = 0;
 		memset(threatened, 0, sizeof(threatened));
-		for (int from = 0; from < SPACES; ++from) {
+		for (unsigned from = 0; from < SPACES; ++from) {
 			if (grid[from])
 				pieceThreats(from);
 		}

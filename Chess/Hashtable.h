@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Board.h"
 #include <vector>
+#include "Board.h"
 
 namespace Hopper
 {

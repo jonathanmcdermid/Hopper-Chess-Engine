@@ -12,6 +12,8 @@ enum generation_enum { GENPV = 0, GENHASH, GENWINCAPS, GENKILLPRIMARY, GENKILLSE
 
 enum hash_enum { HASHEXACT = 1, HASHBETA, HASHALPHA };
 
+#define HOPPER_VERSION "1.0"
+
 #define STARTFEN	"rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
