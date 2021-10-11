@@ -15,9 +15,10 @@ namespace Hopper
             if (bytes & 1 << i)
                 break;
         }
-        i = 1 << (i - 5);
-        myHashTable.resize(i);
-        myPawnHashTable.resize(i);
+        unsigned j = 1 << (i - 5);
+        unsigned k = 1 << (i - 6);
+        myHashTable.resize(j);
+        myPawnHashTable.resize(k);
     }
 
     void HashTable::extractPV(Board* b, line* l)

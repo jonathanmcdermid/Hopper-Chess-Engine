@@ -32,6 +32,19 @@ namespace Hopper
         Move hashMove;
     }hashEntry;
 
+    typedef struct pawnHashEntry {
+        pawnHashEntry(U64 k = 0, int e = 0) {
+            pawnHashZobristKey = k;
+            pawnHashEval = e;
+        }
+        void operator=(const pawnHashEntry& rhs) {
+            pawnHashZobristKey = rhs.pawnHashZobristKey;
+            pawnHashEval = rhs.pawnHashEval;
+        }
+        U64 pawnHashZobristKey;
+        int pawnHashEval;
+    }pawnHashEntry;
+
     class HashTable
     {
     public:
@@ -39,19 +52,20 @@ namespace Hopper
         void setSize(unsigned bytes);
         void clean();
         void extractPV(Board* b, line* l);
-        void newEntry(U64 key, hashEntry& h) { myHashTable[key % myHashTable.size()] = h; }
         void newEntry(U64 key, U64 myZobrist, int d, int e, int f, Move b) { myHashTable[key % myHashTable.size()] = hashEntry(myZobrist, d, e, f, b); }
-        hashEntry getEntry(U64 key) const { return myHashTable[key % myHashTable.size()]; }
-        void newPawnEntry(U64 key, int hashEval) { myPawnHashTable[key % myHashTable.size()] = hashEval; }
-        int getPawnEntry(U64 key) const { return myPawnHashTable[key % myPawnHashTable.size()]; }
-        U64 getZobrist(U64 key) const { return myHashTable[key % myPawnHashTable.size()].hashZobristKey; }
-        Move getMove(U64 key) const { return myHashTable[key % myPawnHashTable.size()].hashMove; }
-        unsigned getDepth(U64 key) const { return myHashTable[key % myPawnHashTable.size()].hashDepth; }
-        int getEval(U64 key) const { return myHashTable[key % myPawnHashTable.size()].hashEval; }
-        unsigned getFlags(U64 key) const { return myHashTable[key % myPawnHashTable.size()].hashFlags; }
+        void newEntry(U64 key, hashEntry& h) { myHashTable[key % myHashTable.size()] = h; }
+        void newPawnEntry(U64 key, int hashEval){ myPawnHashTable[key % myPawnHashTable.size()] = pawnHashEntry(key, hashEval); }
+        int getPawnEval(U64 key)    const       { return myPawnHashTable[key % myPawnHashTable.size()].pawnHashEval; }
+        U64 getPawnZobrist(U64 key) const       { return myPawnHashTable[key % myPawnHashTable.size()].pawnHashZobristKey; }
+        hashEntry getEntry(U64 key) const       { return myHashTable[key % myHashTable.size()]; }
+        U64 getZobrist(U64 key)     const       { return myHashTable[key % myHashTable.size()].hashZobristKey; }
+        Move getMove(U64 key)       const       { return myHashTable[key % myHashTable.size()].hashMove; }
+        unsigned getDepth(U64 key)  const       { return myHashTable[key % myHashTable.size()].hashDepth; }
+        int getEval(U64 key)        const       { return myHashTable[key % myHashTable.size()].hashEval; }
+        unsigned getFlags(U64 key)  const       { return myHashTable[key % myHashTable.size()].hashFlags; }
     private:
         std::vector<hashEntry> myHashTable;
-        std::vector<int> myPawnHashTable;
+        std::vector<pawnHashEntry> myPawnHashTable;
         bool master;
     };
 }

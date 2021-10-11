@@ -1,5 +1,6 @@
 #include <cstring>
 #include <iostream>
+#include <cassert>
 #include "Interface.h"
 
 namespace Hopper
@@ -67,48 +68,6 @@ namespace Hopper
 		Interface::botMove();
 	}
 
-	void Interface::drawBoard()
-	{//prints board in cmd
-		char letter;
-		std::cout << "\n  a   b   c   d   e   f   g   h";
-		for (unsigned i = 0; i < WIDTH; ++i) {
-			std::cout << "\n---------------------------------\n|";
-			for (unsigned j = 0; j < WIDTH; ++j) {
-				switch (myBoard.getGridAt(i * WIDTH + j)) {
-				case W_PAWN:
-					letter = 'P'; break;
-				case W_ROOK:
-					letter = 'R'; break;
-				case W_KNIGHT:
-					letter = 'N'; break;
-				case W_BISHOP:
-					letter = 'B'; break;
-				case W_QUEEN:
-					letter = 'Q'; break;
-				case W_KING:
-					letter = 'K'; break;
-				case B_PAWN:
-					letter = 'p'; break;
-				case B_ROOK:
-					letter = 'r'; break;
-				case B_KNIGHT:
-					letter = 'n'; break;
-				case B_BISHOP:
-					letter = 'b'; break;
-				case B_QUEEN:
-					letter = 'q'; break;
-				case B_KING:
-					letter = 'k'; break;
-				default:
-					letter = ' ';
-				}
-				std::cout << " " << letter << " |";
-			}
-			std::cout << " " << WIDTH - i;
-		}
-		std::cout << "\n---------------------------------\n";
-	}
-
 	void Interface::position(std::istringstream& is)
 	{
 		std::string word, fen;
@@ -124,10 +83,11 @@ namespace Hopper
 			return;
 		myBoard.fenSet((const char*)fen.c_str());
 		while (is >> word) {
-			if (!playerMove(word))
-				return;
+			if (!playerMove(word)) {
+				std::cout << word << " is not a valid move\n";
+				exit(1);
+			}
 		}
-		//drawBoard();
 	}
 
 	void Interface::uci(int argc, char* argv[])
@@ -153,24 +113,24 @@ namespace Hopper
 			else if (word == "isready")
 				std::cout << "readyok\n";
 			else if (word == "print")
-				drawBoard();
+				myBoard.drawBoard();
 		} while (word != "quit" && argc == 1);
 	}
 
 	void Interface::local()
 	{//for play without uci
 		std::string input;
-		drawBoard();
+		myBoard.drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
 				while (!playerMove(input))
 					std::getline(std::cin, input);
-				drawBoard();
+				myBoard.drawBoard();
 				if (myBoard.isCheckMate())
 					break;
 				Interface::botMove();
-				drawBoard();
+				myBoard.drawBoard();
 				if (myBoard.isCheckMate())
 					break;
 			}
@@ -181,13 +141,13 @@ namespace Hopper
 	void Interface::self()
 	{//for play without uci
 		std::string input;
-		drawBoard();
+		myBoard.drawBoard();
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
 				while (!playerMove(input))
 					std::getline(std::cin, input);
-				drawBoard();
+				myBoard.drawBoard();
 				if (myBoard.isCheckMate() || myBoard.isMaterialDraw() || myBoard.isRepititionDraw())
 					break;
 			}
@@ -245,11 +205,11 @@ namespace Hopper
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			myBoard.fenSet(input.c_str());
-			drawBoard();
+			myBoard.drawBoard();
 		}
 		else if (input == "unmove") {
 			myBoard.unmovePiece();
-			drawBoard();
+			myBoard.drawBoard();
 		}
 		return false;
 	}

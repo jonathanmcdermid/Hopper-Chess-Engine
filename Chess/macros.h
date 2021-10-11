@@ -2,15 +2,17 @@
 
 enum castle_enum : int { WKINGSIDE, WQUEENSIDE, BKINGSIDE, BQUEENSIDE };
 
-enum role_enum : int { EMPTY = 0, B_KING = -20005, B_QUEEN = -904, B_ROOK = -503, B_BISHOP = -322, B_KNIGHT = -301, B_PAWN = -100, W_PAWN = 100, W_KNIGHT = 301, W_BISHOP = 322, W_ROOK = 503, W_QUEEN = 904, W_KING = 20005 };
-
-enum role_index_enum : int { PINDEX, NINDEX, BINDEX, RINDEX, QINDEX, KINDEX };
+enum role_enum : int { WHITE_PAWN, BLACK_PAWN, WHITE_KNIGHT, BLACK_KNIGHT, WHITE_BISHOP, BLACK_BISHOP, WHITE_ROOK, BLACK_ROOK, WHITE_QUEEN, BLACK_QUEEN, WHITE_KING, BLACK_KING, EMPTY };
 
 enum move_enum : int { STANDARD, DOUBLEPUSH, KCASTLE, QCASTLE, CAPTURE, ENPASSANT, NULLFLAGS = 7, NPROMOTE, BPROMOTE, RPROMOTE, QPROMOTE, NPROMOTEC, BPROMOTEC, RPROMOTEC, QPROMOTEC };
 
 enum generation_enum : int { GENPV, GENHASH, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENNONCAPS, GENLOSECAPS, GENEND };
 
 enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
+
+static inline bool validPiece(role_enum p, bool t) { return ((t  == (p & 1)) && p != EMPTY); }
+
+static inline bool enemyPiece(role_enum p, bool t) { return (t ^ (p & 1)) && p != EMPTY; }
 
 #define STARTFEN	"rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -20,8 +22,15 @@ enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
 #define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
 #define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
 
-#define BLACK		false
-#define WHITE		true
+#define WHITE	false
+#define BLACK	true
+
+#define PAWN   0
+#define KNIGHT 1
+#define BISHOP 2
+#define ROOK   3
+#define QUEEN  4
+#define KING   5
 
 #define UPPERLIMIT	30000
 #define LOWERLIMIT	-30000
@@ -29,6 +38,8 @@ enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
 #define CONTEMPT	0
 
 #define SEE_THRESHOLD -30
+
+#define NULLMOVE_GAMEPHASE_THRESHOLD 10
 
 #define SPACES		64
 #define WIDTH		8
@@ -49,16 +60,11 @@ enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
 
 #define MEMORY		128
 
-#define PAWN_PASSED					5
 #define PAWN_ROOK_ON_PASSED			25
-#define PAWN_ISOLATED				-20
-#define PAWN_DOUBLED				-30
-#define PAWN_TRIPLED				-100
-#define PAWN_CONNECTED				10
-#define PAWN_BACKWARD				-50
-#define PAWN_PHALANX				10
-#define PAWN_KNIGHT_OUTPOST			50
-#define PAWN_BISHOP_OUTPOST			25
+#define PAWN_ISOLATED				0
+#define PAWN_CONNECTED				0
+#define PAWN_BACKWARD				0
+#define PAWN_PHALANX				0
 
 #define BONUS_BISHOP_PAIR			15
 #define BONUS_ROOK_OPEN_FILE		50

@@ -8,6 +8,7 @@ namespace Hopper
 	{
 		myBoard = bd;
 		myHashTable.setSize(myLimits.hashbytes);
+		init_tables();
 	}
 
 	void Engine::makeMove()
@@ -19,6 +20,10 @@ namespace Hopper
 		int score;
 		line principalVariation;
 		nodes = 0;
+		//phHits = 0;
+		//phMisses = 0;
+		//hHits = 0;
+		//hMisses = 0;
 		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
 			myHashTable.extractPV(myBoard, &principalVariation);
@@ -50,6 +55,8 @@ namespace Hopper
 				beta = score + window;
 			}
 		}
+		//std::cout << "hash "<<hHits << " " << hMisses << "\n";
+		//std::cout << "pawnhash " <<phHits << " " << phMisses << "\n";
 		myBoard->movePiece(principalVariation.moveLink[0]);
 		myHashTable.clean();
 		myKillers.chrono();
@@ -57,21 +64,24 @@ namespace Hopper
 
 	int Engine::alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull)
 	{
-		if (!depth)
+		if (depth == 0)
 			return quiescentSearch(alpha, beta);
 		U64 keyIndex = myBoard->getCurrZ();
 		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
-			if (myHashTable.getFlags(keyIndex) == HASHEXACT 
-			|| (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta) 
-			|| (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
+			//++hHits;
+			if (myHashTable.getFlags(keyIndex) == HASHEXACT
+				|| (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta)
+				|| (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
 				pline->moveLink[0] = myHashTable.getMove(keyIndex);
 				pline->moveCount = 1;
 				return myHashTable.getEval(keyIndex);
 			}
 		}
+		//else
+			//++hMisses;
 		line localLine;
 		int score;
-		if (!isNull && depth > 3 && !myBoard->isCheck() && !myBoard->isEndgame()) {
+		if (isNull == false && depth > 3 && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_GAMEPHASE_THRESHOLD) {
 			myBoard->movePiece(NULLMOVE);
 			score = -alphaBeta(depth / 2 - 2, ply + 1, -beta, -beta + 1, &localLine, true);
 			myBoard->unmovePiece();
@@ -89,9 +99,7 @@ namespace Hopper
 				if (myBoard->isPseudoRepititionDraw() || myBoard->isMaterialDraw())
 					score = CONTEMPT;
 				else if (genstate > GENHASH) {
-					score = (depth > 1) ?
-						-alphaBeta(depth - 2, ply + 1, -alpha - 1, -alpha, &localLine, false) :
-						-alphaBeta(depth - 1, ply + 1, -alpha - 1, -alpha, &localLine, false);
+					score = -alphaBeta((depth > 2) ? depth - 2 : 0, ply + 1, -alpha - 1, -alpha, &localLine, false);
 					if (score > alpha && score < beta)
 						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				}
@@ -102,7 +110,7 @@ namespace Hopper
 					pline->moveLink[0] = localMoveList.getCurrMove();
 					if (score >= beta) {
 						pline->moveCount = 1;
-						if (!localMoveList.getCurrMove().isCap())
+						if (localMoveList.getCurrMove().isCap() == false)
 							myKillers.cutoff(localMoveList.getCurrMove(), ply);
 						myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
 						return score;
@@ -135,10 +143,49 @@ namespace Hopper
 
 	unsigned Engine::perft(unsigned depth)
 	{
-		if (!depth)
+		if (depth == 0)
 			return 1;
 		Move allMoves[MEMORY];
 		unsigned moveCount = myBoard->genAllMoves(allMoves);
+		Move allNonCapMoves[MEMORY];
+		unsigned nonCapCount = myBoard->genAllNonCapMoves(allNonCapMoves);
+		Move allCapMoves[MEMORY];
+		unsigned capCount = myBoard->genAllCapMoves(allCapMoves);
+		if (moveCount != capCount + nonCapCount) {
+			myBoard->drawBoard();
+			std::string message;
+			message = "All Moves: ";
+			for (unsigned i = 0; i < moveCount; ++i) {
+				message += { 
+					(char)(allMoves[i].getFrom() % WIDTH + 'a'),
+					(char)((WIDTH - (int)allMoves[i].getFrom() / WIDTH) + '0'),
+					(char)(allMoves[i].getTo() % WIDTH + 'a'),
+					(char)(WIDTH - (int)(allMoves[i].getTo() / WIDTH) + '0'),
+					(char)' ' };
+			}
+			std::cout << message << "\n";
+			message = "Caps: ";
+			for (unsigned i = 0; i < capCount; ++i) {
+				message += {
+					(char)(allCapMoves[i].getFrom() % WIDTH + 'a'),
+						(char)((WIDTH - (int)allCapMoves[i].getFrom() / WIDTH) + '0'),
+						(char)(allCapMoves[i].getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allCapMoves[i].getTo() / WIDTH) + '0'),
+						(char)' ' };
+			}
+			std::cout << message << "\n";
+			message = "NonCaps: ";
+			for (unsigned i = 0; i < nonCapCount; ++i) {
+				message += {
+					(char)(allNonCapMoves[i].getFrom() % WIDTH + 'a'),
+						(char)((WIDTH - (int)allNonCapMoves[i].getFrom() / WIDTH) + '0'),
+						(char)(allNonCapMoves[i].getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allNonCapMoves[i].getTo() / WIDTH) + '0'),
+						(char)' ' };
+			}
+			std::cout << message << "\n";
+			moveCount = myBoard->genAllCapMoves(allMoves);
+		}
 		unsigned n = 0;
 		for (unsigned i = 0; i < moveCount; ++i) {
 			myBoard->movePiece(allMoves[i]);
@@ -151,17 +198,21 @@ namespace Hopper
 	int Engine::quiescentSearch(int alpha, int beta)
 	{
 		int score = negaEval();
-		if (myHashTable.getPawnEntry(myBoard->getCurrP()) == myBoard->getCurrP())
-			score += (myBoard->getTurn()) ? myHashTable.getPawnEntry(myBoard->getCurrP()) : -myHashTable.getPawnEntry(myBoard->getCurrP());
-		else
+		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) == myBoard->getCurrP()){
+			//++phHits;
+			score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
+		}
+		else {
+			//++phMisses;
 			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
+		}
 		if (score >= beta)
 			return score;
-		if (score > alpha)
+		else if (score > alpha)
 			alpha = score;
 		MoveList localMoveList(myBoard);
 		localMoveList.moveOrder(GENWINCAPS);
-		if (!localMoveList.movesLeft())
+		if (localMoveList.movesLeft() == false)
 			return (myBoard->isCheckMate()) ? (myBoard->isCheck()) ? -MATE : CONTEMPT : score;
 		do {
 			myBoard->movePiece(localMoveList.getCurrMove());

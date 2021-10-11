@@ -11,14 +11,14 @@ namespace Hopper
 		Zobrist();
 		U64 newKey(Board* b);
 		U64 newPawnKey(Board* b);
-		U64 piecesAt(unsigned x, unsigned y, unsigned myZobrist)const { return pieces[x + 6 * (y + myZobrist * 2)]; }
-		U64 castleAt(unsigned x)const { return castle[x]; }
-		U64 enPassantAt(unsigned x)const { return enPassant[x]; }
-		U64 sideAt()const { return turn; }
+		U64 piecesAt(unsigned p, unsigned z)const { return zobristPieces[p][z]; }
+		U64 castleAt(unsigned x)const { return zobristCastle[x]; }
+		U64 enPassantAt(unsigned x)const { return zobristEnPassantFlag[x]; }
+		U64 sideAt()const { return zobristTurn; }
 	private:
-		U64 castle[4];
-		U64 enPassant[SPACES];
-		U64 turn;
-		U64 pieces[6 * 2 * SPACES];
+		U64 zobristCastle[4];
+		U64 zobristEnPassantFlag[SPACES];
+		U64 zobristTurn;
+		U64 zobristPieces[12][SPACES];
 	};
 }

@@ -9,30 +9,31 @@ namespace Hopper
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
 		std::uniform_int_distribution<std::uintmax_t> dis;
-		turn = dis(gen);
-		for (unsigned i = 0; i < 6 * 2 * SPACES; ++i)
-			pieces[i] = dis(gen);
+		zobristTurn = dis(gen);
+		for (unsigned i = 0; i < 12; ++i)
+			for(unsigned j = 0; j < SPACES; ++j)
+				zobristPieces[i][j] = dis(gen);
 		for (unsigned i = 0; i < SPACES; ++i)
-			enPassant[i] = dis(gen);
+			zobristEnPassantFlag[i] = dis(gen);
 		for (unsigned i = 0; i < 4; ++i)
-			castle[i] = dis(gen);
+			zobristCastle[i] = dis(gen);
 	}
 
 	U64 Zobrist::newKey(Board* b)
 	{//XORs random template with board state and returns zobrist key
 		U64 key = 0;
 		for (unsigned i = 0; i < SPACES; ++i) {
-			if (b->getGridAt(i))
-				key ^= piecesAt(abs(b->getGridAt(i)) % 10, b->getGridAt(i) > 0, i);
+			if (b->getGridAt(i) != EMPTY)
+				key ^= piecesAt(b->getGridAt(i), i);
 		}
 		for (unsigned i = 0; i < 4; ++i) {
 			if (b->getCurrC() & 1 << i)
-				key ^= castle[i];
+				key ^= zobristCastle[i];
 		}
 		if (b->getCurrM().getFlags() == DOUBLEPUSH)
-			key ^= enPassant[b->getCurrM().getTo()];
-		if (b->getTurn())
-			key ^= turn;
+			key ^= zobristEnPassantFlag[b->getCurrM().getTo()];
+		if (b->getTurn() == BLACK)
+			key ^= zobristTurn;
 		return key;
 	}
 
@@ -40,10 +41,10 @@ namespace Hopper
 	{
 		U64 key = 0;
 		for (unsigned i = 0; i < SPACES; i++) {
-			if (b->getGridAt(i) == W_PAWN)
-				key ^= piecesAt(PINDEX, WHITE, i);
-			else if (b->getGridAt(i) == B_PAWN)
-				key ^= piecesAt(PINDEX, BLACK, i);
+			if (b->getGridAt(i) == WHITE_PAWN)
+				key ^= piecesAt(WHITE_PAWN, i);
+			else if (b->getGridAt(i) == BLACK_PAWN)
+				key ^= piecesAt(BLACK_PAWN, i);
 		}
 		return key;
 	}

@@ -13,7 +13,6 @@ namespace Hopper
 		void go(std::istringstream& is);
 		void position(std::istringstream& is);
 	private:
-		void drawBoard();
 		void local();
 		void self();
 		bool playerMove(std::string input);

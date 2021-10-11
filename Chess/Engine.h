@@ -33,11 +33,16 @@ namespace Hopper
 		static int hypotenuse(const int a, const int b);
 		unsigned perft(unsigned depth);
 		int quiescentSearch(int alpha, int beta);
+		void init_tables();
 		int negaEval();
 		int pawnEval();
 		Board* myBoard;
 		Killers myKillers;
 		HashTable myHashTable;
 		unsigned nodes = 0;
+		//int hHits;
+		//int hMisses;
+		//int phHits;
+		//int phMisses;
 	};
 }

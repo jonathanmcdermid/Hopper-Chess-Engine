@@ -90,14 +90,16 @@ namespace Hopper
 		}
 	}
 
+	static int piece_values[6] = { 94, 281, 297, 512,  936,  0 };
+
 	bool MoveList::staticExchange(Move nextMove)
 	{
 		bool tomove = myBoard->getTurn();
 		unsigned to = nextMove.getTo(), from = nextMove.getFrom();
 		int attackers[WIDTH * 2];
 		unsigned total[2];
-		int see = abs(myBoard->getGridAt(to));
-		int trophy = abs(myBoard->getGridAt(from));
+		int see = piece_values[myBoard->getGridAt(to) / 2];
+		int trophy = piece_values[myBoard->getGridAt(from) / 2];
 		unsigned smallestindex;
 		for (unsigned i = 0; i < 2; ++i) {
 			total[i] = myBoard->getThreatenedAt(i, to);
@@ -111,10 +113,11 @@ namespace Hopper
 			tomove = !tomove;
 			smallestindex = 0;
 			for (unsigned i = 1; i < total[tomove]; ++i)
-				if (abs(myBoard->getGridAt(attackers[tomove * WIDTH + i])) < abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex])))
+				if (piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + i]) / 2] < 
+					piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2])
 					smallestindex = i;
 			see -= trophy;
-			trophy = abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]));
+			trophy = piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2];
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + total[tomove] - 1];
 			--total[tomove];
 			tomove = !tomove;
@@ -124,10 +127,11 @@ namespace Hopper
 				return false;
 			smallestindex = 0;
 			for (unsigned i = 1; i < total[tomove]; ++i)
-				if (abs(myBoard->getGridAt(attackers[tomove * WIDTH + i])) < abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex])))
+				if (piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + i]) / 2] <
+					piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2])
 					smallestindex = i;
 			see += trophy;
-			trophy = abs(myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]));
+			trophy = piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2];
 			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
 		}
 		return see > SEE_THRESHOLD;

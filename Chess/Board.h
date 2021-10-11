@@ -29,9 +29,9 @@ namespace Hopper
 		bool isCheckMate();
 		bool isRepititionDraw();
 		bool isPseudoRepititionDraw();
-		bool isMaterialDraw();
-		bool isEndgame();
-		bool isCheck() const { return threatened[!turn * SPACES + kingPos[turn]]; }
+		bool isMaterialDraw()const;
+		unsigned getGamePhase();
+		bool isCheck() const { return threatened[!turn][kingPos[turn]]; }
 		int getCurrC() const { return myHistory[halfMoveClock].cHist; }
 		int getCurrV() const { return myHistory[halfMoveClock].vHist; }
 		int getCurrF() const { return myHistory[halfMoveClock].fHist; }
@@ -40,13 +40,14 @@ namespace Hopper
 		Move getCurrM() const { return myHistory[halfMoveClock].mHist; }
 		bool getTurn() const { return turn; }
 		int getGridAt(int position)const { return (int)grid[position]; }
-		int getThreatenedAt(bool team, int position)const { return threatened[team * SPACES + position]; }
+		int getThreatenedAt(bool team, int position)const { return threatened[team][position]; }
 		int getAttackersAt(int x, int y, int z)const { return attackers[x][y][z]; }
 		void setAttackersAt(int x, int y, int z, int val) { attackers[x][y][z] = val; }
 		int getPinsAt(int position)const { return pinnedPieces[position]; }
 		int getRolesAt(int position)const { return roleCounts[position]; }
 		int getPinCount()const { return pinCount; }
-		int getKingPosAt(int position)const { return kingPos[position]; }
+		int getKingPosAt(bool team)const { return kingPos[team]; }
+		void changeTurn() { turn = !turn; }
 		void movePiece(Move nextMove);
 		void unmovePiece();
 		bool validateMove(const Move nextMove);
@@ -54,6 +55,7 @@ namespace Hopper
 		unsigned genAllMoves(Move* nextMove);
 		unsigned genAllCapMoves(Move* nextMove);
 		unsigned genAllNonCapMoves(Move* nextMove);
+		void drawBoard();
 	private:
 		void pieceThreats(int from);
 		void allThreats();
@@ -65,7 +67,7 @@ namespace Hopper
 		historyInfo myHistory[512];
 		role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
-		int threatened[SPACES * 2];
+		int threatened[2][SPACES];
 		int pinnedPieces[10];
 		int roleCounts[10];
 		int kingPos[2];
