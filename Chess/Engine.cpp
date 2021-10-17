@@ -20,13 +20,8 @@ namespace Hopper
 		int score;
 		line principalVariation;
 		nodes = 0;
-		//phHits = 0;
-		//phMisses = 0;
-		//hHits = 0;
-		//hMisses = 0;
 		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
-			//myHashTable.extractPV(myBoard, &principalVariation);
 			std::string message;
 			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
 			for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
@@ -56,8 +51,6 @@ namespace Hopper
 				beta = score + window;
 			}
 		}
-		//std::cout << "hash "<<hHits << " " << hMisses << "\n";
-		//std::cout << "pawnhash " <<phHits << " " << phMisses << "\n";
 		myBoard->movePiece(principalVariation.moveLink[0]);
 		myHashTable.clean();
 		myKillers.chrono();
@@ -69,7 +62,6 @@ namespace Hopper
 			return quiescentSearch(alpha, beta);
 		U64 keyIndex = myBoard->getCurrZ();
 		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
-			//++hHits;
 			if (myHashTable.getFlags(keyIndex) == HASHEXACT
 				|| (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta)
 				|| (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
@@ -78,8 +70,6 @@ namespace Hopper
 				return myHashTable.getEval(keyIndex);
 			}
 		}
-		//else
-			//++hMisses;
 		line localLine;
 		int score;
 		if (isNull == false && depth > 3 && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_GAMEPHASE_THRESHOLD) {

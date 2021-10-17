@@ -20,21 +20,4 @@ namespace Hopper
         myHashTable.resize(j);
         myPawnHashTable.resize(k);
     }
-
-    void HashTable::extractPV(Board* b, line* l)
-    {
-        Move nextMove;
-        unsigned index = 0;
-        unsigned depth = getDepth(b->getCurrZ() % myHashTable.size());
-        do {
-            nextMove = getMove(b->getCurrZ() % myHashTable.size());
-            if (b->getCurrZ() != getZobrist(b->getCurrZ() % myHashTable.size()) || !b->validateMove(nextMove))
-                break;
-            l->moveLink[index++] = nextMove;
-            b->movePiece(nextMove);
-        } while (--depth);
-        l->moveCount = index;
-        while (index--)
-            b->unmovePiece();
-    }
 }

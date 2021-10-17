@@ -40,9 +40,5 @@ namespace Hopper
 		Killers myKillers;
 		HashTable myHashTable;
 		unsigned nodes = 0;
-		//int hHits;
-		//int hMisses;
-		//int phHits;
-		//int phMisses;
 	};
 }

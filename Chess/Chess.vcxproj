@@ -41,6 +41,9 @@
     <ClInclude Include="Movelist.h" />
     <ClInclude Include="Zobrist.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{594E110F-22CB-4F4A-9C8D-5C5A514182DF}</ProjectGuid>

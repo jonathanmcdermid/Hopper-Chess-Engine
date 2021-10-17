@@ -51,7 +51,6 @@ namespace Hopper
         HashTable() { master = true; }
         void setSize(unsigned bytes);
         void clean();
-        void extractPV(Board* b, line* l);
         void newEntry(U64 key, U64 myZobrist, int d, int e, int f, Move b) { myHashTable[key % myHashTable.size()] = hashEntry(myZobrist, d, e, f, b); }
         void newEntry(U64 key, hashEntry& h) { myHashTable[key % myHashTable.size()] = h; }
         void newPawnEntry(U64 key, int hashEval){ myPawnHashTable[key % myPawnHashTable.size()] = pawnHashEntry(key, hashEval); }
