@@ -12,7 +12,7 @@ namespace Hopper
 		zobristTurn = dis(gen);
 		for (unsigned i = 0; i < 12; ++i)
 			for(unsigned j = 0; j < SPACES; ++j)
-				zobristPieces[i][j] = dis(gen);
+				zobristPieces[i * SPACES + j] = dis(gen);
 		for (unsigned i = 0; i < SPACES; ++i)
 			zobristEnPassantFlag[i] = dis(gen);
 		for (unsigned i = 0; i < 4; ++i)

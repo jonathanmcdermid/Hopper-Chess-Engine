@@ -1,26 +1,6 @@
 #pragma once
 
-enum castle_enum : int { WKINGSIDE, WQUEENSIDE, BKINGSIDE, BQUEENSIDE };
-
-enum role_enum : int { WHITE_PAWN, BLACK_PAWN, WHITE_KNIGHT, BLACK_KNIGHT, WHITE_BISHOP, BLACK_BISHOP, WHITE_ROOK, BLACK_ROOK, WHITE_QUEEN, BLACK_QUEEN, WHITE_KING, BLACK_KING, EMPTY };
-
-enum move_enum : int { STANDARD, DOUBLEPUSH, KCASTLE, QCASTLE, CAPTURE, ENPASSANT, NULLFLAGS = 7, NPROMOTE, BPROMOTE, RPROMOTE, QPROMOTE, NPROMOTEC, BPROMOTEC, RPROMOTEC, QPROMOTEC };
-
-enum generation_enum : int { GENPV, GENHASH, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENNONCAPS, GENLOSECAPS, GENEND };
-
-enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
-
-static inline bool validPiece(role_enum p, bool t) { return ((t  == (p & 1)) && p != EMPTY); }
-
-static inline bool enemyPiece(role_enum p, bool t) { return (t ^ (p & 1)) && p != EMPTY; }
-
 #define STARTFEN	"rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-#define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
-#define NESWslide(from, to) (((to) - (from)) % BOARD_SOUTHWEST && ((to) - (from)) % BOARD_NORTHEAST) ? false : true
-#define NWSEslide(from, to) (((to) - (from)) % BOARD_SOUTHEAST && ((to) - (from)) % BOARD_NORTHWEST) ? false : true
-#define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
-#define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
 
 #define WHITE	false
 #define BLACK	true
@@ -60,15 +40,34 @@ static inline bool enemyPiece(role_enum p, bool t) { return (t ^ (p & 1)) && p !
 
 #define MEMORY		128
 
-#define PAWN_ROOK_ON_PASSED			25
-#define PAWN_ISOLATED				0
-#define PAWN_CONNECTED				0
-#define PAWN_BACKWARD				0
+#define PAWN_ISOLATED				-10
+#define PAWN_CONNECTED				5
+#define PAWN_BACKWARD				-20
 #define PAWN_PHALANX				0
 
 #define BONUS_BISHOP_PAIR			15
-#define BONUS_ROOK_OPEN_FILE		50
-#define BONUS_ROOK_HALF_OPEN_FILE	30
-#define BONUS_ROOK_ON_KING_FILE		15
-#define BONUS_SPOILED_CASTLE		-20
-#define BONUS_QUEEN_SUPPORT			15
+#define BONUS_ROOK_OPEN_FILE		30
+#define BONUS_ROOK_KING_FILE		15
+#define BONUS_QUEEN_SUPPORT			5
+
+#define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
+#define NESWslide(from, to) (((to) - (from)) % BOARD_SOUTHWEST && ((to) - (from)) % BOARD_NORTHEAST) ? false : true
+#define NWSEslide(from, to) (((to) - (from)) % BOARD_SOUTHEAST && ((to) - (from)) % BOARD_NORTHWEST) ? false : true
+#define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
+#define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
+
+enum castle_enum : int { WKINGSIDE, WQUEENSIDE, BKINGSIDE, BQUEENSIDE };
+
+enum role_enum : int { WHITE_PAWN, BLACK_PAWN, WHITE_KNIGHT, BLACK_KNIGHT, WHITE_BISHOP, BLACK_BISHOP, WHITE_ROOK, BLACK_ROOK, WHITE_QUEEN, BLACK_QUEEN, WHITE_KING, BLACK_KING, EMPTY };
+
+enum move_enum : int { STANDARD, DOUBLEPUSH, KCASTLE, QCASTLE, CAPTURE, ENPASSANT, NULLFLAGS = 7, NPROMOTE, BPROMOTE, RPROMOTE, QPROMOTE, NPROMOTEC, BPROMOTEC, RPROMOTEC, QPROMOTEC };
+
+enum generation_enum : int { GENPV, GENHASH, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENNONCAPS, GENLOSECAPS, GENEND };
+
+enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
+
+static inline bool validPiece(int p, bool t) { return ((t  == (p & 1)) && p != EMPTY); }
+
+static inline bool enemyPiece(int p, bool t) { return (t ^ (p & 1)) && p != EMPTY; }
+
+static inline int pawnPush(int p) { return (p & 1) ? BOARD_SOUTH : BOARD_NORTH; }

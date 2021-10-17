@@ -14,7 +14,7 @@ namespace Hopper
 	void Engine::makeMove()
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft);
+		unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() > 5) ? 5 : 20);
 		unsigned window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
@@ -26,13 +26,14 @@ namespace Hopper
 		//hMisses = 0;
 		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
-			myHashTable.extractPV(myBoard, &principalVariation);
+			//myHashTable.extractPV(myBoard, &principalVariation);
 			std::string message;
 			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
 			for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
-				message += { (char)(principalVariation.moveLink[i].getFrom() % WIDTH + 'a'),
+				message += { 
+					(char)				(principalVariation.moveLink[i].getFrom() % WIDTH + 'a'),
 					(char)(WIDTH - (int)(principalVariation.moveLink[i].getFrom() / WIDTH) + '0'),
-					(char)(principalVariation.moveLink[i].getTo() % WIDTH + 'a'),
+					(char)				(principalVariation.moveLink[i].getTo() % WIDTH + 'a'),
 					(char)(WIDTH - (int)(principalVariation.moveLink[i].getTo() / WIDTH) + '0'),
 					(char)' ' };
 			}
@@ -49,7 +50,7 @@ namespace Hopper
 				--depth;
 			}
 			else {
-				if(score >= MATE || score <= -MATE || (score == CONTEMPT && principalVariation.moveCount == 1 && depth != 1))
+				if(score >= MATE || score <= -MATE)// || (score == CONTEMPT && principalVariation.moveCount == 1 && depth != 1))
 					break;
 				alpha = score - window;
 				beta = score + window;
@@ -197,23 +198,18 @@ namespace Hopper
 
 	int Engine::quiescentSearch(int alpha, int beta)
 	{
-		int score = negaEval();
-		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) == myBoard->getCurrP()){
-			//++phHits;
-			score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
-		}
-		else {
-			//++phMisses;
+		int score = (myBoard->getTurn() == BLACK) ? -evaluate() : evaluate();
+		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
 			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
-		}
+		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 		if (score >= beta)
 			return score;
 		else if (score > alpha)
 			alpha = score;
 		MoveList localMoveList(myBoard);
 		localMoveList.moveOrder(GENWINCAPS);
-		if (localMoveList.movesLeft() == false)
-			return (myBoard->isCheckMate()) ? (myBoard->isCheck()) ? -MATE : CONTEMPT : score;
+		if (localMoveList.movesLeft() == false) 
+			return score;
 		do {
 			myBoard->movePiece(localMoveList.getCurrMove());
 			score = -quiescentSearch(-beta, -alpha);

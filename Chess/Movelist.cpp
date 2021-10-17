@@ -123,7 +123,7 @@ namespace Hopper
 			tomove = !tomove;
 			if (see > SEE_THRESHOLD)
 				return true;
-			else if (!total[tomove])
+			else if (total[tomove] == 0)
 				return false;
 			smallestindex = 0;
 			for (unsigned i = 1; i < total[tomove]; ++i)

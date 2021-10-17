@@ -34,7 +34,7 @@ namespace Hopper
 		unsigned perft(unsigned depth);
 		int quiescentSearch(int alpha, int beta);
 		void init_tables();
-		int negaEval();
+		int evaluate();
 		int pawnEval();
 		Board* myBoard;
 		Killers myKillers;

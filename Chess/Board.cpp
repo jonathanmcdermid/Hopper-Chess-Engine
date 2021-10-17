@@ -199,7 +199,11 @@ namespace Hopper {
 		return (roleCounts[WHITE_PAWN]	|| roleCounts[BLACK_PAWN]		||
 				roleCounts[WHITE_QUEEN] || roleCounts[BLACK_QUEEN]		||
 				roleCounts[WHITE_ROOK]  || roleCounts[BLACK_ROOK]		||
+				roleCounts[WHITE_BISHOP] > 1 ||
+				roleCounts[WHITE_KNIGHT] > 2 ||
 				roleCounts[WHITE_BISHOP] + roleCounts[WHITE_KNIGHT] > 1 ||
+				roleCounts[BLACK_BISHOP] > 1 ||
+				roleCounts[BLACK_KNIGHT] > 2 ||
 				roleCounts[BLACK_BISHOP] + roleCounts[BLACK_KNIGHT] > 1) == false;
 	}
 

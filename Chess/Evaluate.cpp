@@ -1,7 +1,6 @@
 #include <cmath>
 #include <cstring>
 #include "Engine.h"
-#include <iostream>
 
 namespace Hopper
 {
@@ -13,7 +12,7 @@ namespace Hopper
 		-27,  -2,  -5,  12,  17,   6, 10, -25,
 		-26,  -4,  -4, -10,   3,   3, 33, -12,
 		-35,  -1, -20, -23, -15,  24, 38, -22,
-		  0,   0,   0,   0,   0,   0,  0,   0,
+		  0,   0,   0,   0,   0,   0,  0,   0
 	};
 
 	static int eg_pawn_table[64] = {
@@ -35,7 +34,7 @@ namespace Hopper
 		 -13,   4,  16,  13,  28,  19,  21,   -8,
 		 -23,  -9,  12,  10,  19,  17,  25,  -16,
 		 -29, -53, -12,  -3,  -1,  18, -14,  -19,
-		-105, -21, -58, -33, -17, -28, -19,  -23,
+		-105, -21, -58, -33, -17, -28, -19,  -23
 	};
 
 	static int eg_knight_table[64] = {
@@ -46,7 +45,7 @@ namespace Hopper
 		-18,  -6,  16,  25,  16,  17,   4, -18,
 		-23,  -3,  -1,  15,  10,  -3, -20, -22,
 		-42, -20, -10,  -5,  -2, -20, -23, -44,
-		-29, -51, -23, -15, -22, -18, -50, -64,
+		-29, -51, -23, -15, -22, -18, -50, -64
 	};
 
 	static int mg_bishop_table[64] = {
@@ -57,7 +56,7 @@ namespace Hopper
 		 -6,  13,  13,  26,  34,  12,  10,   4,
 		  0,  15,  15,  15,  14,  27,  18,  10,
 		  4,  15,  16,   0,   7,  21,  33,   1,
-		-33,  -3, -14, -21, -13, -12, -39, -21,
+		-33,  -3, -14, -21, -13, -12, -39, -21
 	};
 
 	static int eg_bishop_table[64] = {
@@ -68,7 +67,7 @@ namespace Hopper
 		 -6,   3,  13,  19,  7,  10,  -3,  -9,
 		-12,  -3,   8,  10, 13,   3,  -7, -15,
 		-14, -18,  -7,  -1,  4,  -9, -15, -27,
-		-23,  -9, -23,  -5, -9, -16,  -5, -17,
+		-23,  -9, -23,  -5, -9, -16,  -5, -17
 	};
 
 	static int mg_rook_table[64] = {
@@ -79,7 +78,7 @@ namespace Hopper
 		-36, -26, -12,  -1,  9, -7,   6, -23,
 		-45, -25, -16, -17,  3,  0,  -5, -33,
 		-44, -16, -20,  -9, -1, 11,  -6, -71,
-		-19, -13,   1,  17, 16,  7, -37, -26,
+		-19, -13,   1,  17, 16,  7, -37, -26
 	};
 
 	static int eg_rook_table[64] = {
@@ -90,7 +89,7 @@ namespace Hopper
 		 3,  5,  8,  4, -5,  -6,  -8, -11,
 		-4,  0, -5, -1, -7, -12,  -8, -16,
 		-6, -6,  0,  2, -9,  -9, -11,  -3,
-		-9,  2,  3, -1, -5, -13,   4, -20,
+		-9,  2,  3, -1, -5, -13,   4, -20
 	};
 
 	static int mg_queen_table[64] = {
@@ -101,7 +100,7 @@ namespace Hopper
 		 -9, -26,  -9, -10,  -2,  -4,   3,  -3,
 		-14,   2, -11,  -2,  -5,   2,  14,   5,
 		-35,  -8,  11,   2,   8,  15,  -3,   1,
-		 -1, -18,  -9,  10, -15, -25, -31, -50,
+		 -1, -18,  -9,  10, -15, -25, -31, -50
 	};
 
 	static int eg_queen_table[64] = {
@@ -112,7 +111,7 @@ namespace Hopper
 		-18,  28,  19,  47,  31,  34,  39,  23,
 		-16, -27,  15,   6,   9,  17,  10,   5,
 		-22, -23, -30, -16, -16, -23, -36, -32,
-		-33, -28, -22, -43,  -5, -32, -20, -41,
+		-33, -28, -22, -43,  -5, -32, -20, -41
 	};
 
 	static int mg_king_table[64] = {
@@ -123,7 +122,7 @@ namespace Hopper
 		-49,  -1, -27, -39, -46, -44, -33, -51,
 		-14, -14, -22, -46, -44, -30, -15, -27,
 		  1,   7,  -8, -64, -43, -16,   9,   8,
-		-15,  36,  12, -54,   8, -28,  24,  14,
+		-15,  36,  12, -54,   8, -28,  24,  14
 	};
 
 	static int eg_king_table[64] = {
@@ -187,9 +186,9 @@ namespace Hopper
 
 	static int king_proximity_factor[12] = { 0, 0, 1, -1, 2,-2, 3,-3, 4, -4, 0, 0 };
 
-	static int passed_rank_bonus[8] = { 0, 512, 256, 128, 64, 32, 16, 0 };
+	static int passed_rank_bonus[8] = { 0, 256, 128, 64, 32, 16, 8, 0 };
 
-	static int pawn_file_population_penalty[5] = { 0, 0, -5, -20, -50};
+	static int pawn_file_population_penalty[5] = { 0, 0, -32, -64, -128};
 
 	void Engine::init_tables()
 	{
@@ -204,7 +203,7 @@ namespace Hopper
 		}
 	}
 
-	int Engine::negaEval()
+	int Engine::evaluate()
 	{
 		int mg[2];
 		int eg[2];
@@ -217,31 +216,16 @@ namespace Hopper
 		int sum = 0;
 		int helper;
 
+		int mgPhase = myBoard->getGamePhase();
+
 		for (int sq = 0; sq < 64; ++sq) {
 			int pc = myBoard->getGridAt(sq);
 			switch (pc) {
 			case WHITE_PAWN:
-				if (myBoard->getGridAt(sq + BOARD_NORTH) == BLACK_PAWN) {
+				if (0){//myBoard->getGridAt(sq + BOARD_NORTH) == BLACK_PAWN) {
 					switch (sq % WIDTH) {
-					case 0:
-						if (myBoard->getGridAt(sq + BOARD_NORTHEAST) == WHITE_KNIGHT) {
-							for (helper = sq + BOARD_NORTHEAST + BOARD_NORTHEAST; helper >= WIDTH; helper += BOARD_NORTH) {
-								if (myBoard->getGridAt(helper) == BLACK_PAWN)
-									break;
-							}
-							if(helper < WIDTH)
-								sum += knight_outpost_table[sq + BOARD_NORTHEAST];
-						}
-						break;
 					case 7:
-						if (myBoard->getGridAt(sq + BOARD_NORTHWEST) == WHITE_KNIGHT) {
-							for (helper = sq + BOARD_NORTHWEST + BOARD_NORTHWEST; helper >= WIDTH; helper += BOARD_NORTH) {
-								if (myBoard->getGridAt(helper) == BLACK_PAWN)
-									break;
-							}
-							if (helper < WIDTH)
-							sum += knight_outpost_table[sq + BOARD_NORTHWEST];
-						}
+					case 0:
 						break;
 					default:
 						if (myBoard->getGridAt(sq + BOARD_NORTHEAST) == WHITE_KNIGHT) {
@@ -256,6 +240,18 @@ namespace Hopper
 									sum += knight_outpost_table[sq + BOARD_NORTHEAST];
 							}
 						}
+						else if (myBoard->getGridAt(sq + BOARD_NORTHEAST) == WHITE_BISHOP) {
+							if (sq % WIDTH == 6)
+								sum += bishop_outpost_table[sq + BOARD_NORTHEAST];
+							else {
+								for (helper = sq + BOARD_NORTHEAST + BOARD_NORTHEAST; helper >= WIDTH; helper += BOARD_NORTH) {
+									if (myBoard->getGridAt(helper) == BLACK_PAWN)
+										break;
+								}
+								if (helper < WIDTH)
+									sum += bishop_outpost_table[sq + BOARD_NORTHEAST];
+							}
+						}
 						if (myBoard->getGridAt(sq + BOARD_NORTHWEST) == WHITE_KNIGHT) {
 							if (sq % WIDTH == 1)
 								sum += knight_outpost_table[sq + BOARD_NORTHWEST];
@@ -268,31 +264,26 @@ namespace Hopper
 									sum += knight_outpost_table[sq + BOARD_NORTHWEST];
 							}
 						}
+						else if (myBoard->getGridAt(sq + BOARD_NORTHWEST) == WHITE_BISHOP) {
+							if (sq % WIDTH == 1)
+								sum += bishop_outpost_table[sq + BOARD_NORTHWEST];
+							else {
+								for (helper = sq + BOARD_NORTHWEST + BOARD_NORTHWEST; helper >= WIDTH; helper += BOARD_NORTH) {
+									if (myBoard->getGridAt(helper) == BLACK_PAWN)
+										break;
+								}
+								if (helper < WIDTH)
+									sum += bishop_outpost_table[sq + BOARD_NORTHWEST];
+							}
+						}
 					}
 				}
 				break;
 			case BLACK_PAWN:
-				if (myBoard->getGridAt(sq + BOARD_SOUTH) == WHITE_PAWN) {
+				if (0){//myBoard->getGridAt(sq + BOARD_SOUTH) == WHITE_PAWN) {
 					switch (sq % WIDTH) {
-					case 0:
-						if (myBoard->getGridAt(sq + BOARD_SOUTHEAST) == BLACK_KNIGHT) {
-							for (helper = sq + BOARD_SOUTHEAST + BOARD_SOUTHEAST; helper < 56; helper += BOARD_SOUTH) {
-								if (myBoard->getGridAt(helper) == WHITE_PAWN)
-									break;
-							}
-							if (helper >= 56)
-								sum -= knight_outpost_table[(sq + BOARD_SOUTHEAST) ^ 56];
-						}
-						break;
 					case 7:
-						if (myBoard->getGridAt(sq + BOARD_SOUTHWEST) == BLACK_KNIGHT) {
-							for (helper = sq + BOARD_SOUTHWEST + BOARD_SOUTHWEST; helper < 56; helper += BOARD_SOUTH) {
-								if (myBoard->getGridAt(helper) == WHITE_PAWN)
-									break;
-							}
-							if (helper >= 56)
-								sum -= knight_outpost_table[(sq + BOARD_SOUTHWEST) ^ 56];
-						}
+					case 0:
 						break;
 					default:
 						if (myBoard->getGridAt(sq + BOARD_SOUTHEAST) == BLACK_KNIGHT) {
@@ -309,6 +300,20 @@ namespace Hopper
 								}
 							}
 						}
+						else if (myBoard->getGridAt(sq + BOARD_SOUTHEAST) == BLACK_BISHOP) {
+							if (sq % WIDTH == 6)
+								sum -= bishop_outpost_table[(sq + BOARD_SOUTHEAST) ^ 56];
+							else {
+								if (myBoard->getGridAt(sq + BOARD_SOUTHEAST) == BLACK_KNIGHT) {
+									for (helper = sq + BOARD_SOUTHEAST + BOARD_SOUTHEAST; helper < 56; helper += BOARD_SOUTH) {
+										if (myBoard->getGridAt(helper) == WHITE_PAWN)
+											break;
+									}
+									if (helper >= 56)
+										sum -= bishop_outpost_table[(sq + BOARD_SOUTHEAST) ^ 56];
+								}
+							}
+						}
 						if (myBoard->getGridAt(sq + BOARD_SOUTHWEST) == BLACK_KNIGHT) {
 							if (sq % WIDTH == 1)
 								sum -= knight_outpost_table[(sq + BOARD_SOUTHWEST) ^ 56];
@@ -321,8 +326,40 @@ namespace Hopper
 									sum -= knight_outpost_table[(sq + BOARD_SOUTHWEST) ^ 56];
 							}
 						}
+						else if (myBoard->getGridAt(sq + BOARD_SOUTHWEST) == BLACK_BISHOP) {
+							if (sq % WIDTH == 1)
+								sum -= bishop_outpost_table[(sq + BOARD_SOUTHWEST) ^ 56];
+							else {
+								for (helper = sq + BOARD_SOUTHWEST + BOARD_SOUTHWEST; helper < 56; helper += BOARD_SOUTH) {
+									if (myBoard->getGridAt(helper) == WHITE_PAWN)
+										break;
+								}
+								if (helper >= 56)
+									sum -= bishop_outpost_table[(sq + BOARD_SOUTHWEST) ^ 56];
+							}
+						}
 					}
 				}
+				break;
+			case WHITE_ROOK:
+				for (helper = sq % WIDTH; helper < 56; helper += BOARD_SOUTH) {
+					if (myBoard->getGridAt(helper) == BLACK_PAWN || myBoard->getGridAt(helper) == WHITE_PAWN)
+						break;
+				}
+				if (helper >= 56)
+					sum += BONUS_ROOK_OPEN_FILE * mgPhase / 24;
+				//if (sq % WIDTH == myBoard->getKingPosAt(BLACK) % WIDTH)
+				//	sum += BONUS_ROOK_KING_FILE;
+				break;
+			case BLACK_ROOK:
+				for (helper = sq % WIDTH; helper < 56; helper += BOARD_SOUTH) {
+					if (myBoard->getGridAt(helper) == BLACK_PAWN || myBoard->getGridAt(helper) == WHITE_PAWN)
+						break;
+				}
+				if (helper >= 56)
+					sum -= BONUS_ROOK_OPEN_FILE * mgPhase / 24;
+				//if (sq % WIDTH == myBoard->getKingPosAt(WHITE) % WIDTH)
+				//	sum -= BONUS_ROOK_KING_FILE;
 				break;
 			case WHITE_QUEEN:
 				for (helper = 0; helper < myBoard->getThreatenedAt(WHITE, sq); ++helper) {
@@ -345,22 +382,16 @@ namespace Hopper
 			case EMPTY:
 				continue;
 			}
-			sum += king_proximity_factor[pc] * hypotenuse(myBoard->getKingPosAt(pc ^ 1), sq);
+			//sum += king_proximity_factor[pc] * hypotenuse(myBoard->getKingPosAt(pc ^ 1), sq);
 			mg[pc & 1] += mg_table[pc][sq];
 			eg[pc & 1] += eg_table[pc][sq];
 		}
-
-		int mgScore = mg[myBoard->getTurn()] - mg[!myBoard->getTurn()];
-		int egScore = eg[myBoard->getTurn()] - eg[!myBoard->getTurn()];
-		int mgPhase = myBoard->getGamePhase();
-		int egPhase = 24 - mgPhase;
-		sum += (mgScore * mgPhase + egScore * egPhase) / 24;
 		if (myBoard->getRolesAt(WHITE_BISHOP) > 1)
 			sum += BONUS_BISHOP_PAIR;
 		if (myBoard->getRolesAt(BLACK_BISHOP) > 1)
 			sum -= BONUS_BISHOP_PAIR;
-		return sum;
-	}
+		sum += ((mg[WHITE] - mg[BLACK]) * mgPhase + (eg[WHITE] - eg[BLACK]) * (24 - mgPhase)) / 24;
+		return sum;	}
 
 	int Engine::hypotenuse(int a, int b)
 	{
@@ -389,8 +420,6 @@ namespace Hopper
 					}
 					if (j < WIDTH)
 						sum += passed_rank_bonus[i / WIDTH];
-					if (myBoard->getGridAt(i + BOARD_EAST) == WHITE_PAWN)
-						sum += PAWN_PHALANX;
 					if (myBoard->getGridAt(i + BOARD_NORTHEAST) == WHITE_PAWN) {
 						sum += PAWN_CONNECTED;
 						if (i / WIDTH > 1 &&
@@ -406,8 +435,6 @@ namespace Hopper
 					}
 					if (j < WIDTH)
 						sum += passed_rank_bonus[i / WIDTH];
-					if (myBoard->getGridAt(i + BOARD_WEST) == WHITE_PAWN)
-						sum += PAWN_PHALANX;
 					if (myBoard->getGridAt(i + BOARD_NORTHWEST) == WHITE_PAWN) {
 						sum += PAWN_CONNECTED;
 						if (i / WIDTH > 1 &&
@@ -423,10 +450,10 @@ namespace Hopper
 					}
 					if (j < WIDTH)
 						sum += passed_rank_bonus[i / WIDTH];
-					if (myBoard->getGridAt(i + BOARD_WEST) == WHITE_PAWN)
-						sum += PAWN_PHALANX;
-					if (myBoard->getGridAt(i + BOARD_EAST) == WHITE_PAWN)
-						sum += PAWN_PHALANX;
+					//if (myBoard->getGridAt(i + BOARD_WEST) == WHITE_PAWN)
+					//	sum += PAWN_PHALANX;
+					//if (myBoard->getGridAt(i + BOARD_EAST) == WHITE_PAWN)
+					//	sum += PAWN_PHALANX;
 					if (myBoard->getGridAt(i + BOARD_NORTHWEST) == WHITE_PAWN) {
 						sum += PAWN_CONNECTED;
 						if (i / WIDTH > 1 &&
@@ -454,8 +481,6 @@ namespace Hopper
 					}
 					if (j >= 56)
 						sum -= passed_rank_bonus[(i ^ 56) / WIDTH];
-					if (myBoard->getGridAt(i  + BOARD_EAST) == BLACK_PAWN)
-						sum -= PAWN_PHALANX;
 					if (myBoard->getGridAt(i  + BOARD_SOUTHEAST) == BLACK_PAWN) {
 						sum -= PAWN_CONNECTED;
 						if (i  / WIDTH < WIDTH - 1 &&
@@ -471,8 +496,6 @@ namespace Hopper
 					}
 					if (j >= 56)
 						sum -= passed_rank_bonus[(i ^ 56) / WIDTH];
-					if (myBoard->getGridAt(i  + BOARD_WEST) == BLACK_PAWN)
-						sum -= PAWN_PHALANX;
 					if (myBoard->getGridAt(i  + BOARD_SOUTHWEST) == BLACK_PAWN) {
 						sum -= PAWN_CONNECTED;
 						if (i  / WIDTH < WIDTH - 1 &&
@@ -488,10 +511,10 @@ namespace Hopper
 					}
 					if (j >= 56) 
 						sum -= passed_rank_bonus[(i ^ 56) / WIDTH];
-					if (myBoard->getGridAt(i  + BOARD_WEST) == BLACK_PAWN)
-						sum -= PAWN_PHALANX;
-					if (myBoard->getGridAt(i  + BOARD_EAST) == BLACK_PAWN)
-						sum -= PAWN_PHALANX;
+					//if (myBoard->getGridAt(i  + BOARD_WEST) == BLACK_PAWN)
+					//	sum -= PAWN_PHALANX;
+					//if (myBoard->getGridAt(i  + BOARD_EAST) == BLACK_PAWN)
+					//	sum -= PAWN_PHALANX;
 					if (myBoard->getGridAt(i  + BOARD_SOUTHWEST) == BLACK_PAWN) {
 						sum -= PAWN_CONNECTED;
 						if (i  / WIDTH < WIDTH - 1 &&
@@ -526,9 +549,9 @@ namespace Hopper
 		if (pawnCounts[WHITE][6] == 0)
 			sum += PAWN_ISOLATED * pawnCounts[WHITE][7];
 		if (pawnCounts[BLACK][1] == 0)
-			sum += PAWN_ISOLATED * pawnCounts[BLACK][0];
+			sum -= PAWN_ISOLATED * pawnCounts[BLACK][0];
 		if (pawnCounts[BLACK][6] == 0)
-			sum += PAWN_ISOLATED * pawnCounts[BLACK][7];
+			sum -= PAWN_ISOLATED * pawnCounts[BLACK][7];
 		return sum;
 	}
 }
