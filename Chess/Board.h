@@ -30,7 +30,7 @@ namespace Hopper
 		bool isRepititionDraw();
 		bool isPseudoRepititionDraw();
 		bool isMaterialDraw()const;
-		unsigned getGamePhase();
+		unsigned getGamePhase()const;
 		bool isCheck() const { return threatened[!turn][kingPos[turn]]; }
 		int getCurrC() const { return myHistory[halfMoveClock].cHist; }
 		int getCurrV() const { return myHistory[halfMoveClock].vHist; }

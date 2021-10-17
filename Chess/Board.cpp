@@ -209,13 +209,17 @@ namespace Hopper {
 
 	static int gamephaseInc[12] = { 0,0,1,1,1,1,2,2,4,4,0,0 };
 
-	unsigned Board::getGamePhase()
+	unsigned Board::getGamePhase()const
 	{
-		unsigned gp = 0;
-		for (unsigned i = WHITE_KNIGHT; i < WHITE_KING; ++i) {
-			gp += roleCounts[i] * gamephaseInc[i];
-		}
-		return gp;
+		return
+			roleCounts[WHITE_KNIGHT] * gamephaseInc[WHITE_KNIGHT] +
+			roleCounts[BLACK_KNIGHT] * gamephaseInc[BLACK_KNIGHT] +
+			roleCounts[WHITE_BISHOP] * gamephaseInc[WHITE_BISHOP] +
+			roleCounts[BLACK_BISHOP] * gamephaseInc[BLACK_BISHOP] +
+			roleCounts[WHITE_ROOK]   * gamephaseInc[WHITE_ROOK]   +
+			roleCounts[BLACK_ROOK]   * gamephaseInc[BLACK_ROOK]   +
+			roleCounts[WHITE_QUEEN]  * gamephaseInc[WHITE_QUEEN]  +
+			roleCounts[BLACK_QUEEN]  * gamephaseInc[BLACK_QUEEN];
 	}
 
 	void Board::movePiece(Move nextMove)

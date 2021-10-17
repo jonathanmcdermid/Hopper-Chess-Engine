@@ -8,7 +8,7 @@ namespace Hopper
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
 		std::string input;
-		std::cout << "Hopper Engine v1.0 by Jonathan McDermid\n";
+		std::cout << "Hopper Engine v1.1 by Jonathan McDermid\n";
 		while (1) {
 			std::getline(std::cin, input);
 			if (input == "uci") {
@@ -93,7 +93,7 @@ namespace Hopper
 	void Interface::uci(int argc, char* argv[])
 	{//uci communication loop, some options non functioning
 		std::string word, cmd;
-		std::cout << "id name Hopper Engine v1.0 \nid author Jonathan McDermid\nuciok\n";
+		std::cout << "id name Hopper Engine v1.1 \nid author Jonathan McDermid\nuciok\n";
 		for (int i = 1; i < argc; ++i)
 			cmd += std::string(argv[i]) + " ";
 		do {
@@ -103,7 +103,7 @@ namespace Hopper
 			word.clear();
 			is >> std::skipws >> word;
 			if (word == "uci")
-				std::cout << "id name Hopper Engine v1.0 \nid author Jonathan McDermid\nuciok\n";
+				std::cout << "id name Hopper Engine v1.1 \nid author Jonathan McDermid\nuciok\n";
 			else if (word == "go")
 				go(is);
 			else if (word == "position")
