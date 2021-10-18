@@ -211,7 +211,7 @@ namespace Hopper {
 
 	unsigned Board::getGamePhase()const
 	{
-		return
+		return 
 			roleCounts[WHITE_KNIGHT] * gamephaseInc[WHITE_KNIGHT] +
 			roleCounts[BLACK_KNIGHT] * gamephaseInc[BLACK_KNIGHT] +
 			roleCounts[WHITE_BISHOP] * gamephaseInc[WHITE_BISHOP] +

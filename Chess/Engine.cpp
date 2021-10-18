@@ -14,72 +14,94 @@ namespace Hopper
 	void Engine::makeMove()
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() > 5) ? 5 : 20);
+		std::chrono::steady_clock::time_point stop;
+		std::chrono::milliseconds duration;
 		unsigned window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
 		line principalVariation;
 		nodes = 0;
-		for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
-			score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
-			std::string message;
-			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
-			for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
-				message += { 
-					(char)				(principalVariation.moveLink[i].getFrom() % WIDTH + 'a'),
-					(char)(WIDTH - (int)(principalVariation.moveLink[i].getFrom() / WIDTH) + '0'),
-					(char)				(principalVariation.moveLink[i].getTo() % WIDTH + 'a'),
-					(char)(WIDTH - (int)(principalVariation.moveLink[i].getTo() / WIDTH) + '0'),
-					(char)' ' };
-			}
-			std::cout << message << "\n";
-			auto stop = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - startTime);
-			if (duration.count() > timeallotted) {
-				std::cout << "time " << (int)duration.count() << "\n";
-				break;
-			}
-			if (score <= alpha || score >= beta) {
-				alpha = LOWERLIMIT;
-				beta = UPPERLIMIT;
-				--depth;
-			}
-			else {
-				if(score >= MATE || score <= -MATE)// || (score == CONTEMPT && principalVariation.moveCount == 1 && depth != 1))
+		Move rootMoves[128];
+		unsigned nMoves = myBoard->genAllMoves(rootMoves);
+		if (nMoves == 1) {
+			principalVariation.moveLink[0] = rootMoves[0];
+			principalVariation.moveCount = 1;
+		}
+		else {
+			bool consensus = true;
+			Move history[MAXDEPTH];
+			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() == 5) ? 5 : 20);
+			for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
+				score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
+				std::string message;
+				std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
+				for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
+					message += {
+						(char)(principalVariation.moveLink[i].getFrom() % WIDTH + 'a'),
+							(char)(WIDTH - (int)(principalVariation.moveLink[i].getFrom() / WIDTH) + '0'),
+							(char)(principalVariation.moveLink[i].getTo() % WIDTH + 'a'),
+							(char)(WIDTH - (int)(principalVariation.moveLink[i].getTo() / WIDTH) + '0'),
+							(char)' ' };
+				}
+				std::cout << message << "\n";
+				stop = std::chrono::high_resolution_clock::now();
+				duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - startTime);
+				if (duration.count() > timeallotted)
 					break;
-				alpha = score - window;
-				beta = score + window;
+				if (score <= alpha || score >= beta) {
+					alpha = LOWERLIMIT;
+					beta = UPPERLIMIT;
+					--depth;
+				}
+				else {
+					alpha = score - window;
+					beta = score + window;
+					consensus = true;
+					history[depth - 1] = principalVariation.moveLink[0];
+					for (unsigned i = (depth > 4) ? depth - 4 : 1; i < depth; ++i) {
+						if (history[i - 1] != history[i]) {
+							consensus = false;
+							break;
+						}
+					}
+				}
+				if (score >= MATE || score <= -MATE || (duration.count() > timeallotted / 4 && consensus))
+					break;
 			}
 		}
+		std::cout << "time " << (int)duration.count() << "\n";
 		myBoard->movePiece(principalVariation.moveLink[0]);
 		myHashTable.clean();
 		myKillers.chrono();
 	}
 
+	int Engine::alphaBetaRoot(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull) {
+		return 0;
+	} 
+
 	int Engine::alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull)
 	{
 		if (depth == 0)
 			return quiescentSearch(alpha, beta);
-		U64 keyIndex = myBoard->getCurrZ();
-		if (myHashTable.getZobrist(keyIndex) == myBoard->getCurrZ() && myHashTable.getDepth(keyIndex) >= depth) {
-			if (myHashTable.getFlags(keyIndex) == HASHEXACT
-				|| (myHashTable.getFlags(keyIndex) == HASHBETA && myHashTable.getEval(keyIndex) >= beta)
-				|| (myHashTable.getFlags(keyIndex) == HASHALPHA && myHashTable.getEval(keyIndex) <= alpha)) {
-				pline->moveLink[0] = myHashTable.getMove(keyIndex);
+		if (myHashTable.getZobrist(myBoard->getCurrZ()) == myBoard->getCurrZ() && myHashTable.getDepth(myBoard->getCurrZ()) >= depth) {
+			if (myHashTable.getFlags(myBoard->getCurrZ()) == HASHEXACT
+				|| (myHashTable.getFlags(myBoard->getCurrZ()) == HASHBETA && myHashTable.getEval(myBoard->getCurrZ()) >= beta)
+				|| (myHashTable.getFlags(myBoard->getCurrZ()) == HASHALPHA && myHashTable.getEval(myBoard->getCurrZ()) <= alpha)) {
+				pline->moveLink[0] = myHashTable.getMove(myBoard->getCurrZ());
 				pline->moveCount = 1;
-				return myHashTable.getEval(keyIndex);
+				return myHashTable.getEval(myBoard->getCurrZ());
 			}
 		}
 		line localLine;
 		int score;
-		if (isNull == false && depth > 3 && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_GAMEPHASE_THRESHOLD) {
+		if (isNull == false && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_GAMEPHASE_THRESHOLD) {
 			myBoard->movePiece(NULLMOVE);
-			score = -alphaBeta(depth / 2 - 2, ply + 1, -beta, -beta + 1, &localLine, true);
+			score = -alphaBeta(0, ply + 1, -beta, -beta + 1, &localLine, true);
 			myBoard->unmovePiece();
 			if (score >= beta)
 				return score;
 		}
-		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(keyIndex), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
+		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(myBoard->getCurrZ()), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
 		unsigned evaltype = HASHALPHA;
 		for (unsigned genstate = GENPV; genstate != GENEND; ++genstate)
 		{
@@ -103,7 +125,7 @@ namespace Hopper
 						pline->moveCount = 1;
 						if (localMoveList.getCurrMove().isCap() == false)
 							myKillers.cutoff(localMoveList.getCurrMove(), ply);
-						myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
+						myHashTable.newEntry(myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
 						return score;
 					}
 					for (unsigned j = 1; j < depth; ++j)
@@ -117,8 +139,35 @@ namespace Hopper
 		}
 		if (localMoveList.noMoves())
 			return (myBoard->isCheck()) ? -MATE - depth : CONTEMPT;
-		else if (myHashTable.getDepth(keyIndex) < depth)
-			myHashTable.newEntry(keyIndex, myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
+		else if (myHashTable.getDepth(myBoard->getCurrZ()) < depth)
+			myHashTable.newEntry(myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
+		return alpha;
+	}
+
+	int Engine::quiescentSearch(int alpha, int beta)
+	{
+		int score = negaEval();
+		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
+			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
+		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
+		if (score >= beta)
+			return score;
+		else if (score > alpha)
+			alpha = score;
+		MoveList localMoveList(myBoard);
+		localMoveList.moveOrder(GENWINCAPS);
+		if (localMoveList.movesLeft() == false) 
+			return score;
+		do {
+			myBoard->movePiece(localMoveList.getCurrMove());
+			score = -quiescentSearch(-beta, -alpha);
+			myBoard->unmovePiece();
+			if (score >= beta)
+				return score;
+			else if (score > alpha)
+				alpha = score;
+			localMoveList.increment();
+		} while (localMoveList.movesLeft());
 		return alpha;
 	}
 
@@ -147,12 +196,12 @@ namespace Hopper
 			std::string message;
 			message = "All Moves: ";
 			for (unsigned i = 0; i < moveCount; ++i) {
-				message += { 
+				message += {
 					(char)(allMoves[i].getFrom() % WIDTH + 'a'),
-					(char)((WIDTH - (int)allMoves[i].getFrom() / WIDTH) + '0'),
-					(char)(allMoves[i].getTo() % WIDTH + 'a'),
-					(char)(WIDTH - (int)(allMoves[i].getTo() / WIDTH) + '0'),
-					(char)' ' };
+						(char)((WIDTH - (int)allMoves[i].getFrom() / WIDTH) + '0'),
+						(char)(allMoves[i].getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allMoves[i].getTo() / WIDTH) + '0'),
+						(char)' ' };
 			}
 			std::cout << message << "\n";
 			message = "Caps: ";
@@ -184,32 +233,5 @@ namespace Hopper
 			myBoard->unmovePiece();
 		}
 		return n;
-	}
-
-	int Engine::quiescentSearch(int alpha, int beta)
-	{
-		int score = (myBoard->getTurn() == BLACK) ? -evaluate() : evaluate();
-		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
-			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
-		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
-		if (score >= beta)
-			return score;
-		else if (score > alpha)
-			alpha = score;
-		MoveList localMoveList(myBoard);
-		localMoveList.moveOrder(GENWINCAPS);
-		if (localMoveList.movesLeft() == false) 
-			return score;
-		do {
-			myBoard->movePiece(localMoveList.getCurrMove());
-			score = -quiescentSearch(-beta, -alpha);
-			myBoard->unmovePiece();
-			if (score >= beta)
-				return score;
-			else if (score > alpha)
-				alpha = score;
-			localMoveList.increment();
-		} while (localMoveList.movesLeft());
-		return alpha;
 	}
 }
