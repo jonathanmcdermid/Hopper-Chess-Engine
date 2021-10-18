@@ -192,9 +192,8 @@ namespace Hopper
 
 	void Engine::init_tables()
 	{
-		int p, pc, sq;
-		for (p = PAWN, pc = WHITE_PAWN; p <= KING; pc += 2, ++p) {
-			for (sq = 0; sq < 64; ++sq) {
+		for (int p = PAWN, pc = WHITE_PAWN; p <= KING; pc += 2, ++p) {
+			for (int sq = 0; sq < 64; ++sq) {
 				mg_table[pc][sq] = mg_value[p] + mg_pesto_table[p][sq];
 				eg_table[pc][sq] = eg_value[p] + eg_pesto_table[p][sq];
 				mg_table[pc + 1][sq] = mg_value[p] + mg_pesto_table[p][sq ^ 56];
@@ -203,7 +202,7 @@ namespace Hopper
 		}
 	}
 
-	int Engine::evaluate()
+	int Engine::negaEval()
 	{
 		int mg[2];
 		int eg[2];
@@ -391,7 +390,8 @@ namespace Hopper
 		if (myBoard->getRolesAt(BLACK_BISHOP) > 1)
 			sum -= BONUS_BISHOP_PAIR;
 		sum += ((mg[WHITE] - mg[BLACK]) * mgPhase + (eg[WHITE] - eg[BLACK]) * (24 - mgPhase)) / 24;
-		return sum;	}
+		return (myBoard->getTurn() == BLACK) ? -sum : sum;
+	}
 
 	int Engine::hypotenuse(int a, int b)
 	{

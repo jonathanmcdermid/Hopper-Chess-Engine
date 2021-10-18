@@ -26,6 +26,7 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
+		int alphaBetaRoot(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
 		int alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
 		void perftControl();
 		limits myLimits;
@@ -34,7 +35,7 @@ namespace Hopper
 		unsigned perft(unsigned depth);
 		int quiescentSearch(int alpha, int beta);
 		void init_tables();
-		int evaluate();
+		int negaEval();
 		int pawnEval();
 		Board* myBoard;
 		Killers myKillers;
