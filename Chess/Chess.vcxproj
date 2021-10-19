@@ -36,7 +36,7 @@
     <ClInclude Include="Hashtable.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Killers.h" />
-    <ClInclude Include="macros.h" />
+    <ClInclude Include="Macros.h" />
     <ClInclude Include="Move.h" />
     <ClInclude Include="Movelist.h" />
     <ClInclude Include="Zobrist.h" />

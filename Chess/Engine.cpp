@@ -30,7 +30,8 @@ namespace Hopper
 		else {
 			bool consensus = true;
 			Move history[MAXDEPTH];
-			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() == 5) ? 5 : 20);
+			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() == 5) ? 
+				myLimits.movesleft / 2 + 1 : myLimits.movesleft + 1);
 			for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 				score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
 				std::string message;
@@ -65,7 +66,7 @@ namespace Hopper
 						}
 					}
 				}
-				if (score >= MATE || score <= -MATE || (duration.count() > timeallotted / 4 && consensus))
+				if (score >= MATE || score <= -MATE || (duration.count() > timeallotted / 2 && consensus))
 					break;
 			}
 		}
