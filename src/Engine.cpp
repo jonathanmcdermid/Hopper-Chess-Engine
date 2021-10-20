@@ -14,8 +14,7 @@ namespace Hopper
 	void Engine::makeMove()
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
-		std::chrono::steady_clock::time_point stop;
-		std::chrono::milliseconds duration;
+		auto now = std::chrono::high_resolution_clock::now();
 		unsigned window = 45;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
@@ -45,9 +44,8 @@ namespace Hopper
 							(char)' ' };
 				}
 				std::cout << message << "\n";
-				stop = std::chrono::high_resolution_clock::now();
-				duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - startTime);
-				if (duration.count() > timeallotted)
+				now = std::chrono::high_resolution_clock::now();
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted)
 					break;
 				if (score <= alpha || score >= beta) {
 					alpha = LOWERLIMIT;
@@ -66,11 +64,11 @@ namespace Hopper
 						}
 					}
 				}
-				if (score >= MATE || score <= -MATE || (duration.count() > timeallotted / 2 && consensus))
+				if (score >= MATE || score <= -MATE || (std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus))
 					break;
 			}
 		}
-		std::cout << "time " << (int)duration.count() << "\n";
+		std::cout << "time " << (int) std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() << "\n";
 		myBoard->movePiece(principalVariation.moveLink[0]);
 		myHashTable.clean();
 		myKillers.chrono();

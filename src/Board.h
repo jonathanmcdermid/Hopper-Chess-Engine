@@ -1,6 +1,7 @@
 #pragma once
 
-#include "zobrist.h"
+#include "Zobrist.h"
+#include "Move.h"
 
 namespace Hopper
 {
@@ -12,12 +13,12 @@ namespace Hopper
 		U64 pHist = 0;
 		Move mHist = NULLMOVE;
 		historyInfo(unsigned f = 0, unsigned c = 0, int v = 0, U64 z = 0, U64 p = 0, Move m = NULLMOVE) {
-			fHist = f;
-			cHist = c;
-			vHist = v;
-			zHist = z;
-			pHist = p;
-			mHist = m;
+			this->fHist = f;
+			this->cHist = c;
+			this->vHist = v;
+			this->zHist = z;
+			this->pHist = p;
+			this->mHist = m;
 		}
 	};
 

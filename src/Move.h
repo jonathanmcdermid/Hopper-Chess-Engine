@@ -1,6 +1,6 @@
 #pragma once
 
-#include "macros.h"
+#include "Macros.h"
 
 namespace Hopper
 {

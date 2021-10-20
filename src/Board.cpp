@@ -1,4 +1,4 @@
-#include <cmath>
+#include <stdlib.h>
 #include <cstring>
 #include <iostream>
 #include "Board.h"

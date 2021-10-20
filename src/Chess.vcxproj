@@ -42,6 +42,7 @@
     <ClInclude Include="Zobrist.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Makefile" />
     <None Include="..\README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
