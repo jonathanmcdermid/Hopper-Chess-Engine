@@ -15,7 +15,7 @@ namespace Hopper
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
 		auto now = std::chrono::high_resolution_clock::now();
-		unsigned window = 45;
+		unsigned window = 25;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int score;
 		line principalVariation;
@@ -45,7 +45,8 @@ namespace Hopper
 				}
 				std::cout << message << "\n";
 				now = std::chrono::high_resolution_clock::now();
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted)
+				if (std::chrono::duration_cast<std::chrono::milliseconds>
+					(now - startTime).count() > timeallotted)
 					break;
 				if (score <= alpha || score >= beta) {
 					alpha = LOWERLIMIT;
@@ -98,7 +99,7 @@ namespace Hopper
 			score = -alphaBeta(0, ply + 1, -beta, -beta + 1, &localLine, true);
 			myBoard->unmovePiece();
 			if (score >= beta)
-				return score;
+				return beta;
 		}
 		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(myBoard->getCurrZ()), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
 		unsigned evaltype = HASHALPHA;
@@ -125,7 +126,7 @@ namespace Hopper
 						if (localMoveList.getCurrMove().isCap() == false)
 							myKillers.cutoff(localMoveList.getCurrMove(), ply);
 						myHashTable.newEntry(myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
-						return score;
+						return beta;
 					}
 					for (unsigned j = 1; j < depth; ++j)
 						pline->moveLink[j] = localLine.moveLink[j - 1];
@@ -150,23 +151,21 @@ namespace Hopper
 			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
 		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 		if (score >= beta)
-			return score;
+			return beta;
 		else if (score > alpha)
 			alpha = score;
 		MoveList localMoveList(myBoard);
 		localMoveList.moveOrder(GENWINCAPS);
-		if (localMoveList.movesLeft() == false) 
-			return score;
-		do {
+		while (localMoveList.movesLeft()) {
 			myBoard->movePiece(localMoveList.getCurrMove());
 			score = -quiescentSearch(-beta, -alpha);
 			myBoard->unmovePiece();
 			if (score >= beta)
-				return score;
+				return beta;
 			else if (score > alpha)
 				alpha = score;
 			localMoveList.increment();
-		} while (localMoveList.movesLeft());
+		}
 		return alpha;
 	}
 

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstring>
+#include <cassert>
 #include "Engine.h"
 
 namespace Hopper
@@ -188,7 +189,7 @@ namespace Hopper
 
 	static int passed_rank_bonus[8] = { 0, 256, 128, 64, 32, 16, 8, 0 };
 
-	static int pawn_file_population_penalty[5] = { 0, 0, -32, -64, -128};
+	static int pawn_file_population_penalty[5] = { 0, 0, -8, -16, -32};
 
 	void Engine::init_tables()
 	{
@@ -221,7 +222,7 @@ namespace Hopper
 			int pc = myBoard->getGridAt(sq);
 			switch (pc) {
 			case WHITE_PAWN:
-				if (0){//myBoard->getGridAt(sq + BOARD_NORTH) == BLACK_PAWN) {
+				if (myBoard->getGridAt(sq + BOARD_NORTH) == BLACK_PAWN) {
 					switch (sq % WIDTH) {
 					case 7:
 					case 0:
@@ -279,7 +280,7 @@ namespace Hopper
 				}
 				break;
 			case BLACK_PAWN:
-				if (0){//myBoard->getGridAt(sq + BOARD_SOUTH) == WHITE_PAWN) {
+				if (myBoard->getGridAt(sq + BOARD_SOUTH) == WHITE_PAWN) {
 					switch (sq % WIDTH) {
 					case 7:
 					case 0:
