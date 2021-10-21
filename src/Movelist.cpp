@@ -5,6 +5,8 @@
 
 namespace Hopper
 {
+	static int piece_values[6] = { 94, 281, 297, 512,  936,  0 };
+
 	template <typename Iter>
 	unsigned index_of(Iter first, Iter last, typename std::iterator_traits<Iter>::value_type& x)
 	{
@@ -18,16 +20,17 @@ namespace Hopper
 	{
 		generationState = GENPV;
 		myBoard = bd;
+
 		memset(index, 0, sizeof(index));
 		memset(limit, 0, sizeof(limit));
-		memset(sortedMoves, 0, sizeof(sortedMoves));
-		sortedMoves[GENPV][0] = pv;
+
+		storedMoves[GENPV][0].myMove = pv;
 		if(hash != pv)
-			sortedMoves[GENHASH][0] = hash;
+			storedMoves[GENHASH][0].myMove = hash;
 		if (primary != hash && primary != pv)
-			sortedMoves[GENKILLPRIMARY][0] = primary;
+			storedMoves[GENKILLPRIMARY][0].myMove = primary;
 		if (secondary != primary && secondary != hash && secondary != pv)
-			sortedMoves[GENKILLSECONDARY][0] = secondary;
+			storedMoves[GENKILLSECONDARY][0].myMove = secondary;
 	}
 
 	bool MoveList::noMoves()const
@@ -39,24 +42,30 @@ namespace Hopper
 		return true;
 	}
 
-	inline static bool moveFlagSort(Move const& lhs, Move const& rhs) {
-		return lhs.getFlags() > rhs.getFlags();
+	void MoveList::MVVLVA() {
+		for (unsigned i = 0; i < limit[GENWINCAPS]; ++i) {
+			storedMoves[GENWINCAPS][i].score = 1 << (6 + myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getTo()) / 2) |
+											   1 << (5 - myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getFrom()) / 2);
+		}
+		std::sort(storedMoves[GENWINCAPS], storedMoves[GENWINCAPS] + limit[GENWINCAPS], smScoreComp);
 	}
 
 	void MoveList::removeDuplicate(unsigned gs) {
 		if (limit[gs]) {
-			unsigned i = index_of(sortedMoves[generationState], sortedMoves[generationState] + limit[generationState], sortedMoves[gs][0]);
+			unsigned i = index_of(storedMoves[generationState], storedMoves[generationState] + limit[generationState], storedMoves[gs][0]);
 			if (i != limit[generationState])
-				sortedMoves[generationState][i] = sortedMoves[generationState][--limit[generationState]];
+				storedMoves[generationState][i] = storedMoves[generationState][--limit[generationState]];
 		}
 	}
 
-	void MoveList::staticSort() {
-		for (unsigned i = 0; i < limit[GENWINCAPS]; ++i) {
-			if (!staticExchange(sortedMoves[GENWINCAPS][i])) {
-				sortedMoves[GENLOSECAPS][limit[GENLOSECAPS]++] = sortedMoves[GENWINCAPS][i];
-				sortedMoves[GENWINCAPS][i--] = sortedMoves[GENWINCAPS][--limit[GENWINCAPS]];
-			}
+	void MoveList::increment() { 
+		++index[generationState];
+		if (1)//generationState != GENWINCAPS)
+			return;
+		if (!staticExchange(storedMoves[GENWINCAPS][index[GENWINCAPS]].myMove)) {
+			storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index[GENWINCAPS]];
+			++limit[GENLOSECAPS];
+			++index[GENWINCAPS];
 		}
 	}
 
@@ -68,29 +77,27 @@ namespace Hopper
 		case GENHASH:
 		case GENKILLPRIMARY:
 		case GENKILLSECONDARY:
-			if (sortedMoves[generationState][0] != NULLMOVE && myBoard->validateMove(sortedMoves[generationState][0]))
+			if (storedMoves[generationState][0].myMove != NULLMOVE && myBoard->validateMove(storedMoves[generationState][0].myMove))
 				++limit[generationState];
 			break;
 		case GENWINCAPS:
-			limit[GENWINCAPS] = myBoard->genAllCapMoves(sortedMoves[GENWINCAPS]);
+			limit[GENWINCAPS] = myBoard->genAllCapMoves(storedMoves[GENWINCAPS]);
 			removeDuplicate(GENPV);
 			removeDuplicate(GENHASH);
-			staticSort();
+			MVVLVA();
 			break;
 		case GENNONCAPS:
-			limit[GENNONCAPS] = myBoard->genAllNonCapMoves(sortedMoves[GENNONCAPS]);
+			limit[GENNONCAPS] = myBoard->genAllNonCapMoves(storedMoves[GENNONCAPS]);
 			removeDuplicate(GENPV);
 			removeDuplicate(GENHASH);
 			removeDuplicate(GENKILLPRIMARY);
 			removeDuplicate(GENKILLSECONDARY);
-			std::sort(sortedMoves[GENNONCAPS], sortedMoves[GENNONCAPS] + limit[GENNONCAPS], moveFlagSort);
+			std::sort(storedMoves[GENNONCAPS], storedMoves[GENNONCAPS] + limit[GENNONCAPS], smFlagsComp);
 			break;
 		case GENLOSECAPS:
 			break;
 		}
 	}
-
-	static int piece_values[6] = { 94, 281, 297, 512,  936,  0 };
 
 	bool MoveList::staticExchange(Move nextMove)
 	{

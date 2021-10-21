@@ -8,24 +8,20 @@ namespace Hopper
 		memset(killerIndex, 0, sizeof(killerIndex));
 	}
 
-	inline static bool killerSort(trackedMove const& lhs, trackedMove const& rhs) {
-		return lhs.appearances > rhs.appearances;
-	}
-
 	void Killers::cutoff(Move cm, unsigned ply)
 	{
 		unsigned i = 0;
 		while(i < killerIndex[ply]) {
 			if (trackedKillers[ply][i].myMove == cm) {
-				++trackedKillers[ply][i].appearances;
-				std::sort(trackedKillers[ply], trackedKillers[ply] + killerIndex[ply], killerSort);
+				++trackedKillers[ply][i].score;
+				std::sort(trackedKillers[ply], trackedKillers[ply] + killerIndex[ply], smScoreComp);
 				return;
 			}
 			++i;
 		}
 		if (i < MEMORY) {
 			trackedKillers[ply][i].myMove = cm;
-			++trackedKillers[ply][i].appearances;
+			++trackedKillers[ply][i].score;
 			++killerIndex[ply];
 		}
 	}

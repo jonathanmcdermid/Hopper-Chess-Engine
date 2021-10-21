@@ -156,7 +156,7 @@ namespace Hopper {
 
 	bool Board::isCheckMate()
 	{
-		Move nextMove[28];
+		scoredMove nextMove[28];
 		unsigned moveCount;
 		for (unsigned i = 0; i < SPACES; ++i) {
 			if (validPiece(grid[i], turn)) {

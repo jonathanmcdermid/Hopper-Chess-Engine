@@ -35,5 +35,6 @@ threatened squares
 killer moves
 perft
 principal variation search
+MVV-LVA
 static exchange evaluation
 ```

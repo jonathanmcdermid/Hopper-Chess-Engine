@@ -20,10 +20,10 @@ namespace Hopper
 		int score;
 		line principalVariation;
 		nodes = 0;
-		Move rootMoves[128];
+		scoredMove rootMoves[128];
 		unsigned nMoves = myBoard->genAllMoves(rootMoves);
 		if (nMoves == 1) {
-			principalVariation.moveLink[0] = rootMoves[0];
+			principalVariation.moveLink[0] = rootMoves[0].myMove;
 			principalVariation.moveCount = 1;
 		}
 		else {
@@ -44,10 +44,6 @@ namespace Hopper
 							(char)' ' };
 				}
 				std::cout << message << "\n";
-				now = std::chrono::high_resolution_clock::now();
-				if (std::chrono::duration_cast<std::chrono::milliseconds>
-					(now - startTime).count() > timeallotted)
-					break;
 				if (score <= alpha || score >= beta) {
 					alpha = LOWERLIMIT;
 					beta = UPPERLIMIT;
@@ -65,7 +61,11 @@ namespace Hopper
 						}
 					}
 				}
-				if (score >= MATE || score <= -MATE || (std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus))
+				now = std::chrono::high_resolution_clock::now();
+				if (score >= MATE || score <= -MATE || 
+					std::chrono::duration_cast<std::chrono::milliseconds>
+					(now - startTime).count() > timeallotted ||
+					(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus))
 					break;
 			}
 		}
@@ -138,7 +138,7 @@ namespace Hopper
 			}
 		}
 		if (localMoveList.noMoves())
-			return (myBoard->isCheck()) ? -MATE - depth : CONTEMPT;
+			return (myBoard->isCheck()) ? -MATE + ply : CONTEMPT;
 		else if (myHashTable.getDepth(myBoard->getCurrZ()) < depth)
 			myHashTable.newEntry(myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
 		return alpha;
@@ -183,11 +183,11 @@ namespace Hopper
 	{
 		if (depth == 0)
 			return 1;
-		Move allMoves[MEMORY];
+		scoredMove allMoves[MEMORY];
 		unsigned moveCount = myBoard->genAllMoves(allMoves);
-		Move allNonCapMoves[MEMORY];
+		scoredMove allNonCapMoves[MEMORY];
 		unsigned nonCapCount = myBoard->genAllNonCapMoves(allNonCapMoves);
-		Move allCapMoves[MEMORY];
+		scoredMove allCapMoves[MEMORY];
 		unsigned capCount = myBoard->genAllCapMoves(allCapMoves);
 		if (moveCount != capCount + nonCapCount) {
 			myBoard->drawBoard();
@@ -195,30 +195,30 @@ namespace Hopper
 			message = "All Moves: ";
 			for (unsigned i = 0; i < moveCount; ++i) {
 				message += {
-					(char)(allMoves[i].getFrom() % WIDTH + 'a'),
-						(char)((WIDTH - (int)allMoves[i].getFrom() / WIDTH) + '0'),
-						(char)(allMoves[i].getTo() % WIDTH + 'a'),
-						(char)(WIDTH - (int)(allMoves[i].getTo() / WIDTH) + '0'),
+					(char)(allMoves[i].myMove.getFrom() % WIDTH + 'a'),
+						(char)((WIDTH - (int)allMoves[i].myMove.getFrom() / WIDTH) + '0'),
+						(char)(allMoves[i].myMove.getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
 			std::cout << message << "\n";
 			message = "Caps: ";
 			for (unsigned i = 0; i < capCount; ++i) {
 				message += {
-					(char)(allCapMoves[i].getFrom() % WIDTH + 'a'),
-						(char)((WIDTH - (int)allCapMoves[i].getFrom() / WIDTH) + '0'),
-						(char)(allCapMoves[i].getTo() % WIDTH + 'a'),
-						(char)(WIDTH - (int)(allCapMoves[i].getTo() / WIDTH) + '0'),
+					(char)(allCapMoves[i].myMove.getFrom() % WIDTH + 'a'),
+						(char)((WIDTH - (int)allCapMoves[i].myMove.getFrom() / WIDTH) + '0'),
+						(char)(allCapMoves[i].myMove.getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allCapMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
 			std::cout << message << "\n";
 			message = "NonCaps: ";
 			for (unsigned i = 0; i < nonCapCount; ++i) {
 				message += {
-					(char)(allNonCapMoves[i].getFrom() % WIDTH + 'a'),
-						(char)((WIDTH - (int)allNonCapMoves[i].getFrom() / WIDTH) + '0'),
-						(char)(allNonCapMoves[i].getTo() % WIDTH + 'a'),
-						(char)(WIDTH - (int)(allNonCapMoves[i].getTo() / WIDTH) + '0'),
+					(char)(allNonCapMoves[i].myMove.getFrom() % WIDTH + 'a'),
+						(char)((WIDTH - (int)allNonCapMoves[i].myMove.getFrom() / WIDTH) + '0'),
+						(char)(allNonCapMoves[i].myMove.getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(allNonCapMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
 			std::cout << message << "\n";
@@ -226,7 +226,7 @@ namespace Hopper
 		}
 		unsigned n = 0;
 		for (unsigned i = 0; i < moveCount; ++i) {
-			myBoard->movePiece(allMoves[i]);
+			myBoard->movePiece(allMoves[i].myMove);
 			n += perft(depth - 1);
 			myBoard->unmovePiece();
 		}

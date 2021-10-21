@@ -179,6 +179,7 @@ namespace Hopper
 		eg_king_table
 	};
 
+
 	static int mg_table[12][64];
 	static int eg_table[12][64];
 
@@ -189,7 +190,8 @@ namespace Hopper
 
 	static int passed_rank_bonus[8] = { 0, 256, 128, 64, 32, 16, 8, 0 };
 
-	static int pawn_file_population_penalty[5] = { 0, 0, -8, -16, -32};
+	static int mg_pawn_file_population_penalty[5] = { 0, 0, -2, -4, -8};
+	static int eg_pawn_file_population_penalty[5] = { 0, 0, -16, -32, -64};
 
 	void Engine::init_tables()
 	{
@@ -409,6 +411,7 @@ namespace Hopper
 		int i, j;
 		unsigned pawnCounts[2][WIDTH];
 		memset(pawnCounts, 0, sizeof(pawnCounts));
+		int mgPhase = myBoard->getGamePhase();//this contradicts the idea of a pawn hashtable, but generally the state of the game shouldnt change much
 		for (i = WIDTH; i < 56; ++i) {
 			switch (myBoard->getGridAt(i)) {
 			case WHITE_PAWN:
@@ -535,9 +538,11 @@ namespace Hopper
 				break;
 			}
 		}
-		for (i = 0; i < WIDTH; ++i) {
-			sum += pawn_file_population_penalty[pawnCounts[WHITE][i]];
-			sum -= pawn_file_population_penalty[pawnCounts[BLACK][i]];
+		for (int i = 0; i < WIDTH; ++i) {
+			sum += ((mg_pawn_file_population_penalty[pawnCounts[WHITE][i]] -
+				mg_pawn_file_population_penalty[pawnCounts[BLACK][i]]) * mgPhase +
+				(eg_pawn_file_population_penalty[pawnCounts[WHITE][i]] -
+					eg_pawn_file_population_penalty[pawnCounts[BLACK][i]]) * (24 - mgPhase)) / 24;
 		}
 		for (i = 1; i < WIDTH - 1; ++i) {
 			if (pawnCounts[WHITE][i - 1] == 0 && pawnCounts[WHITE][i + 1] == 0)
