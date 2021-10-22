@@ -538,11 +538,12 @@ namespace Hopper
 				break;
 			}
 		}
-		for (int i = 0; i < WIDTH; ++i) {
-			sum += ((mg_pawn_file_population_penalty[pawnCounts[WHITE][i]] -
+		for (i = 0; i < WIDTH; ++i) {
+			sum += ((
+				mg_pawn_file_population_penalty[pawnCounts[WHITE][i]] -
 				mg_pawn_file_population_penalty[pawnCounts[BLACK][i]]) * mgPhase +
 				(eg_pawn_file_population_penalty[pawnCounts[WHITE][i]] -
-					eg_pawn_file_population_penalty[pawnCounts[BLACK][i]]) * (24 - mgPhase)) / 24;
+				eg_pawn_file_population_penalty[pawnCounts[BLACK][i]]) * (24 - mgPhase)) / 24;
 		}
 		for (i = 1; i < WIDTH - 1; ++i) {
 			if (pawnCounts[WHITE][i - 1] == 0 && pawnCounts[WHITE][i + 1] == 0)

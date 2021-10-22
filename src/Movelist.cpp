@@ -20,10 +20,8 @@ namespace Hopper
 	{
 		generationState = GENPV;
 		myBoard = bd;
-
-		memset(index, 0, sizeof(index));
+		index = 0;
 		memset(limit, 0, sizeof(limit));
-
 		storedMoves[GENPV][0].myMove = pv;
 		if(hash != pv)
 			storedMoves[GENHASH][0].myMove = hash;
@@ -59,18 +57,19 @@ namespace Hopper
 	}
 
 	void MoveList::increment() { 
-		++index[generationState];
-		if (1)//generationState != GENWINCAPS)
-			return;
-		if (!staticExchange(storedMoves[GENWINCAPS][index[GENWINCAPS]].myMove)) {
-			storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index[GENWINCAPS]];
-			++limit[GENLOSECAPS];
-			++index[GENWINCAPS];
-		}
+		++index;
+		//if (generationState != GENWINCAPS)
+		//	return;
+		//if (!staticExchange(storedMoves[GENWINCAPS][index[GENWINCAPS]].myMove)) {
+		//	storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index[GENWINCAPS]];
+		//	++limit[GENLOSECAPS];
+		//	++index[GENWINCAPS];
+		//}
 	}
 
 	void MoveList::moveOrder(unsigned gs)
 	{
+		index = 0;
 		generationState = gs;
 		switch (gs) {
 		case GENPV:

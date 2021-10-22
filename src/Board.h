@@ -28,8 +28,8 @@ namespace Hopper
 		Board();
 		void fenSet(const char* fs);
 		bool isCheckMate();
-		bool isRepititionDraw();
-		bool isPseudoRepititionDraw();
+		bool isRepititionDraw()const;
+		bool isPseudoRepititionDraw()const;
 		bool isMaterialDraw()const;
 		unsigned getGamePhase()const;
 		bool isCheck() const { return threatened[!turn][kingPos[turn]]; }

@@ -12,14 +12,14 @@ namespace Hopper
 		bool staticExchange(Move myMove);
 		void MVVLVA();
 		void removeDuplicate(unsigned gs);
-		bool movesLeft()const { return index[generationState] < limit[generationState]; }
+		bool movesLeft()const { return index < limit[generationState]; }
 		bool noMoves()const;
-		Move getCurrMove()const { return storedMoves[generationState][index[generationState]].myMove; }
+		Move getCurrMove()const { return storedMoves[generationState][index].myMove; }
 		void increment();
 	private:
 		Board* myBoard;
 		scoredMove storedMoves[GENEND][SPACES];
-		unsigned index[GENEND];
+		unsigned index;
 		unsigned limit[GENEND];
 		unsigned generationState;
 	};

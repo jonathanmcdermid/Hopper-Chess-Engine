@@ -35,7 +35,6 @@ namespace Hopper
 
 	unsigned Board::removeIllegalMoves(scoredMove* nextMove, unsigned moveCount)
 	{
-		int checktype;
 		for (int i = 0; i < pinCount; ++i) {
 			for (unsigned j = 0; j < moveCount; ++j) {
 				if (nextMove[j].myMove.getFrom() == pinnedPieces[i]) {
@@ -70,6 +69,7 @@ namespace Hopper
 			}
 		}
 		for (int i = 0; i < threatened[!turn][kingPos[turn]]; ++i) {
+			int checktype;
 			if (grid[attackers[!turn][i][kingPos[turn]]] <= BLACK_KNIGHT)
 				checktype = BOARD_LEAP;
 			else if (NSslide(attackers[!turn][i][kingPos[turn]], kingPos[turn]))

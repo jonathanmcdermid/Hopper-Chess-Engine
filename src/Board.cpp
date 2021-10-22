@@ -169,7 +169,7 @@ namespace Hopper {
 		return true;
 	}
 
-	bool Board::isRepititionDraw()
+	bool Board::isRepititionDraw()const
 	{
 		if (myHistory[halfMoveClock].fHist >= 100)
 			return true;
@@ -185,7 +185,7 @@ namespace Hopper {
 		return false;
 	}
 
-	bool Board::isPseudoRepititionDraw()
+	bool Board::isPseudoRepititionDraw()const
 	{
 		for (unsigned i = 4; i < myHistory[halfMoveClock].fHist; i += 4) {
 			if (myHistory[halfMoveClock - i].zHist == myHistory[halfMoveClock].zHist)

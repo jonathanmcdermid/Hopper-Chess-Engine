@@ -14,6 +14,6 @@ namespace Hopper
 		void chrono();
 	private:
 		scoredMove trackedKillers[MAXDEPTH][MEMORY];
-		unsigned killerIndex[MAXDEPTH];
+		unsigned killerLimit[MAXDEPTH];
 	};
 }
