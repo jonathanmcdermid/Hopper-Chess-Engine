@@ -5,7 +5,7 @@
 
 namespace Hopper
 {
-	static int piece_values[6] = { 94, 281, 297, 512,  936,  0 };
+	static int piece_values[6] = { 94, 281, 297, 512,  936,  25000 };
 
 	template <typename Iter>
 	unsigned index_of(Iter first, Iter last, typename std::iterator_traits<Iter>::value_type& x)
@@ -60,10 +60,12 @@ namespace Hopper
 		++index;
 		//if (generationState != GENWINCAPS)
 		//	return;
-		//if (!staticExchange(storedMoves[GENWINCAPS][index[GENWINCAPS]].myMove)) {
-		//	storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index[GENWINCAPS]];
+		//if (myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getTo()) < 
+		//	myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getFrom()) &&
+		//	myBoard->getThreatenedAt(!myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo())) {
+		//	storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index];
 		//	++limit[GENLOSECAPS];
-		//	++index[GENWINCAPS];
+		//	++index;
 		//}
 	}
 
@@ -112,9 +114,12 @@ namespace Hopper
 			for (unsigned j = 0; j < total[i]; ++j)
 				attackers[i * WIDTH + j] = myBoard->getAttackersAt(i, j, to);
 		}
-		for (unsigned i = 0; i < total[tomove]; ++i)
-			if (attackers[tomove * WIDTH + i] == from)
+		for (unsigned i = 0; i < total[tomove]; ++i) {
+			if (attackers[tomove * WIDTH + i] == from) {
 				attackers[tomove * WIDTH + i] = attackers[tomove * WIDTH + --total[tomove]];
+				break;
+			}
+		}
 		while (total[!tomove]) {
 			tomove = !tomove;
 			smallestindex = 0;
@@ -129,7 +134,7 @@ namespace Hopper
 			tomove = !tomove;
 			if (see > SEE_THRESHOLD)
 				return true;
-			else if (total[tomove] == 0)
+			if (total[tomove] == 0)
 				return false;
 			smallestindex = 0;
 			for (unsigned i = 1; i < total[tomove]; ++i)

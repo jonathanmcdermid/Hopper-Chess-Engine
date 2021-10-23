@@ -9,6 +9,7 @@ namespace Hopper
 		myBoard = bd;
 		myHashTable.setSize(myLimits.hashbytes);
 		init_tables();
+		lastEval = 0;
 	}
 
 	void Engine::makeMove()
@@ -27,10 +28,10 @@ namespace Hopper
 			principalVariation.moveCount = 1;
 		}
 		else {
+			bool panic = false;
 			bool consensus = true;
 			Move history[MAXDEPTH];
-			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / ((myBoard->getCurrF() == 5) ? 
-				myLimits.movesleft / 2 + 1 : myLimits.movesleft + 1);
+			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft + 1);
 			for (unsigned depth = 1; depth < myLimits.depth; ++depth) {
 				score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
 				std::string message;
@@ -62,11 +63,25 @@ namespace Hopper
 					}
 				}
 				now = std::chrono::high_resolution_clock::now();
-				if (score >= MATE || score <= -MATE || 
+				// if PV mate is found, no point in continuing search
+				if (score >= MATE || score <= -MATE ||
+					// if we are over time limit, need to stop search unless we are significantly lower than previous eval
 					std::chrono::duration_cast<std::chrono::milliseconds>
 					(now - startTime).count() > timeallotted ||
-					(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus))
-					break;
+					// if the past few iterative searches have yielded the same move, we will stop early
+					(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus) ||
+					// if engine was in panic state but has now found a move, we can stop
+					(panic == true && score >= lastEval - PANIC_THRESHOLD)) {
+					// if we are over our time limit but we cant find a good move, take more time and panic
+					if (score < lastEval - PANIC_THRESHOLD && panic == false) {
+						timeallotted *= 3;
+						panic = true;
+					}
+					else {
+						lastEval = score;
+						break;
+					}
+				}
 			}
 		}
 		std::cout << "time " << (int) std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() << "\n";
@@ -74,10 +89,6 @@ namespace Hopper
 		myHashTable.clean();
 		myKillers.chrono();
 	}
-
-	int Engine::alphaBetaRoot(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull) {
-		return 0;
-	} 
 
 	int Engine::alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull)
 	{
@@ -111,12 +122,13 @@ namespace Hopper
 				++nodes;
 				if (myBoard->isPseudoRepititionDraw() || myBoard->isMaterialDraw())
 					score = CONTEMPT;
+				// For PVS, the node is a PV node if beta - alpha != 1 (not a null window)
 				else if (genstate > GENHASH) {
 					score = -alphaBeta((depth > 2) ? depth - 2 : 0, ply + 1, -alpha - 1, -alpha, &localLine, false);
 					if (score > alpha && score < beta)
 						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				}
-				else
+				else // PV move
 					score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				myBoard->unmovePiece();
 				if (score > alpha) {

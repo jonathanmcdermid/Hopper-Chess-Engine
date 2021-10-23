@@ -26,7 +26,6 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
-		int alphaBetaRoot(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
 		int alphaBeta(unsigned depth, unsigned ply, int alpha, int beta, line* pline, bool isNull);
 		void perftControl();
 		limits myLimits;
@@ -40,6 +39,7 @@ namespace Hopper
 		Board* myBoard;
 		Killers myKillers;
 		HashTable myHashTable;
-		unsigned nodes = 0;
+		unsigned nodes;
+		int lastEval;
 	};
 }
