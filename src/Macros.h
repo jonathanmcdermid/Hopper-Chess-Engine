@@ -17,7 +17,7 @@
 #define MATE		25000
 #define CONTEMPT	0
 
-#define PANIC_THRESHOLD 50
+#define PANIC_THRESHOLD 25
 
 #define SEE_THRESHOLD -30
 
@@ -42,13 +42,13 @@
 
 #define MEMORY		128
 
-#define PAWN_ISOLATED				-10
+#define PAWN_ISOLATED				-16
 #define PAWN_CONNECTED				5
-#define PAWN_BACKWARD				-20
+#define PAWN_BACKWARD				-8
 #define PAWN_PHALANX				0
 
-#define BONUS_BISHOP_PAIR			15
-#define BONUS_ROOK_OPEN_FILE		30
+#define BONUS_BISHOP_PAIR			32
+#define BONUS_ROOK_OPEN_FILE		40
 #define BONUS_ROOK_KING_FILE		15
 #define BONUS_QUEEN_SUPPORT			5
 

@@ -179,7 +179,6 @@ namespace Hopper
 		eg_king_table
 	};
 
-
 	static int mg_table[12][64];
 	static int eg_table[12][64];
 

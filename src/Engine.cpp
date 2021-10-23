@@ -74,7 +74,9 @@ namespace Hopper
 					(panic == true && score >= lastEval - PANIC_THRESHOLD)) {
 					// if we are over our time limit but we cant find a good move, take more time and panic
 					if (score < lastEval - PANIC_THRESHOLD && panic == false) {
-						timeallotted *= 3;
+						timeallotted *= 1 + 
+							(lastEval - score) / PANIC_THRESHOLD < 4 ? 
+							(lastEval - score) / PANIC_THRESHOLD : 4;
 						panic = true;
 					}
 					else {
