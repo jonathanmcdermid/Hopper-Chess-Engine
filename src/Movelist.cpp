@@ -40,15 +40,27 @@ namespace Hopper
 		return true;
 	}
 
-	void MoveList::MVVLVA() {
+	void MoveList::MVVLVA() 
+	{
 		for (unsigned i = 0; i < limit[GENWINCAPS]; ++i) {
-			storedMoves[GENWINCAPS][i].score = 1 << (6 + myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getTo()) / 2) |
-											   1 << (5 - myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getFrom()) / 2);
+			storedMoves[GENWINCAPS][i].score =	1 << (12 + storedMoves[GENWINCAPS]->myMove.getFlags() / NPROMOTE) |
+												1 << (6 + myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getTo()) / 2) |
+												1 << (5 - myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getFrom()) / 2);
 		}
 		std::sort(storedMoves[GENWINCAPS], storedMoves[GENWINCAPS] + limit[GENWINCAPS], smScoreComp);
 	}
 
-	void MoveList::removeDuplicate(unsigned gs) {
+	void MoveList::scoreQuiets() 
+	{
+		for (unsigned i = 0; i < limit[GENQUIETS]; ++i) {
+			storedMoves[GENQUIETS][i].score =	1 << (12 + storedMoves[GENQUIETS]->myMove.getFlags() / NPROMOTE) |
+												1 << ((myBoard->getGridAt(storedMoves[GENQUIETS][i].myMove.getFrom()) / 2) % KING);
+		}
+		std::sort(storedMoves[GENQUIETS], storedMoves[GENQUIETS] + limit[GENQUIETS], smScoreComp);
+	}
+
+	void MoveList::removeDuplicate(unsigned gs) 
+	{
 		if (limit[gs]) {
 			unsigned i = index_of(storedMoves[generationState], storedMoves[generationState] + limit[generationState], storedMoves[gs][0]);
 			if (i != limit[generationState])
@@ -56,7 +68,8 @@ namespace Hopper
 		}
 	}
 
-	void MoveList::increment() { 
+	void MoveList::increment() 
+	{ 
 		++index;
 		//if (generationState != GENWINCAPS)
 		//	return;
@@ -87,13 +100,13 @@ namespace Hopper
 			removeDuplicate(GENHASH);
 			MVVLVA();
 			break;
-		case GENNONCAPS:
-			limit[GENNONCAPS] = myBoard->genAllNonCapMoves(storedMoves[GENNONCAPS]);
+		case GENQUIETS:
+			limit[GENQUIETS] = myBoard->genAllNonCapMoves(storedMoves[GENQUIETS]);
 			removeDuplicate(GENPV);
 			removeDuplicate(GENHASH);
 			removeDuplicate(GENKILLPRIMARY);
 			removeDuplicate(GENKILLSECONDARY);
-			std::sort(storedMoves[GENNONCAPS], storedMoves[GENNONCAPS] + limit[GENNONCAPS], smFlagsComp);
+			scoreQuiets();
 			break;
 		case GENLOSECAPS:
 			break;

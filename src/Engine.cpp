@@ -55,7 +55,7 @@ namespace Hopper
 					beta = score + window;
 					consensus = true;
 					history[depth - 1] = principalVariation.moveLink[0];
-					for (unsigned i = (depth > 4) ? depth - 4 : 1; i < depth; ++i) {
+					for (unsigned i = (depth > CONSENSUS_THRESHOLD) ? depth - CONSENSUS_THRESHOLD : 1; i < depth; ++i) {
 						if (history[i - 1] != history[i]) {
 							consensus = false;
 							break;
@@ -69,14 +69,15 @@ namespace Hopper
 					std::chrono::duration_cast<std::chrono::milliseconds>
 					(now - startTime).count() > timeallotted ||
 					// if the past few iterative searches have yielded the same move, we will stop early
-					(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / 2 && consensus) ||
+					(consensus == true && panic == false && 
+					std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / CONSENSUS_REDUCTION_FACTOR) ||
 					// if engine was in panic state but has now found a move, we can stop
 					(panic == true && score >= lastEval - PANIC_THRESHOLD)) {
 					// if we are over our time limit but we cant find a good move, take more time and panic
 					if (score < lastEval - PANIC_THRESHOLD && panic == false) {
 						timeallotted *= 1 + 
-							(lastEval - score) / PANIC_THRESHOLD < 4 ? 
-							(lastEval - score) / PANIC_THRESHOLD : 4;
+							(lastEval - score) / PANIC_THRESHOLD < PANIC_EXTENSION_LIMIT ? 
+							(lastEval - score) / PANIC_THRESHOLD : PANIC_EXTENSION_LIMIT;
 						panic = true;
 					}
 					else {
@@ -97,9 +98,9 @@ namespace Hopper
 		if (depth == 0)
 			return quiescentSearch(alpha, beta);
 		if (myHashTable.getZobrist(myBoard->getCurrZ()) == myBoard->getCurrZ() && myHashTable.getDepth(myBoard->getCurrZ()) >= depth) {
-			if (myHashTable.getFlags(myBoard->getCurrZ()) == HASHEXACT
-				|| (myHashTable.getFlags(myBoard->getCurrZ()) == HASHBETA && myHashTable.getEval(myBoard->getCurrZ()) >= beta)
-				|| (myHashTable.getFlags(myBoard->getCurrZ()) == HASHALPHA && myHashTable.getEval(myBoard->getCurrZ()) <= alpha)) {
+			if (myHashTable.getFlags(myBoard->getCurrZ()) == HASHEXACT ||
+				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHBETA && myHashTable.getEval(myBoard->getCurrZ()) >= beta) ||
+				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHALPHA && myHashTable.getEval(myBoard->getCurrZ()) <= alpha)) {
 				pline->moveLink[0] = myHashTable.getMove(myBoard->getCurrZ());
 				pline->moveCount = 1;
 				return myHashTable.getEval(myBoard->getCurrZ());
@@ -107,7 +108,7 @@ namespace Hopper
 		}
 		line localLine;
 		int score;
-		if (isNull == false && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_GAMEPHASE_THRESHOLD) {
+		if (isNull == false && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_THRESHOLD) {
 			myBoard->movePiece(NULLMOVE);
 			score = -alphaBeta(0, ply + 1, -beta, -beta + 1, &localLine, true);
 			myBoard->unmovePiece();
@@ -126,7 +127,7 @@ namespace Hopper
 					score = CONTEMPT;
 				// For PVS, the node is a PV node if beta - alpha != 1 (not a null window)
 				else if (genstate > GENHASH) {
-					score = -alphaBeta((depth > 2) ? depth - 2 : 0, ply + 1, -alpha - 1, -alpha, &localLine, false);
+					score = -alphaBeta((depth > 2) ? depth - 1 : depth / 3, ply + 1, -alpha - 1, -alpha, &localLine, false);
 					if (score > alpha && score < beta)
 						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				}

@@ -11,6 +11,7 @@ namespace Hopper
 		void moveOrder(unsigned genState);
 		bool staticExchange(Move myMove);
 		void MVVLVA();
+		void scoreQuiets();
 		void removeDuplicate(unsigned gs);
 		bool movesLeft()const { return index < limit[generationState]; }
 		bool noMoves()const;
