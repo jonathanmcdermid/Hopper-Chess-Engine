@@ -127,7 +127,7 @@ namespace Hopper
 					score = CONTEMPT;
 				// For PVS, the node is a PV node if beta - alpha != 1 (not a null window)
 				else if (genstate > GENHASH) {
-					score = -alphaBeta((depth > 2) ? depth - 1 : depth / 3, ply + 1, -alpha - 1, -alpha, &localLine, false);
+					score = -alphaBeta((depth > 2) ? depth - 2 : 0, ply + 1, -alpha - 1, -alpha, &localLine, false);
 					if (score > alpha && score < beta)
 						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				}

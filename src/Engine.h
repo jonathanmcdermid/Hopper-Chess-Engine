@@ -12,7 +12,7 @@ namespace Hopper
 		unsigned time[2] = { 300000, 300000 };
 		unsigned inc[2] = { 10000, 10000 };
 		unsigned movetime = 0;
-		unsigned movesleft = 10;
+		unsigned movesleft = 15;
 		unsigned depth = MAXDEPTH;
 		unsigned nodes = 0;
 		unsigned perft = 0;
