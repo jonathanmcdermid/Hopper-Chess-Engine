@@ -192,7 +192,7 @@ namespace Hopper
 	static int mg_pawn_file_population_penalty[5] = { 0, 0, -2, -4, -8};
 	static int eg_pawn_file_population_penalty[5] = { 0, 0, -16, -32, -64};
 
-	void Engine::init_tables()
+	void Engine::initEvalTables()
 	{
 		for (int p = PAWN, pc = WHITE_PAWN; p <= KING; pc += 2, ++p) {
 			for (int sq = 0; sq < 64; ++sq) {

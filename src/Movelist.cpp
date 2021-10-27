@@ -73,9 +73,11 @@ namespace Hopper
 		++index;
 		//if (generationState != GENWINCAPS)
 		//	return;
-		//if (myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getTo()) < 
-		//	myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getFrom()) &&
-		//	myBoard->getThreatenedAt(!myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo())) {
+		//while (movesLeft() && 
+		//	piece_values[myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getTo()) / 2] <
+		//	piece_values[myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getFrom()) / 2] &&
+		//	myBoard->getThreatenedAt(!myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo()) != 0 &&
+		//	myBoard->getThreatenedAt(myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo()) == 1){
 		//	storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index];
 		//	++limit[GENLOSECAPS];
 		//	++index;

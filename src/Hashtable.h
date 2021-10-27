@@ -11,7 +11,7 @@ namespace Hopper
     }line;
 
     typedef struct hashEntry {
-        hashEntry(U64 k = 0, unsigned d = 0, int e = 0, unsigned f = 0, Move m = NULLMOVE) {
+        hashEntry(U64 k = 0, int d = 0, int e = 0, int f = 0, Move m = NULLMOVE) {
             hashZobristKey = k;
             hashDepth = d;
             hashEval = e;
@@ -26,8 +26,8 @@ namespace Hopper
             hashMove = rhs.hashMove;
         }
         U64 hashZobristKey;
-        unsigned hashDepth;
-        unsigned hashFlags;
+        int hashDepth;
+        int hashFlags;
         int hashEval;
         Move hashMove;
     }hashEntry;
@@ -59,9 +59,9 @@ namespace Hopper
         hashEntry getEntry(U64 key) const { return myHashTable[key % myHashTable.size()]; }
         U64 getZobrist(U64 key)     const { return myHashTable[key % myHashTable.size()].hashZobristKey; }
         Move getMove(U64 key)       const { return myHashTable[key % myHashTable.size()].hashMove; }
-        unsigned getDepth(U64 key)  const { return myHashTable[key % myHashTable.size()].hashDepth; }
+        int getDepth(U64 key)       const { return myHashTable[key % myHashTable.size()].hashDepth; }
         int getEval(U64 key)        const { return myHashTable[key % myHashTable.size()].hashEval; }
-        unsigned getFlags(U64 key)  const { return myHashTable[key % myHashTable.size()].hashFlags; }
+        int getFlags(U64 key)       const { return myHashTable[key % myHashTable.size()].hashFlags; }
     private:
         std::vector<hashEntry> myHashTable;
         std::vector<pawnHashEntry> myPawnHashTable;
