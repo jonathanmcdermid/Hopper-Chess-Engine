@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <math.h>
 #include "Engine.h"
 
 namespace Hopper
@@ -179,9 +180,9 @@ namespace Hopper
 				localMoveList.increment();
 			}
 		}
-		if (localMoveList.noMoves())
+		if (movesPlayed == 0)
 			return (myBoard->isCheck()) ? -MATE + ply : CONTEMPT;
-		else if (myHashTable.getDepth(myBoard->getCurrZ()) < depth)
+		else if (myHashTable.getDepth(myBoard->getCurrZ()) < depth) //|| myHashTable.getZobrist(myBoard->getCurrZ()) != myBoard->getCurrZ())
 			myHashTable.newEntry(myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
 		return alpha;
 	}
