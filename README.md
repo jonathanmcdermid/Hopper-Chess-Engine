@@ -38,3 +38,14 @@ principal variation search
 MVV-LVA
 static exchange evaluation
 ```
+
+## Credits
+
+A big thanks to the following sources
+
+```
+Jonatan Pettersson and his blog
+The authors of Stockfish, PeSTO, Ethereal
+The chessprogramming wiki
+The engine testers
+```
