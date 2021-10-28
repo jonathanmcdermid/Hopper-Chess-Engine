@@ -129,7 +129,7 @@ namespace Hopper
 			goto movesLoop;
 
 		score = (ttHit) ? TTentry->hashEval : negaEval();
-		//beta pruning
+		// beta pruning
 		if (pvNode == false && depth <= BETA_PRUNING_DEPTH && score - BETA_MARGIN * depth > beta)
 			return score;
 		// alpha pruning
