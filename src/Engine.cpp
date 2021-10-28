@@ -44,7 +44,7 @@ namespace Hopper
 			Move history[MAXDEPTH];
 			unsigned timeallotted = (myLimits.time[myBoard->getTurn()] + myLimits.inc[myBoard->getTurn()]) / (myLimits.movesleft + 1);
 			for (int depth = 1; depth < myLimits.depth; ++depth) {
-				score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false);
+				score = alphaBeta(depth, 0, alpha, beta, &principalVariation, false, false);
 				std::string message;
 				std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
 				for (unsigned i = 0; i < principalVariation.moveCount; ++i) {
@@ -104,38 +104,60 @@ namespace Hopper
 		myKillers.chrono();
 	}
 
-	int Engine::alphaBetaRoot(int depth, int ply, int alpha, int beta, line* pline, bool isNull)
-	{
-		return 0;
-	}
-
-	int Engine::alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull)
+	int Engine::alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull, bool cutNode)
 	{
 		if (depth <= 0)
 			return quiescentSearch(alpha, beta);
-		if (myHashTable.getZobrist(myBoard->getCurrZ()) == myBoard->getCurrZ() && myHashTable.getDepth(myBoard->getCurrZ()) >= depth) {
-			if (myHashTable.getFlags(myBoard->getCurrZ()) == HASHEXACT ||
-				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHBETA && myHashTable.getEval(myBoard->getCurrZ()) >= beta) ||
-				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHALPHA && myHashTable.getEval(myBoard->getCurrZ()) <= alpha)) {
-				pline->moveLink[0] = myHashTable.getMove(myBoard->getCurrZ());
+
+		// probe transposition table for cutoffs
+		bool ttHit;
+		hashEntry* TTentry = myHashTable.probe(myBoard->getCurrZ(), ttHit);
+		if (ttHit && TTentry->hashDepth >= depth && 
+			(TTentry->hashFlags == HASHEXACT ||
+			(TTentry->hashFlags == HASHBETA && TTentry->hashEval >= beta) ||
+			(TTentry->hashFlags == HASHALPHA && TTentry->hashEval <= alpha))) {
+				pline->moveLink[0] = TTentry->hashMove;
 				pline->moveCount = 1;
-				return myHashTable.getEval(myBoard->getCurrZ());
-			}
+				return TTentry->hashEval;
 		}
-		line localLine;
+
 		int score;
-		if (isNull == false && myBoard->isCheck() == false && myBoard->getGamePhase() >= NULLMOVE_THRESHOLD) {
+		bool pvNode = (beta - alpha != 1);
+		bool inCheck = myBoard->isCheck();
+
+		if (inCheck)
+			goto movesLoop;
+
+		score = (ttHit) ? TTentry->hashEval : negaEval();
+		//beta pruning
+		if (pvNode == false && depth <= BETA_PRUNING_DEPTH && score - BETA_MARGIN * depth > beta)
+			return score;
+		// alpha pruning
+		if (pvNode == false && depth <= ALPHA_PRUNING_DEPTH && score + ALPHA_MARGIN <= alpha)
+			return score;
+		// null move pruning
+		if (isNull == false && myBoard->getGamePhase() >= NULLMOVE_THRESHOLD) {
 			myBoard->movePiece(NULLMOVE);
-			score = -alphaBeta(0, ply + 1, -beta, -beta + 1, &localLine, true);
+			score = -alphaBeta(0, ply + 1, -beta, -beta + 1, nullptr, true, !cutNode);
 			myBoard->unmovePiece();
 			if (score >= beta)
 				return beta;
 		}
-		MoveList localMoveList(myBoard, pline->moveLink[0], myHashTable.getMove(myBoard->getCurrZ()), myKillers.getPrimary(ply), myKillers.getSecondary(ply));
+
+		if (pvNode && depth >= 6 && ttHit == false) 
+			depth -= 2;
+		
+		if (cutNode && depth >= 9 && ttHit == false)
+			--depth;
+
+	movesLoop:
+
+		MoveList localMoveList(myBoard, pline->moveLink[0], ttHit ? TTentry->hashMove : NULLMOVE, myKillers.getPrimary(ply), myKillers.getSecondary(ply));
+		line localLine;
 		unsigned evaltype = HASHALPHA;
 		unsigned movesPlayed = 0;
-		bool pvNode = (beta - alpha != 1);
-		int lmrVal;
+		int R;
+
 		for (unsigned genstate = GENPV; genstate != GENEND; ++genstate)
 		{
 			localMoveList.moveOrder(genstate);
@@ -145,20 +167,20 @@ namespace Hopper
 					score = CONTEMPT;
 				else {
 					if (localMoveList.getCurrMove().isCap() == false && depth > 2 && movesPlayed != 0) {
-						lmrVal = LMRTable[depth][movesPlayed % 64];
-						lmrVal += pvNode == false;
-						lmrVal += myBoard->isCheck() && myBoard->getGridAt(localMoveList.getCurrMove().getFrom()) / 2 == KING;
-						lmrVal -= genstate < GENQUIETS;
-						lmrVal = lmrVal > 1 ? lmrVal : 1;
-						lmrVal = lmrVal < depth - 1 ? lmrVal : depth - 1;
-						score = -alphaBeta(depth - lmrVal, ply + 1, -alpha - 1, -alpha, &localLine, false);
+						R = LMRTable[depth][movesPlayed % 64];
+						R += pvNode == false;
+						R += inCheck && myBoard->getGridAt(localMoveList.getCurrMove().getTo()) / 2 == KING;
+						R -= genstate < GENQUIETS;
+						R = R > 1 ? R : 1;
+						R = R < depth - 1 ? R : depth - 1;
+						score = -alphaBeta(depth - R, ply + 1, -alpha - 1, -alpha, &localLine, false, true);
 						if (score > alpha)
-							score = -alphaBeta(depth - 1, ply + 1, -alpha - 1, -alpha, &localLine, false);
+							score = -alphaBeta(depth - 1, ply + 1, -alpha - 1, -alpha, &localLine, false, !cutNode);
 						if (pvNode && score > alpha)
-							score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
+							score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false, false);
 					}
 					else 
-						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false);
+						score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, &localLine, false, false);
 				}
 				myBoard->unmovePiece();
 				if (score > alpha) {
@@ -167,7 +189,7 @@ namespace Hopper
 						pline->moveCount = 1;
 						if (localMoveList.getCurrMove().isCap() == false)
 							myKillers.cutoff(localMoveList.getCurrMove(), ply);
-						myHashTable.newEntry(myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
+						*TTentry = hashEntry(myBoard->getCurrZ(), depth, score, HASHBETA, localMoveList.getCurrMove());
 						return beta;
 					}
 					memcpy(pline->moveLink + 1, localLine.moveLink, sizeof(int) * localLine.moveCount);
@@ -181,26 +203,27 @@ namespace Hopper
 			}
 		}
 		if (movesPlayed == 0)
-			return (myBoard->isCheck()) ? -MATE + ply : CONTEMPT;
-		else if (myHashTable.getDepth(myBoard->getCurrZ()) < depth) //|| myHashTable.getZobrist(myBoard->getCurrZ()) != myBoard->getCurrZ())
-			myHashTable.newEntry(myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
+			return (inCheck) ? -MATE + ply : CONTEMPT;
+		else if (TTentry->hashDepth < depth) // || ttHit == false)
+			*TTentry = hashEntry(myBoard->getCurrZ(), depth, alpha, evaltype, pline->moveLink[0]);
 		return alpha;
 	}
 
 	int Engine::quiescentSearch(int alpha, int beta)
 	{
-		if (myHashTable.getZobrist(myBoard->getCurrZ()) == myBoard->getCurrZ()) {
-			if (myHashTable.getFlags(myBoard->getCurrZ()) == HASHEXACT ||
-				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHBETA && myHashTable.getEval(myBoard->getCurrZ()) >= beta) ||
-				(myHashTable.getFlags(myBoard->getCurrZ()) == HASHALPHA && myHashTable.getEval(myBoard->getCurrZ()) <= alpha)) {
-				return myHashTable.getEval(myBoard->getCurrZ());
-			}
+		bool ttHit;
+		hashEntry* TTentry = myHashTable.probe(myBoard->getCurrZ(), ttHit);
+		if (ttHit &&
+			(TTentry->hashFlags == HASHEXACT ||
+			(TTentry->hashFlags == HASHBETA && TTentry->hashEval >= beta) ||
+			(TTentry->hashFlags == HASHALPHA && TTentry->hashEval <= alpha))) {
+				return TTentry->hashEval;
 		}
 		int score = negaEval();
 		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
 			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
 		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
-		if (score >= beta)
+		if (score >= beta) 
 			return beta;
 		else if (score > alpha)
 			alpha = score;
@@ -210,8 +233,11 @@ namespace Hopper
 			myBoard->movePiece(localMoveList.getCurrMove());
 			score = -quiescentSearch(-beta, -alpha);
 			myBoard->unmovePiece();
-			if (score >= beta)
+			if (score >= beta) {
+				if (ttHit == false)
+					*TTentry = hashEntry(myBoard->getCurrZ(), 0, score, HASHBETA, localMoveList.getCurrMove());
 				return beta;
+			}
 			else if (score > alpha)
 				alpha = score;
 			localMoveList.increment();

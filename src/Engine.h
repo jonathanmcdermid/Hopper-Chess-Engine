@@ -12,7 +12,7 @@ namespace Hopper
 		unsigned time[2] = { 300000, 300000 };
 		unsigned inc[2] = { 10000, 10000 };
 		unsigned movetime = 0;
-		unsigned movesleft = 10;
+		unsigned movesleft = 20;
 		int depth = MAXDEPTH;
 		unsigned nodes = 0;
 		unsigned perft = 0;
@@ -26,8 +26,7 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
-		int alphaBetaRoot(int depth, int ply, int alpha, int beta, line* pline, bool isNull);
+		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull, bool cutNode);
 		void perftControl();
 		limits myLimits;
 	private:

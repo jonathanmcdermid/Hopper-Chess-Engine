@@ -62,6 +62,7 @@ namespace Hopper
         int getDepth(U64 key)       const { return myHashTable[key % myHashTable.size()].hashDepth; }
         int getEval(U64 key)        const { return myHashTable[key % myHashTable.size()].hashEval; }
         int getFlags(U64 key)       const { return myHashTable[key % myHashTable.size()].hashFlags; }
+        hashEntry* probe(U64 key, bool& found);
     private:
         std::vector<hashEntry> myHashTable;
         std::vector<pawnHashEntry> myPawnHashTable;

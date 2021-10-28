@@ -24,6 +24,11 @@
 #define NULLMOVE_THRESHOLD			+10
 #define PANIC_EXTENSION_LIMIT		+4
 
+#define BETA_PRUNING_DEPTH	+8
+#define BETA_MARGIN			+75
+#define ALPHA_PRUNING_DEPTH +5
+#define ALPHA_MARGIN		+3000
+
 #define SPACES		+64
 #define WIDTH		+8
 #define MAXDEPTH	+32

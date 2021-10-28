@@ -20,4 +20,9 @@ namespace Hopper
         myHashTable.resize(j);
         myPawnHashTable.resize(k);
     }
+
+    hashEntry* HashTable::probe(U64 key, bool& found) {
+        found = myHashTable[key % myHashTable.size()].hashZobristKey == key;
+        return &myHashTable[key % myHashTable.size()];
+    }
 }
