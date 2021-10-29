@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include <math.h>
+#include <cstring>
 #include "Engine.h"
 
 namespace Hopper
