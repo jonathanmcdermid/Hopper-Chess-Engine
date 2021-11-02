@@ -28,15 +28,11 @@ namespace Hopper
 
 	void Killers::chrono()
 	{
-		for (unsigned i = 0; i < MAXDEPTH - 2; ++i) {
-			killerLimit[i] = killerLimit[i + 2];
-			for (unsigned j = 0; j < MEMORY; ++j) {
-				trackedKillers[i][j] = trackedKillers[i + 2][j];
-			}
-		}
+		memcpy(killerLimit, &killerLimit[2], sizeof(unsigned) * (MAXDEPTH - 2));
+		memcpy(trackedKillers, &trackedKillers[2], sizeof(scoredMove) * MEMORY * (MAXDEPTH - 2));
 		killerLimit[MAXDEPTH - 1] = 0;
 		killerLimit[MAXDEPTH - 2] = 0;
-		memset(trackedKillers[MAXDEPTH - 1], 0, sizeof(trackedKillers[MAXDEPTH - 1]));
-		memset(trackedKillers[MAXDEPTH - 2], 0, sizeof(trackedKillers[MAXDEPTH - 2]));
+		memset(trackedKillers[MAXDEPTH - 1], 0, sizeof(scoredMove) * MEMORY);
+		memset(trackedKillers[MAXDEPTH - 2], 0, sizeof(scoredMove) * MEMORY);
 	}
 }

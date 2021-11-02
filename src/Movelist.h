@@ -4,24 +4,31 @@
 
 namespace Hopper
 {
+	class Engine;
+
 	class MoveList
 	{
 	public:
-		MoveList(Board* bd, Move pv = NULLMOVE, Move hash = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
+		MoveList(Board* bd, Engine* e, Move pv = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
 		void moveOrder(unsigned genState);
-		bool staticExchange(Move myMove);
 		void MVVLVA();
 		void scoreQuiets();
-		void removeDuplicate(unsigned gs);
-		bool movesLeft()const { return index < limit[generationState]; }
-		bool noMoves()const;
-		Move getCurrMove()const { return storedMoves[generationState][index].myMove; }
+		void removeDuplicate(scoredMove m);
+		bool movesLeft();
+		Move getCurrMove();
 		void increment();
+		bool rememberQuiets(Move& m);
 	private:
 		Board* myBoard;
-		scoredMove storedMoves[GENEND][SPACES];
+		Engine* myEngine;
+		scoredMove storedMoves[MEMORY];
+		scoredMove pvMove;
+		scoredMove primaryMove;
+		scoredMove secondaryMove;
+		bool playSpecial;
 		unsigned index;
-		unsigned limit[GENEND];
+		unsigned memoryIndex;
+		unsigned limit;
 		unsigned generationState;
 	};
 }

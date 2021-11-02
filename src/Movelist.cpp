@@ -2,6 +2,7 @@
 #include <cstring>
 #include "Movelist.h"
 #include "Board.h"
+#include "Engine.h"
 
 namespace Hopper
 {
@@ -16,150 +17,150 @@ namespace Hopper
 		return i;
 	}
 
-	MoveList::MoveList(Board* bd, Move pv, Move hash, Move primary, Move secondary)
+	MoveList::MoveList(Board* bd, Engine* e, Move pv, Move primary, Move secondary)
 	{
 		generationState = GENPV;
 		myBoard = bd;
+		myEngine = e;
 		index = 0;
-		memset(limit, 0, sizeof(limit));
-		storedMoves[GENPV][0].myMove = pv;
-		if(hash != pv)
-			storedMoves[GENHASH][0].myMove = hash;
-		if (primary != hash && primary != pv)
-			storedMoves[GENKILLPRIMARY][0].myMove = primary;
-		if (secondary != primary && secondary != hash && secondary != pv)
-			storedMoves[GENKILLSECONDARY][0].myMove = secondary;
-	}
-
-	bool MoveList::noMoves()const
-	{
-		for (unsigned i = 0; i < GENEND; ++i) {
-			if (limit[i])
-				return false;
-		}
-		return true;
+		memoryIndex = 0;
+		limit = 0;
+		pvMove.myMove = pv;
+		if (primary != pv)
+			primaryMove.myMove = primary;
+		if (secondary != primary && secondary != pv)
+			secondaryMove.myMove = secondary;
+		playSpecial = false;
 	}
 
 	void MoveList::MVVLVA() 
 	{
-		for (unsigned i = 0; i < limit[GENWINCAPS]; ++i) {
-			storedMoves[GENWINCAPS][i].score =	1 << (12 + storedMoves[GENWINCAPS]->myMove.getFlags() / NPROMOTE) |
-												1 << (6 + myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getTo()) / 2) |
-												1 << (5 - myBoard->getGridAt(storedMoves[GENWINCAPS][i].myMove.getFrom()) / 2);
+		for (unsigned i = 0; i < limit; ++i) {
+			if (storedMoves[i].myMove.isCap()) {
+				storedMoves[i].score = (storedMoves[i].myMove.getFlags() / NPROMOTE) & 1 << 15 |
+					1 << (6 + myBoard->getGridAt(storedMoves[i].myMove.getTo()) / 2) |
+					1 << (5 - myBoard->getGridAt(storedMoves[i].myMove.getFrom()) / 2);
+			}
 		}
-		std::sort(storedMoves[GENWINCAPS], storedMoves[GENWINCAPS] + limit[GENWINCAPS], smScoreComp);
+		std::sort(storedMoves, storedMoves + limit, smScoreComp);
 	}
 
 	void MoveList::scoreQuiets() 
 	{
-		for (unsigned i = 0; i < limit[GENQUIETS]; ++i) {
-			storedMoves[GENQUIETS][i].score =	1 << (12 + storedMoves[GENQUIETS]->myMove.getFlags() / NPROMOTE) |
-												1 << ((myBoard->getGridAt(storedMoves[GENQUIETS][i].myMove.getFrom()) / 2) % KING);
+		for (unsigned i = 0; i < limit; ++i) {
+			if (storedMoves[i].myMove.isCap() == false) {
+				storedMoves[i].score = (storedMoves[i].myMove.getFlags() / NPROMOTE) & 1 << 15 |
+					1 << ((myBoard->getGridAt(storedMoves[i].myMove.getFrom()) / 2) % KING);
+				storedMoves[i].score += myEngine->hh[myBoard->getTurn()][storedMoves[i].myMove.getFrom()][storedMoves[i].myMove.getTo()];
+			}
 		}
-		std::sort(storedMoves[GENQUIETS], storedMoves[GENQUIETS] + limit[GENQUIETS], smScoreComp);
+		std::sort(storedMoves, storedMoves + limit, smScoreComp);
 	}
 
-	void MoveList::removeDuplicate(unsigned gs) 
+	void MoveList::removeDuplicate(scoredMove m) 
 	{
-		if (limit[gs]) {
-			unsigned i = index_of(storedMoves[generationState], storedMoves[generationState] + limit[generationState], storedMoves[gs][0]);
-			if (i != limit[generationState])
-				storedMoves[generationState][i] = storedMoves[generationState][--limit[generationState]];
+		unsigned i = index_of(storedMoves, storedMoves + limit, m);
+		if (i != limit)
+			storedMoves[i] = storedMoves[--limit];
+	}
+
+	void MoveList::increment()
+	{
+		switch (generationState) {
+		case GENPV:
+		case GENKILLPRIMARY:
+		case GENKILLSECONDARY:
+			playSpecial = false;
+			break;
+		case GENWINCAPS:
+		case GENLOSECAPS:
+			do { ++index; } while (index < limit && storedMoves[index].myMove.isCap() == false);
+			break;
+		case GENQUIETS:
+			do { ++index; } while (index < limit && storedMoves[index].myMove.isCap() == true);
+			break;
 		}
 	}
 
-	void MoveList::increment() 
+	bool MoveList::rememberQuiets(Move& m)
+	{
+		while(memoryIndex < index && storedMoves[memoryIndex].myMove.isCap() == true){
+			++memoryIndex;
+		}
+		if (memoryIndex == index) {
+			return false;
+		}
+		else {
+			m = storedMoves[memoryIndex++].myMove;
+			return true;
+		}
+	}
+
+	bool MoveList::movesLeft() 
 	{ 
-		++index;
-		//if (generationState != GENWINCAPS)
-		//	return;
-		//while (movesLeft() && 
-		//	piece_values[myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getTo()) / 2] <
-		//	piece_values[myBoard->getGridAt(storedMoves[GENWINCAPS][index].myMove.getFrom()) / 2] &&
-		//	myBoard->getThreatenedAt(!myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo()) != 0 &&
-		//	myBoard->getThreatenedAt(myBoard->getTurn(), storedMoves[GENWINCAPS][index].myMove.getTo()) == 1){
-		//	storedMoves[GENLOSECAPS][limit[GENLOSECAPS]] = storedMoves[GENWINCAPS][index];
-		//	++limit[GENLOSECAPS];
-		//	++index;
-		//}
+		switch (generationState) {
+		case GENPV:
+		case GENKILLPRIMARY:
+		case GENKILLSECONDARY:
+			return playSpecial;
+		default:
+			return index < limit;
+		}
+	}
+
+	Move MoveList::getCurrMove() 
+	{ 
+		switch (generationState) {
+		case GENPV:
+			return pvMove.myMove;
+		case GENKILLPRIMARY:
+			return primaryMove.myMove;
+		case GENKILLSECONDARY:
+			return secondaryMove.myMove;
+		default:
+			return storedMoves[index].myMove;
+		}
 	}
 
 	void MoveList::moveOrder(unsigned gs)
 	{
-		index = 0;
 		generationState = gs;
-		switch (gs) {
+		playSpecial = false;
+		memoryIndex = 0;
+		switch (generationState) {
 		case GENPV:
-		case GENHASH:
+			if (myBoard->validateMove(pvMove.myMove)) {
+				playSpecial = true;
+			}
+			break;
 		case GENKILLPRIMARY:
+			if (myBoard->validateMove(primaryMove.myMove)) {
+				playSpecial = true;
+			}
+			break;
 		case GENKILLSECONDARY:
-			if (storedMoves[generationState][0].myMove != NULLMOVE && myBoard->validateMove(storedMoves[generationState][0].myMove))
-				++limit[generationState];
+			if (myBoard->validateMove(secondaryMove.myMove)) {
+				playSpecial = true;
+			}
 			break;
 		case GENWINCAPS:
-			limit[GENWINCAPS] = myBoard->genAllCapMoves(storedMoves[GENWINCAPS]);
-			removeDuplicate(GENPV);
-			removeDuplicate(GENHASH);
+			index = 0;
+			limit += myBoard->genAllCapMoves(&storedMoves[limit]);
+			if (pvMove.myMove.isCap())		removeDuplicate(pvMove);
 			MVVLVA();
 			break;
 		case GENQUIETS:
-			limit[GENQUIETS] = myBoard->genAllNonCapMoves(storedMoves[GENQUIETS]);
-			removeDuplicate(GENPV);
-			removeDuplicate(GENHASH);
-			removeDuplicate(GENKILLPRIMARY);
-			removeDuplicate(GENKILLSECONDARY);
+			index = 0;
+			limit += myBoard->genAllNonCapMoves(&storedMoves[limit]);
+			if (!pvMove.myMove.isCap())		removeDuplicate(pvMove);
+			removeDuplicate(primaryMove);
+			removeDuplicate(secondaryMove);
 			scoreQuiets();
+			while (index < limit && storedMoves[index].myMove.isCap() == true) ++index;
 			break;
 		case GENLOSECAPS:
+			index = limit;
 			break;
 		}
-	}
-
-	bool MoveList::staticExchange(Move nextMove)
-	{
-		bool tomove = myBoard->getTurn();
-		unsigned to = nextMove.getTo(), from = nextMove.getFrom();
-		int attackers[WIDTH * 2];
-		unsigned total[2];
-		int see = piece_values[myBoard->getGridAt(to) / 2];
-		int trophy = piece_values[myBoard->getGridAt(from) / 2];
-		unsigned smallestindex;
-		for (unsigned i = 0; i < 2; ++i) {
-			total[i] = myBoard->getThreatenedAt(i, to);
-			for (unsigned j = 0; j < total[i]; ++j)
-				attackers[i * WIDTH + j] = myBoard->getAttackersAt(i, j, to);
-		}
-		for (unsigned i = 0; i < total[tomove]; ++i) {
-			if (attackers[tomove * WIDTH + i] == from) {
-				attackers[tomove * WIDTH + i] = attackers[tomove * WIDTH + --total[tomove]];
-				break;
-			}
-		}
-		while (total[!tomove]) {
-			tomove = !tomove;
-			smallestindex = 0;
-			for (unsigned i = 1; i < total[tomove]; ++i)
-				if (piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + i]) / 2] < 
-					piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2])
-					smallestindex = i;
-			see -= trophy;
-			trophy = piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2];
-			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + total[tomove] - 1];
-			--total[tomove];
-			tomove = !tomove;
-			if (see > SEE_THRESHOLD)
-				return true;
-			if (total[tomove] == 0)
-				return false;
-			smallestindex = 0;
-			for (unsigned i = 1; i < total[tomove]; ++i)
-				if (piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + i]) / 2] <
-					piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2])
-					smallestindex = i;
-			see += trophy;
-			trophy = piece_values[myBoard->getGridAt(attackers[tomove * WIDTH + smallestindex]) / 2];
-			attackers[tomove * WIDTH + smallestindex] = attackers[tomove * WIDTH + --total[tomove]];
-		}
-		return see > SEE_THRESHOLD;
 	}
 }

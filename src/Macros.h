@@ -12,14 +12,15 @@
 #define QUEEN  +4
 #define KING   +5
 
-#define UPPERLIMIT	+30000
-#define LOWERLIMIT	-30000
-#define MATE		+25000
-#define CONTEMPT	+0
+#define UPPERLIMIT		+30000
+#define LOWERLIMIT		-30000
+#define MATE			+25000
+#define CONTEMPT		+0
+#define NEAR_MATE_SCORE	+2500
 
 #define CONSENSUS_REDUCTION_FACTOR	+4
 #define	CONSENSUS_THRESHOLD			+4
-#define PANIC_THRESHOLD				+25
+#define PANIC_THRESHOLD				+30
 #define SEE_THRESHOLD				-30
 #define NULLMOVE_THRESHOLD			+10
 #define PANIC_EXTENSION_LIMIT		+4
@@ -64,13 +65,16 @@
 #define NSslide(from, to) ((from) % WIDTH - (to) % WIDTH) ? false : true
 #define EWslide(from, to) ((from) / WIDTH - (to) / WIDTH) ? false : true
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 enum castle_enum : int { WKINGSIDE, WQUEENSIDE, BKINGSIDE, BQUEENSIDE };
 
 enum role_enum : int { WHITE_PAWN, BLACK_PAWN, WHITE_KNIGHT, BLACK_KNIGHT, WHITE_BISHOP, BLACK_BISHOP, WHITE_ROOK, BLACK_ROOK, WHITE_QUEEN, BLACK_QUEEN, WHITE_KING, BLACK_KING, EMPTY };
 
 enum move_enum : int { STANDARD, DOUBLEPUSH, KCASTLE, QCASTLE, CAPTURE, ENPASSANT, NULLFLAGS = 7, NPROMOTE, BPROMOTE, RPROMOTE, QPROMOTE, NPROMOTEC, BPROMOTEC, RPROMOTEC, QPROMOTEC };
 
-enum generation_enum : int { GENPV, GENHASH, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENQUIETS, GENLOSECAPS, GENEND };
+enum generation_enum : int { GENPV, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENQUIETS, GENLOSECAPS, GENEND };
 
 enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
 

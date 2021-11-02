@@ -195,7 +195,7 @@ namespace Hopper
 	void Engine::initEvalTables()
 	{
 		for (int p = PAWN, pc = WHITE_PAWN; p <= KING; pc += 2, ++p) {
-			for (int sq = 0; sq < 64; ++sq) {
+			for (int sq = 0; sq < SPACES; ++sq) {
 				mg_table[pc][sq] = mg_value[p] + mg_pesto_table[p][sq];
 				eg_table[pc][sq] = eg_value[p] + eg_pesto_table[p][sq];
 				mg_table[pc + 1][sq] = mg_value[p] + mg_pesto_table[p][sq ^ 56];
@@ -216,11 +216,11 @@ namespace Hopper
 
 		int sum = 0;
 		int helper;
-
+		int pc;
 		int mgPhase = myBoard->getGamePhase();
 
-		for (int sq = 0; sq < 64; ++sq) {
-			int pc = myBoard->getGridAt(sq);
+		for (int sq = 0; sq < SPACES; ++sq) {
+			pc = myBoard->getGridAt(sq);
 			switch (pc) {
 			case WHITE_PAWN:
 				if (myBoard->getGridAt(sq + BOARD_NORTH) == BLACK_PAWN) {
@@ -410,7 +410,8 @@ namespace Hopper
 		int i, j;
 		unsigned pawnCounts[2][WIDTH];
 		memset(pawnCounts, 0, sizeof(pawnCounts));
-		int mgPhase = myBoard->getGamePhase();//this contradicts the idea of a pawn hashtable, but generally the state of the game shouldnt change much
+		//this contradicts the idea of a pawn hashtable, but generally the state of the game shouldnt change much
+		int mgPhase = myBoard->getGamePhase();
 		for (i = WIDTH; i < 56; ++i) {
 			switch (myBoard->getGridAt(i)) {
 			case WHITE_PAWN:
