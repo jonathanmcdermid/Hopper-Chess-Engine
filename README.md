@@ -37,6 +37,7 @@ perft
 principal variation search
 MVV-LVA
 static exchange evaluation
+history heuristic
 ```
 
 ## Credits
