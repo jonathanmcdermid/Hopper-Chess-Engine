@@ -25,10 +25,11 @@
 #define NULLMOVE_THRESHOLD			+10
 #define PANIC_EXTENSION_LIMIT		+4
 
-#define BETA_PRUNING_DEPTH	+8
-#define BETA_MARGIN			+75
-#define ALPHA_PRUNING_DEPTH +5
-#define ALPHA_MARGIN		+3000
+#define NULLMOVE_PRUNING_DEPTH	+2
+#define BETA_PRUNING_DEPTH		+8
+#define BETA_MARGIN				+75
+#define ALPHA_PRUNING_DEPTH		+5
+#define ALPHA_MARGIN			+3000
 
 #define SPACES		+64
 #define WIDTH		+8
@@ -76,7 +77,7 @@ enum move_enum : int { STANDARD, DOUBLEPUSH, KCASTLE, QCASTLE, CAPTURE, ENPASSAN
 
 enum generation_enum : int { GENPV, GENWINCAPS, GENKILLPRIMARY, GENKILLSECONDARY, GENQUIETS, GENLOSECAPS, GENEND };
 
-enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA };
+enum hash_enum : int { HASHEXACT, HASHBETA, HASHALPHA, HASHNONE };
 
 static inline bool validPiece(int p, bool t) { return ((t  == (p & 1)) && p != EMPTY); }
 

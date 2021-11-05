@@ -26,7 +26,7 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool isNull, bool cutNode);
+		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
 		void perftControl();
 		limits myLimits;
 		int hh[2][SPACES][SPACES];
