@@ -18,6 +18,8 @@ namespace Hopper
 		Move getCurrMove();
 		void increment();
 		bool rememberQuiets(Move& m);
+		bool SEEcontrol();
+		void updateHiddenAttackers(int from, int to);
 	private:
 		Board* myBoard;
 		Engine* myEngine;
@@ -30,5 +32,7 @@ namespace Hopper
 		unsigned memoryIndex;
 		unsigned limit;
 		unsigned generationState;
+		int attackers[WIDTH * 2];
+		unsigned total[2];
 	};
 }

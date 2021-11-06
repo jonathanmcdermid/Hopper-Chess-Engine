@@ -14,7 +14,7 @@ namespace Hopper
 		myHashTable.setSize(myLimits.hashbytes);
 		initEvalTables();
 		initLMRTables();
-		memset(hh, 0, sizeof(hh));
+		memset(HHtable, 0, sizeof(HHtable));
 		lastEval = 0;
 	}
 
@@ -238,12 +238,12 @@ namespace Hopper
 		unsigned movesPlayed = 0;
 		int R;
 		int* HHentry = NULL;
-		for (unsigned genstate = GENPV; genstate < GENLOSECAPS; ++genstate)
+		for (unsigned genstate = GENPV; genstate <= GENLOSECAPS; ++genstate)
 		{
 			localMoveList.moveOrder(genstate);
 			while (localMoveList.movesLeft()) {
 				if(localMoveList.getCurrMove().isCap() == false)
-					HHentry = &hh[myBoard->getTurn()][localMoveList.getCurrMove().getFrom()][localMoveList.getCurrMove().getTo()];
+					HHentry = &HHtable[myBoard->getTurn()][localMoveList.getCurrMove().getFrom()][localMoveList.getCurrMove().getTo()];
 				myBoard->movePiece(localMoveList.getCurrMove());
 				if (myBoard->isPseudoRepititionDraw() || myBoard->isMaterialDraw())
 					score = CONTEMPT;
@@ -283,7 +283,7 @@ namespace Hopper
 							*HHentry += 32 * bonus - * HHentry * bonus / 512; // abs(bonus) not needed
 							Move m;
 							while (localMoveList.rememberQuiets(m)) {
-								HHentry = &hh[myBoard->getTurn()][m.getFrom()][m.getTo()];
+								HHentry = &HHtable[myBoard->getTurn()][m.getFrom()][m.getTo()];
 								*HHentry += 32 * (-bonus) - *HHentry * bonus / 512;
 							}
 						}

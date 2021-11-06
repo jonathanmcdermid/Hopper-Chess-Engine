@@ -29,7 +29,7 @@ namespace Hopper
 		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
 		void perftControl();
 		limits myLimits;
-		int hh[2][SPACES][SPACES];
+		int HHtable[2][SPACES][SPACES];
 	private:
 		static int hypotenuse(const int a, const int b);
 		unsigned perft(int depth);
