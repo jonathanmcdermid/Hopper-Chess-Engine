@@ -90,6 +90,9 @@ namespace Hopper
 					// if we are over time limit, need to stop search unless we are significantly lower than previous eval
 					std::chrono::duration_cast<std::chrono::milliseconds >
 					(now - startTime).count() > timeallotted ||
+					// if we are about to get flagged, end no matter what 
+					std::chrono::duration_cast<std::chrono::milliseconds>
+					(now - startTime).count() > myLimits.time[myBoard->getTurn()] / 3 ||
 					// if the past few iterative searches have yielded the same move, we will stop early
 					(consensus == true && panic == false && 
 					std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / CONSENSUS_REDUCTION_FACTOR) ||
@@ -216,8 +219,8 @@ namespace Hopper
 		// internal iterative deepening
 		if (TThit == false &&
 			((PVnode && depth >= 6) || (PVnode == false && depth >= 8))) {
-			int iidDepth = PVnode ? depth - depth / 4 - 1 : (depth - 5) / 2;
-			alphaBeta(iidDepth, ply, alpha, beta, &localLine, cutNode);
+			int IIDdepth = PVnode ? depth - depth / 4 - 1 : (depth - 5) / 2;
+			alphaBeta(IIDdepth, ply, alpha, beta, &localLine, cutNode);
 			TTentry = myHashTable.probe(myBoard->getCurrZ(), TThit);
 			if (TThit) {
 				pline->moveLink[0] = TTentry->hashMove;
