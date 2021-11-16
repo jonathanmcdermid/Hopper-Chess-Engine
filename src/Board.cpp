@@ -17,7 +17,7 @@ namespace Hopper {
 		for (unsigned i = 0; i < WIDTH; ++i) {
 			std::cout << "\n---------------------------------\n|";
 			for (unsigned j = 0; j < WIDTH; ++j) {
-				switch (grid[i * WIDTH + j]) {
+				switch (myPosition.grid[i * WIDTH + j]) {
 				case WHITE_PAWN:
 					letter = 'P'; break;
 				case WHITE_ROOK:
@@ -61,62 +61,62 @@ namespace Hopper {
 		memset(threatened, 0, sizeof(threatened));
 		memset(pinnedPieces, 0, sizeof(pinnedPieces));
 		memset(attackers, 0, sizeof(attackers));
-		unsigned index = 0, counter = 0, helper;
+		myPosition = position(fs);
+		unsigned index = 0, counter = 0;
 		while (fs[index] != ' ') {
 			switch (fs[index]) {
 			case 'P':
-				grid[counter++] = WHITE_PAWN;
 				++roleCounts[WHITE_PAWN];
+				++counter;
 				break;
 			case 'R':
-				grid[counter++] = WHITE_ROOK;
 				++roleCounts[WHITE_ROOK];
+				++counter;
 				break;
 			case 'N':
-				grid[counter++] = WHITE_KNIGHT;
 				++roleCounts[WHITE_KNIGHT];
+				++counter;
 				break;
 			case 'B':
-				grid[counter++] = WHITE_BISHOP;
 				++roleCounts[WHITE_BISHOP];
+				++counter;
 				break;
 			case 'Q':
-				grid[counter++] = WHITE_QUEEN;
 				++roleCounts[WHITE_QUEEN];
+				++counter;
 				break;
 			case 'K':
 				kingPos[WHITE] = counter;
-				grid[counter++] = WHITE_KING;
+				++counter;
 				break;
 			case 'p':
-				grid[counter++] = BLACK_PAWN;
 				++roleCounts[BLACK_PAWN];
+				++counter;
 				break;
 			case 'r':
-				grid[counter++] = BLACK_ROOK;
 				++roleCounts[BLACK_ROOK];
+				++counter;
 				break;
 			case 'n':
-				grid[counter++] = BLACK_KNIGHT;
 				++roleCounts[BLACK_KNIGHT];
+				++counter;
 				break;
 			case 'b':
-				grid[counter++] = BLACK_BISHOP;
 				++roleCounts[BLACK_BISHOP];
+				++counter;
 				break;
 			case 'q':
-				grid[counter++] = BLACK_QUEEN;
 				++roleCounts[BLACK_QUEEN];
+				++counter;
 				break;
 			case 'k':
 				kingPos[BLACK] = counter;
-				grid[counter++] = BLACK_KING;
+				++counter;
 				break;
 			case '/':
 				break;
 			default:
-				helper = fs[index] - '0';
-				while (helper--) { grid[counter++] = EMPTY; }
+				++counter;
 			}
 			++index;
 		}
@@ -148,7 +148,7 @@ namespace Hopper {
 		myHistory[halfMoveClock].fHist = fs[index] - '0';
 		myHistory[halfMoveClock].vHist = 0;
 		for (int i = 0; i < SPACES; ++i)
-			myHistory[halfMoveClock].vHist += grid[i];
+			myHistory[halfMoveClock].vHist += myPosition.grid[i];
 		myHistory[halfMoveClock].zHist = myZobrist.newKey(this);
 		myHistory[halfMoveClock].pHist = myZobrist.newPawnKey(this);
 		allThreats();
@@ -159,7 +159,7 @@ namespace Hopper {
 		scoredMove nextMove[28];
 		unsigned moveCount;
 		for (unsigned i = 0; i < SPACES; ++i) {
-			if (validPiece(grid[i], turn)) {
+			if (validPiece(myPosition.grid[i], turn)) {
 				moveCount = genAllMovesAt(nextMove, i);
 				if (moveCount) {
 					if (removeIllegalMoves(nextMove, moveCount)) { return false; }
@@ -199,33 +199,16 @@ namespace Hopper {
 		return (roleCounts[WHITE_PAWN]	|| roleCounts[BLACK_PAWN]		||
 				roleCounts[WHITE_QUEEN] || roleCounts[BLACK_QUEEN]		||
 				roleCounts[WHITE_ROOK]  || roleCounts[BLACK_ROOK]		||
-				roleCounts[WHITE_BISHOP] > 1 ||
 				roleCounts[WHITE_KNIGHT] > 2 ||
-				roleCounts[WHITE_BISHOP] + roleCounts[WHITE_KNIGHT] > 1 ||
-				roleCounts[BLACK_BISHOP] > 1 ||
+				roleCounts[WHITE_BISHOP] + roleCounts[WHITE_KNIGHT] / 2 > 1 ||
 				roleCounts[BLACK_KNIGHT] > 2 ||
-				roleCounts[BLACK_BISHOP] + roleCounts[BLACK_KNIGHT] > 1) == false;
-	}
-
-	static int gamephaseInc[12] = { 0,0,1,1,1,1,2,2,4,4,0,0 };
-
-	unsigned Board::getGamePhase()const
-	{
-		return 
-			roleCounts[WHITE_KNIGHT] * gamephaseInc[WHITE_KNIGHT] +
-			roleCounts[BLACK_KNIGHT] * gamephaseInc[BLACK_KNIGHT] +
-			roleCounts[WHITE_BISHOP] * gamephaseInc[WHITE_BISHOP] +
-			roleCounts[BLACK_BISHOP] * gamephaseInc[BLACK_BISHOP] +
-			roleCounts[WHITE_ROOK]   * gamephaseInc[WHITE_ROOK]   +
-			roleCounts[BLACK_ROOK]   * gamephaseInc[BLACK_ROOK]   +
-			roleCounts[WHITE_QUEEN]  * gamephaseInc[WHITE_QUEEN]  +
-			roleCounts[BLACK_QUEEN]  * gamephaseInc[BLACK_QUEEN];
+				roleCounts[BLACK_BISHOP] + roleCounts[BLACK_KNIGHT] / 2 > 1) == false;
 	}
 
 	void Board::movePiece(Move nextMove)
 	{//executes a move if legal
 		myHistory[halfMoveClock + 1] = historyInfo(
-			(nextMove.getFlags() == STANDARD && (grid[nextMove.getFrom()] != WHITE_PAWN && grid[nextMove.getTo()] != BLACK_PAWN)) ? 
+			(nextMove.getFlags() == STANDARD && (myPosition.grid[nextMove.getFrom()] != WHITE_PAWN && myPosition.grid[nextMove.getTo()] != BLACK_PAWN)) ? 
 			myHistory[halfMoveClock].fHist + 1 : 0,
 			myHistory[halfMoveClock].cHist,
 			myHistory[halfMoveClock].vHist,
@@ -238,169 +221,169 @@ namespace Hopper {
 		++halfMoveClock;
 		switch (nextMove.getFlags()) {
 		case STANDARD:
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
-			grid[nextMove.getFrom()] = EMPTY;
-			if (grid[nextMove.getTo()] == WHITE_KING || grid[nextMove.getTo()] == BLACK_KING)
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
+			if (myPosition.grid[nextMove.getTo()] == WHITE_KING || myPosition.grid[nextMove.getTo()] == BLACK_KING)
 				kingPos[turn] = nextMove.getTo();
-			else if (grid[nextMove.getTo()] == WHITE_PAWN || grid[nextMove.getTo()] == BLACK_PAWN) {
-				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getFrom());
-				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
+			else if (myPosition.grid[nextMove.getTo()] == WHITE_PAWN || myPosition.grid[nextMove.getTo()] == BLACK_PAWN) {
+				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getFrom());
+				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
 			}
 			break;
 		case DOUBLEPUSH:
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
 			myHistory[halfMoveClock].zHist ^= myZobrist.enPassantAt(nextMove.getTo());
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
-			grid[nextMove.getFrom()] = EMPTY;
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getFrom());
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getFrom());
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
 			break;
 		case KCASTLE:
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo() + 1], nextMove.getTo() + 1);
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo() + 1], nextMove.getTo() - 1);
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
-			grid[nextMove.getTo() - 1] = grid[nextMove.getTo() + 1];
-			grid[nextMove.getTo() + 1] = EMPTY;
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo() + 1], nextMove.getTo() + 1);
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo() + 1], nextMove.getTo() - 1);
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getTo() - 1] = myPosition.grid[nextMove.getTo() + 1];
+			myPosition.grid[nextMove.getTo() + 1] = EMPTY;
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			kingPos[turn] = nextMove.getTo();
 			break;
 		case QCASTLE:
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo() - 2], nextMove.getTo() - 2);
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo() - 2], nextMove.getTo() + 1);
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
-			grid[nextMove.getTo() + 1] = grid[nextMove.getTo() - 2];
-			grid[nextMove.getTo() - 2] = EMPTY;
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo() - 2], nextMove.getTo() - 2);
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo() - 2], nextMove.getTo() + 1);
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getTo() + 1] = myPosition.grid[nextMove.getTo() - 2];
+			myPosition.grid[nextMove.getTo() - 2] = EMPTY;
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			kingPos[turn] = nextMove.getTo();
 			break;
 		case CAPTURE:
-			--roleCounts[grid[nextMove.getTo()]];
-			if (grid[nextMove.getTo()] == WHITE_PAWN || grid[nextMove.getTo()] == BLACK_PAWN) 
-				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].vHist -= grid[nextMove.getTo()];
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
-			grid[nextMove.getFrom()] = EMPTY;
-			if (grid[nextMove.getTo()] == WHITE_PAWN || grid[nextMove.getTo()] == BLACK_PAWN) {
-				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getFrom());
-				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
+			--roleCounts[myPosition.grid[nextMove.getTo()]];
+			if (myPosition.grid[nextMove.getTo()] == WHITE_PAWN || myPosition.grid[nextMove.getTo()] == BLACK_PAWN) 
+				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].vHist -= myPosition.grid[nextMove.getTo()];
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
+			if (myPosition.grid[nextMove.getTo()] == WHITE_PAWN || myPosition.grid[nextMove.getTo()] == BLACK_PAWN) {
+				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getFrom());
+				myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
 			}
-			else if (grid[nextMove.getTo()] == WHITE_KING || grid[nextMove.getTo()] == BLACK_KING) { kingPos[turn] = nextMove.getTo(); }
+			else if (myPosition.grid[nextMove.getTo()] == WHITE_KING || myPosition.grid[nextMove.getTo()] == BLACK_KING) { kingPos[turn] = nextMove.getTo(); }
 			break;
 		case ENPASSANT:
 			--roleCounts[WHITE_PAWN + turn];
 			myHistory[halfMoveClock].vHist -= (turn == BLACK) ? WHITE_PAWN : BLACK_PAWN;
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getTo());
 			myHistory[halfMoveClock].zHist ^= (turn) ? myZobrist.piecesAt(WHITE_PAWN, nextMove.getTo() + BOARD_NORTH) : myZobrist.piecesAt(BLACK_PAWN, nextMove.getTo() + BOARD_SOUTH);
-			grid[nextMove.getTo()] = grid[nextMove.getFrom()];
+			myPosition.grid[nextMove.getTo()] = myPosition.grid[nextMove.getFrom()];
 			if (turn == BLACK)
-				grid[nextMove.getTo() + BOARD_NORTH] = EMPTY;
+				myPosition.grid[nextMove.getTo() + BOARD_NORTH] = EMPTY;
 			else 
-				grid[nextMove.getTo() + BOARD_SOUTH] = EMPTY;
-			grid[nextMove.getFrom()] = EMPTY;
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getFrom());
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
+				myPosition.grid[nextMove.getTo() + BOARD_SOUTH] = EMPTY;
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getFrom());
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
 			myHistory[halfMoveClock].pHist ^= (turn == BLACK) ? 
 				myZobrist.piecesAt(WHITE_PAWN, nextMove.getTo() + BOARD_NORTH) : 
 				myZobrist.piecesAt(BLACK_PAWN, nextMove.getTo() + BOARD_SOUTH);
 			break;
 		case NPROMOTE:
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_KNIGHT];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
 			myHistory[halfMoveClock].vHist += WHITE_KNIGHT;
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_KNIGHT, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_KNIGHT);
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case BPROMOTE:
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_BISHOP];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
 			myHistory[halfMoveClock].vHist += WHITE_BISHOP;
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_BISHOP, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_BISHOP);
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case RPROMOTE:
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_ROOK];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_ROOK];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
 			myHistory[halfMoveClock].vHist += WHITE_ROOK;
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_ROOK, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_ROOK);
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_ROOK, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_ROOK);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case QPROMOTE:
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_QUEEN];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
 			myHistory[halfMoveClock].vHist += WHITE_QUEEN;
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_QUEEN, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_QUEEN);
-			grid[nextMove.getFrom()] = EMPTY;
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case NPROMOTEC:
-			--roleCounts[grid[nextMove.getTo()]];
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_KNIGHT];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].vHist += WHITE_KNIGHT - grid[nextMove.getTo()];
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_KNIGHT, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_KNIGHT);
-			grid[nextMove.getFrom()] = EMPTY;
+			--roleCounts[myPosition.grid[nextMove.getTo()]];
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].vHist += WHITE_KNIGHT - myPosition.grid[nextMove.getTo()];
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_KNIGHT);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case BPROMOTEC:
-			--roleCounts[grid[nextMove.getTo()]];
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_BISHOP];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].vHist += WHITE_BISHOP - grid[nextMove.getTo()];
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_BISHOP, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_BISHOP);
-			grid[nextMove.getFrom()] = EMPTY;
+			--roleCounts[myPosition.grid[nextMove.getTo()]];
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].vHist += WHITE_BISHOP - myPosition.grid[nextMove.getTo()];
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_BISHOP);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case RPROMOTEC:
-			--roleCounts[grid[nextMove.getTo()]];
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_ROOK];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].vHist += WHITE_ROOK - grid[nextMove.getTo()];
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_ROOK, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum)(grid[nextMove.getFrom()] + WHITE_ROOK);
-			grid[nextMove.getFrom()] = EMPTY;
+			--roleCounts[myPosition.grid[nextMove.getTo()]];
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_ROOK];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].vHist += WHITE_ROOK - myPosition.grid[nextMove.getTo()];
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_ROOK, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum)(myPosition.grid[nextMove.getFrom()] + WHITE_ROOK);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		case QPROMOTEC:
-			--roleCounts[grid[nextMove.getTo()]];
-			--roleCounts[grid[nextMove.getFrom()]];
-			++roleCounts[grid[nextMove.getFrom()] + WHITE_QUEEN];
-			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].vHist += WHITE_QUEEN - grid[nextMove.getTo()];
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()], nextMove.getFrom());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getTo()], nextMove.getTo());
-			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(grid[nextMove.getFrom()] + WHITE_QUEEN, nextMove.getTo());
-			grid[nextMove.getTo()] = (role_enum) (grid[nextMove.getFrom()] + WHITE_QUEEN);
-			grid[nextMove.getFrom()] = EMPTY;
+			--roleCounts[myPosition.grid[nextMove.getTo()]];
+			--roleCounts[myPosition.grid[nextMove.getFrom()]];
+			++roleCounts[myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN];
+			myHistory[halfMoveClock].pHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].vHist += WHITE_QUEEN - myPosition.grid[nextMove.getTo()];
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()], nextMove.getFrom());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getTo()], nextMove.getTo());
+			myHistory[halfMoveClock].zHist ^= myZobrist.piecesAt(myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN, nextMove.getTo());
+			myPosition.grid[nextMove.getTo()] = (role_enum) (myPosition.grid[nextMove.getFrom()] + WHITE_QUEEN);
+			myPosition.grid[nextMove.getFrom()] = EMPTY;
 			break;
 		}
 		if (myHistory[halfMoveClock].cHist & 1 << 0 && (nextMove.getTo() == 63 || nextMove.getFrom() == 63)) {
@@ -448,100 +431,100 @@ namespace Hopper {
 		turn = !turn;
 		switch (myHistory[halfMoveClock].mHist.getFlags()) {
 		case STANDARD:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			if (grid[myHistory[halfMoveClock].mHist.getFrom()] == WHITE_KING || grid[myHistory[halfMoveClock].mHist.getFrom()] == BLACK_KING) 
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			if (myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] == WHITE_KING || myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] == BLACK_KING) 
 				kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom(); 
 			break;
 		case DOUBLEPUSH:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
 			break;
 		case KCASTLE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			grid[myHistory[halfMoveClock].mHist.getTo() + 1] = grid[myHistory[halfMoveClock].mHist.getTo() - 1];
-			grid[myHistory[halfMoveClock].mHist.getTo() - 1] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + 1] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo() - 1];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo() - 1] = EMPTY;
 			kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom();
 			break;
 		case QCASTLE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			grid[myHistory[halfMoveClock].mHist.getTo() - 2] = grid[myHistory[halfMoveClock].mHist.getTo() + 1];
-			grid[myHistory[halfMoveClock].mHist.getTo() + 1] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo() - 2] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + 1];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + 1] = EMPTY;
 			kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom();
 			break;
 		case CAPTURE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist);
-			if (grid[myHistory[halfMoveClock].mHist.getFrom()] == WHITE_KING || grid[myHistory[halfMoveClock].mHist.getFrom()] == BLACK_KING) 
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist);
+			if (myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] == WHITE_KING || myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] == BLACK_KING) 
 				kingPos[turn] = myHistory[halfMoveClock].mHist.getFrom();
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo()]];
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo()]];
 			break;
 		case ENPASSANT:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = grid[myHistory[halfMoveClock].mHist.getTo()];
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = myPosition.grid[myHistory[halfMoveClock].mHist.getTo()];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
 			if (turn == BLACK) {
-				grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_NORTH] = WHITE_PAWN;
-				++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_NORTH]];
+				myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_NORTH] = WHITE_PAWN;
+				++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_NORTH]];
 			}
 			else {
-				grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_SOUTH] = BLACK_PAWN;
-				++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_SOUTH]];
+				myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_SOUTH] = BLACK_PAWN;
+				++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo() + BOARD_SOUTH]];
 
 			}
 			break;
 		case NPROMOTE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_KNIGHT];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_KNIGHT];
 			break;
 		case BPROMOTE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_BISHOP];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_BISHOP];
 			break;
 		case RPROMOTE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_ROOK];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_ROOK];
 			break;
 		case QPROMOTE:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_QUEEN];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = EMPTY;
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_QUEEN];
 			break;
 		case NPROMOTEC:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_KNIGHT);
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo()]];
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_KNIGHT];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_KNIGHT);
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo()]];
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_KNIGHT];
 			break;
 		case BPROMOTEC:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_BISHOP);
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo()]];
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_BISHOP];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_BISHOP);
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo()]];
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_BISHOP];
 			break;
 		case RPROMOTEC:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_ROOK);
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo()]];
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_ROOK];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_ROOK);
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo()]];
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_ROOK];
 			break;
 		case QPROMOTEC:
-			grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
-			grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_QUEEN);
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getTo()]];
-			++roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()]];
-			--roleCounts[grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_QUEEN];
+			myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] = (turn) ? BLACK_PAWN : WHITE_PAWN;
+			myPosition.grid[myHistory[halfMoveClock].mHist.getTo()] = (role_enum)(myHistory[halfMoveClock - 1].vHist - myHistory[halfMoveClock].vHist + WHITE_QUEEN);
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getTo()]];
+			++roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()]];
+			--roleCounts[myPosition.grid[myHistory[halfMoveClock].mHist.getFrom()] + WHITE_QUEEN];
 			break;
 		}
 		--halfMoveClock;
@@ -553,7 +536,7 @@ namespace Hopper {
 		pinCount = 0;
 		memset(threatened, 0, sizeof(threatened));
 		for (unsigned from = 0; from < SPACES; ++from) {
-			if (grid[from] != EMPTY)
+			if (myPosition.grid[from] != EMPTY)
 				pieceThreats(from);
 		}
 	}
@@ -561,8 +544,8 @@ namespace Hopper {
 	void Board::pieceThreats(int from)
 	{//generates all pseudo legal moves for one piece
 		int i, j;
-		bool us = grid[from] & 1;
-		switch (grid[from]) {
+		bool us = myPosition.grid[from] & 1;
+		switch (myPosition.grid[from]) {
 		case WHITE_KING:
 		case BLACK_KING:
 			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55)
@@ -615,10 +598,10 @@ namespace Hopper {
 		case BLACK_ROOK:
 			for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (NSslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
 						for (j = i + BOARD_NORTH; j != kingPos[turn]; j += BOARD_NORTH) {
-							if (grid[j] != EMPTY) { goto failN; }
+							if (myPosition.grid[j] != EMPTY) { goto failN; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_NORTH;
@@ -629,10 +612,10 @@ namespace Hopper {
 		failN:
 			for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (NSslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTH; j != kingPos[turn]; j += BOARD_SOUTH) {
-							if (grid[j] != EMPTY) { goto failS; }
+							if (myPosition.grid[j] != EMPTY) { goto failS; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_SOUTH;
@@ -643,10 +626,10 @@ namespace Hopper {
 		failS:
 			for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (EWslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
 						for (j = i + BOARD_EAST; j != kingPos[turn]; j += BOARD_EAST) {
-							if (grid[j] != EMPTY) { goto failE; }
+							if (myPosition.grid[j] != EMPTY) { goto failE; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_EAST;
@@ -657,10 +640,10 @@ namespace Hopper {
 		failE:
 			for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (EWslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
 						for (j = i + BOARD_WEST; j != kingPos[turn]; j += BOARD_WEST) {
-							if (grid[j] != EMPTY) { goto failW; }
+							if (myPosition.grid[j] != EMPTY) { goto failW; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_WEST;
@@ -669,15 +652,15 @@ namespace Hopper {
 				}
 			}
 		failW:
-			if (grid[from] < WHITE_QUEEN) { break; }
+			if (myPosition.grid[from] < WHITE_QUEEN) { break; }
 		case WHITE_BISHOP:
 		case BLACK_BISHOP:
 			for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (DIAGslide(i, kingPos[turn]) && NESWslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
 						for (j = i + BOARD_NORTHEAST; j != kingPos[turn]; j += BOARD_NORTHEAST) {
-							if (grid[j] != EMPTY) { goto failNE; }
+							if (myPosition.grid[j] != EMPTY) { goto failNE; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_NORTHEAST;
@@ -688,10 +671,10 @@ namespace Hopper {
 		failNE:
 			for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (DIAGslide(i, kingPos[turn]) && NWSEslide(i, kingPos[turn]) && i > kingPos[turn] && turn != us) {
 						for (j = i + BOARD_NORTHWEST; j != kingPos[turn]; j += BOARD_NORTHWEST) {
-							if (grid[j] != EMPTY) { goto failNW; }
+							if (myPosition.grid[j] != EMPTY) { goto failNW; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_NORTHWEST;
@@ -702,10 +685,10 @@ namespace Hopper {
 		failNW:
 			for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (DIAGslide(i, kingPos[turn]) && NWSEslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTHEAST; j != kingPos[turn]; j += BOARD_SOUTHEAST) {
-							if (grid[j] != EMPTY) { goto failSE; }
+							if (myPosition.grid[j] != EMPTY) { goto failSE; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_SOUTHEAST;
@@ -716,10 +699,10 @@ namespace Hopper {
 		failSE:
 			for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
 				attackers[us][threatened[us][i]++][i] = from;
-				if (grid[i] != EMPTY) {
+				if (myPosition.grid[i] != EMPTY) {
 					if (DIAGslide(i, kingPos[turn]) && NESWslide(i, kingPos[turn]) && i < kingPos[turn] && turn != us) {
 						for (j = i + BOARD_SOUTHWEST; j != kingPos[turn]; j += BOARD_SOUTHWEST) {
-							if (grid[j] != EMPTY) { goto failSW; }
+							if (myPosition.grid[j] != EMPTY) { goto failSW; }
 						}
 						pinnedPieces[pinCount] = i;
 						pinnedPieces[5 + pinCount++] = BOARD_SOUTHWEST;

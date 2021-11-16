@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cstring>
 #include "Zobrist.h"
 #include "Move.h"
 
 namespace Hopper
 {
-	struct historyInfo {
+	typedef struct historyInfo {
 		unsigned fHist = 0;
 		unsigned cHist = 0;
 		int vHist = 0;
@@ -20,7 +21,46 @@ namespace Hopper
 			this->pHist = p;
 			this->mHist = m;
 		}
-	};
+	}historyInfo;
+
+	typedef struct position {
+		position(const char* fs = STARTFEN) {
+			unsigned index = 0;
+			unsigned counter = 0;
+			unsigned helper = 0;
+			while (fs[index] != ' ') {
+				switch (fs[index]) {
+				case 'P':grid[counter++] = WHITE_PAWN; break;
+				case 'R':grid[counter++] = WHITE_ROOK; break;
+				case 'N':grid[counter++] = WHITE_KNIGHT; break;
+				case 'B':grid[counter++] = WHITE_BISHOP; break;
+				case 'Q':grid[counter++] = WHITE_QUEEN; break;
+				case 'K':grid[counter++] = WHITE_KING; break;
+				case 'p':grid[counter++] = BLACK_PAWN; break;
+				case 'r':grid[counter++] = BLACK_ROOK; break;
+				case 'n':grid[counter++] = BLACK_KNIGHT; break;
+				case 'b':grid[counter++] = BLACK_BISHOP; break;
+				case 'q':grid[counter++] = BLACK_QUEEN; break;
+				case 'k':grid[counter++] = BLACK_KING; break;
+				case '/': break;
+				default:
+					helper = fs[index] - '0';
+					while (helper--) { grid[counter++] = EMPTY; }
+				}
+				++index;
+			}
+		}
+		void operator=(const position& rhs) {
+			for (int i = 0; i < SPACES; ++i)
+				grid[i] = rhs.grid[i];
+		}
+		bool operator!=(const position& rhs) {
+			for (int i = 0; i < SPACES; ++i)
+				if(grid[i] != rhs.grid[i]) return true;
+			return false;
+		}
+		role_enum grid[SPACES] = { EMPTY };
+	}position;
 
 	class Board
 	{
@@ -31,7 +71,6 @@ namespace Hopper
 		bool isRepititionDraw()const;
 		bool isPseudoRepititionDraw()const;
 		bool isMaterialDraw()const;
-		unsigned getGamePhase()const;
 		bool isCheck() const { return threatened[!turn][kingPos[turn]]; }
 		int getCurrC() const { return myHistory[halfMoveClock].cHist; }
 		int getCurrV() const { return myHistory[halfMoveClock].vHist; }
@@ -40,12 +79,12 @@ namespace Hopper
 		U64 getCurrP() const { return myHistory[halfMoveClock].pHist; }
 		Move getCurrM() const { return myHistory[halfMoveClock].mHist; }
 		bool getTurn() const { return turn; }
-		int getGridAt(int position)const { return (int)grid[position]; }
-		int getThreatenedAt(bool team, int position)const { return threatened[team][position]; }
+		int getGridAt(int pos)const { return (int)myPosition.grid[pos]; }
+		int getThreatenedAt(bool team, int pos)const { return threatened[team][pos]; }
 		int getAttackersAt(int x, int y, int z)const { return attackers[x][y][z]; }
 		void setAttackersAt(int x, int y, int z, int val) { attackers[x][y][z] = val; }
-		int getPinsAt(int position)const { return pinnedPieces[position]; }
-		int getRolesAt(int position)const { return roleCounts[position]; }
+		int getPinsAt(int pos)const { return pinnedPieces[pos]; }
+		int getRolesAt(int pos)const { return roleCounts[pos]; }
 		int getPinCount()const { return pinCount; }
 		int getKingPosAt(bool team)const { return kingPos[team]; }
 		void changeTurn() { turn = !turn; }
@@ -57,6 +96,7 @@ namespace Hopper
 		unsigned genAllCapMoves(scoredMove* nextMove);
 		unsigned genAllNonCapMoves(scoredMove* nextMove);
 		void drawBoard();
+		position myPosition;
 	private:
 		void pieceThreats(int from);
 		void allThreats();
@@ -66,7 +106,6 @@ namespace Hopper
 		unsigned removeIllegalMoves(scoredMove* nextMove, unsigned moveCount);
 		Zobrist myZobrist;
 		historyInfo myHistory[512];
-		role_enum grid[SPACES];
 		int attackers[2][WIDTH][SPACES];
 		int threatened[2][SPACES];
 		int pinnedPieces[10];

@@ -12,8 +12,8 @@ namespace Hopper
 	{
 		myBoard = bd;
 		myHashTable.setSize(myLimits.hashbytes);
-		initEvalTables();
 		initLMRTables();
+		myEvaluate = Evaluate();
 		memset(HHtable, 0, sizeof(HHtable));
 		lastEval = 0;
 	}
@@ -160,7 +160,8 @@ namespace Hopper
 		if (depth <= 0)
 			return quiescentSearch(alpha, beta);
 		++nodes;
-		bool PVnode = (beta - alpha != 1);
+		bool PVnode = beta - alpha != 1;
+		//bool RootNode = ply == 0;
 		// probe transposition table for cutoffs
 		bool TThit;
 		hashEntry* TTentry = myHashTable.probe(myBoard->getCurrZ(), TThit);
@@ -184,9 +185,9 @@ namespace Hopper
 			goto movesLoop;
 
 		if (TThit == false) {
-			score = negaEval();
+			score = (myBoard->getTurn() == BLACK) ? - myEvaluate.eval(&myBoard->myPosition) : myEvaluate.eval(&myBoard->myPosition);
 			if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
-				myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
+				myHashTable.newPawnEntry(myBoard->getCurrP(), myEvaluate.pawnEval(&myBoard->myPosition));
 			score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 			if (TTentry->hashDepth == 0)
 				*TTentry = hashEntry(myBoard->getCurrZ(), 0, score, HASHNONE, NULLMOVE);
@@ -207,8 +208,8 @@ namespace Hopper
 		if (PVnode == false && 
 			myBoard->getCurrM() != NULLMOVE && 
 			depth >= NULLMOVE_PRUNING_DEPTH && 
-			(TThit == false || (TTentry->hashFlags != HASHALPHA && TTentry->hashFlags != HASHNONE) || TTentry->hashEval >= beta) &&
-			myBoard->getGamePhase() >= NULLMOVE_THRESHOLD) {
+			(TThit == false || (TTentry->hashFlags != HASHALPHA && TTentry->hashFlags != HASHNONE) || TTentry->hashEval >= beta)) {
+			//&& myBoard->getGamePhase() >= NULLMOVE_THRESHOLD) {
 			myBoard->movePiece(NULLMOVE);
 			score = -alphaBeta(depth - 7 - depth / 6, ply + 1, -beta, -beta + 1, &localLine, !cutNode);
 			myBoard->unmovePiece();
@@ -320,9 +321,9 @@ namespace Hopper
 				(TTentry->hashFlags == HASHALPHA && TTentry->hashEval <= alpha))
 				return TTentry->hashEval;
 		}
-		int score = negaEval();
+		int score = (myBoard->getTurn() == BLACK) ? -myEvaluate.eval(&myBoard->myPosition) : myEvaluate.eval(&myBoard->myPosition);
 		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
-			myHashTable.newPawnEntry(myBoard->getCurrP(), pawnEval());
+			myHashTable.newPawnEntry(myBoard->getCurrP(), myEvaluate.pawnEval(&myBoard->myPosition));
 		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 		if (TThit == false)
 			*TTentry = hashEntry(myBoard->getCurrZ(), 0, score, HASHNONE, NULLMOVE);

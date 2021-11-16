@@ -4,9 +4,11 @@
 #include "Hashtable.h"
 #include "Killers.h"
 #include "Movelist.h"
+#include "Evaluate.h"
 
 namespace Hopper
 {
+
 	typedef struct limits
 	{
 		unsigned time[2] = { 300000, 300000 };
@@ -26,21 +28,18 @@ namespace Hopper
 	public:
 		Engine(Board* bd);
 		void makeMove();
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
 		void perftControl();
 		limits myLimits;
 		int HHtable[2][SPACES][SPACES];
 	private:
-		static int hypotenuse(const int a, const int b);
 		unsigned perft(int depth);
+		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
 		int quiescentSearch(int alpha, int beta);
-		void initEvalTables();
 		void initLMRTables();
-		int negaEval();
-		int pawnEval();
 		Board* myBoard;
 		Killers myKillers;
 		HashTable myHashTable;
+		Evaluate myEvaluate;
 		unsigned nodes;
 		int lastEval;
 	};

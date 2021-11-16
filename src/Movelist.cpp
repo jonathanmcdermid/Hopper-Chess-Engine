@@ -6,7 +6,7 @@
 
 namespace Hopper
 {
-	static int see_piece_values[6] = { 100, 300, 315, 500,  900,  25000 };
+	static int see_piece_values[7] = { 100, 300, 315, 500,  900,  25000, 0 };
 
 	template <typename Iter>
 	unsigned index_of(Iter first, Iter last, typename std::iterator_traits<Iter>::value_type& x)
@@ -75,7 +75,7 @@ namespace Hopper
 		case GENWINCAPS:
 			while (true) {
 				do { ++index; } while (index < limit && storedMoves[index].myMove.isCap() == false);
-				if (index > limit || SEEcontrol())
+				if (index >= limit || SEEcontrol())
 					break;
 				else
 					storedMoves[index].score = 0;
@@ -92,12 +92,8 @@ namespace Hopper
 
 	bool MoveList::rememberQuiets(Move& m)
 	{
-		while(memoryIndex < index && storedMoves[memoryIndex].myMove.isCap() == true){
-			++memoryIndex;
-		}
-		if (memoryIndex == index) {
-			return false;
-		}
+		while(memoryIndex < index && storedMoves[memoryIndex].myMove.isCap() == true){ ++memoryIndex; }
+		if (memoryIndex == index) { return false; }
 		else {
 			m = storedMoves[memoryIndex++].myMove;
 			return true;
@@ -137,34 +133,25 @@ namespace Hopper
 		memoryIndex = 0;
 		switch (generationState) {
 		case GENPV:
-			if (myBoard->validateMove(pvMove.myMove)) {
-				playSpecial = true;
-			}
+			if (myBoard->validateMove(pvMove.myMove)) { playSpecial = true; }
 			break;
 		case GENKILLPRIMARY:
-			if (myBoard->validateMove(primaryMove.myMove)) {
-				playSpecial = true;
-			}
+			if (myBoard->validateMove(primaryMove.myMove)) { playSpecial = true; }
 			break;
 		case GENKILLSECONDARY:
-			if (myBoard->validateMove(secondaryMove.myMove)) {
-				playSpecial = true;
-			}
+			if (myBoard->validateMove(secondaryMove.myMove)) {playSpecial = true; }
 			break;
 		case GENWINCAPS:
 			index = 0;
 			limit += myBoard->genAllCapMoves(&storedMoves[limit]);
-			if (pvMove.myMove.isCap())		removeDuplicate(pvMove);
+			if (pvMove.myMove.isCap() == true) removeDuplicate(pvMove);
 			MVVLVA();
-			while (index < limit && SEEcontrol() == false) {
-				storedMoves[index].score = 0;
-				++index;
-			}
+			while (index < limit && SEEcontrol() == false) { storedMoves[index++].score = 0; }
 			break;
 		case GENQUIETS:
 			index = 0;
 			limit += myBoard->genAllNonCapMoves(&storedMoves[limit]);
-			if (!pvMove.myMove.isCap())		removeDuplicate(pvMove);
+			if (pvMove.myMove.isCap() == false)	removeDuplicate(pvMove);
 			removeDuplicate(primaryMove);
 			removeDuplicate(secondaryMove);
 			scoreQuiets();
@@ -179,51 +166,111 @@ namespace Hopper
 
 	bool MoveList::SEEcontrol()
 	{
+		// handles en passants and promotions in the laziest way possible
+		if (storedMoves[index].myMove.getFlags() == ENPASSANT)
+			return true;
 		bool side = myBoard->getTurn();
 		unsigned to = storedMoves[index].myMove.getTo(), from = storedMoves[index].myMove.getFrom();
 		int see = see_piece_values[myBoard->getGridAt(to) / 2];
 		int trophy = see_piece_values[myBoard->getGridAt(from) / 2];
-		unsigned smallestindex;
+		unsigned smallestIndex;
 		for (unsigned i = 0; i < 2; ++i) {
 			total[i] = myBoard->getThreatenedAt(i, to);
-			for (unsigned j = 0; j < total[i]; ++j)
-				attackers[i * WIDTH + j] = myBoard->getAttackersAt(i, j, to);
+			for (unsigned j = 0; j < total[i]; ++j) {
+				smallestIndex = i * WIDTH + j;
+				attackers[smallestIndex] = myBoard->getAttackersAt(i, j, to);
+				// handles promotions, assumes queen value
+				attackerValues[smallestIndex] =
+					((myBoard->getGridAt(attackers[smallestIndex]) == WHITE_PAWN && attackers[smallestIndex] < 16) ||
+						(myBoard->getGridAt(attackers[smallestIndex]) == BLACK_PAWN && attackers[smallestIndex] > 47)) ?
+					see_piece_values[QUEEN] :
+					see_piece_values[myBoard->getGridAt(attackers[smallestIndex]) / 2];
+			}
 		}
 		for (unsigned i = 0; i < total[side]; ++i) {
 			if (attackers[side * WIDTH + i] == from) {
-				attackers[side * WIDTH + i] = attackers[side * WIDTH + --total[side]];
+				attackers[side * WIDTH + i] = attackers[side * WIDTH + total[side] - 1];
+				attackerValues[side * WIDTH + i] = attackerValues[side * WIDTH + total[side] - 1];
+				--total[side];
 				updateHiddenAttackers(from, to);
+				break;
 			}
 		}
 		while (total[!side]) {
 			side = !side;
-			smallestindex = 0;
+			smallestIndex = 0;
 			for (unsigned i = 1; i < total[side]; ++i)
-				if (see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + i]) / 2] <
-					see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + smallestindex]) / 2])
-					smallestindex = i;
+				if (attackerValues[side * WIDTH + i] < attackerValues[side * WIDTH + smallestIndex])
+					smallestIndex = i;
 			see -= trophy;
-			trophy = see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + smallestindex]) / 2];
-			updateHiddenAttackers(attackers[side * WIDTH + smallestindex], to);
-			attackers[side * WIDTH + smallestindex] = attackers[side * WIDTH + total[side] - 1];
+			trophy = attackerValues[side * WIDTH + smallestIndex];
+			updateHiddenAttackers(attackers[side * WIDTH + smallestIndex], to);
+			attackers[side * WIDTH + smallestIndex] = attackers[side * WIDTH + total[side] - 1];
+			attackerValues[side * WIDTH + smallestIndex] = attackerValues[side * WIDTH + total[side] - 1];
 			--total[side];
 			side = !side;
 			if (see > SEE_THRESHOLD)
 				return true;
 			else if (total[side] == 0)
 				return false;
-			smallestindex = 0;
+			smallestIndex = 0;
 			for (unsigned i = 1; i < total[side]; ++i)
-				if (see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + i]) / 2] <
-					see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + smallestindex]) / 2])
-					smallestindex = i;
+				if (attackerValues[side * WIDTH + i] < attackerValues[side * WIDTH + smallestIndex])
+					smallestIndex = i;
 			see += trophy;
-			trophy = see_piece_values[myBoard->getGridAt(attackers[side * WIDTH + smallestindex]) / 2];
-			updateHiddenAttackers(attackers[side * WIDTH + smallestindex], to);
-			attackers[side * WIDTH + smallestindex] = attackers[side * WIDTH + total[side] - 1];
+			trophy = attackerValues[side * WIDTH + smallestIndex];
+			updateHiddenAttackers(attackers[side * WIDTH + smallestIndex], to);
+			attackers[side * WIDTH + smallestIndex] = attackers[side * WIDTH + total[side] - 1];
+			attackerValues[side * WIDTH + smallestIndex] = attackerValues[side * WIDTH + total[side] - 1];
 			--total[side];
 		}
 		return see > SEE_THRESHOLD;
+	}
+
+	void MoveList::handleEnPassant(int from, int to)
+	{
+		if (from > to) { // white
+			for (int i = to + 2 * BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
+				switch (myBoard->getGridAt(i))
+				{
+				case WHITE_ROOK:
+				case WHITE_QUEEN:
+					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackers[WHITE * WIDTH + total[WHITE]++] = i;
+					return;
+				case BLACK_ROOK:
+				case BLACK_QUEEN:
+					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackers[BLACK * WIDTH + total[BLACK]++] = i;
+					return;
+				case EMPTY:
+					continue;
+				default:
+					return;
+				}
+			}
+		}
+		else { // black
+			for (int i = to + 2 * BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
+				switch (myBoard->getGridAt(i))
+				{
+				case WHITE_ROOK:
+				case WHITE_QUEEN:
+					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackers[WHITE * WIDTH + total[WHITE]++] = i;
+					return;
+				case BLACK_ROOK:
+				case BLACK_QUEEN:
+					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackers[BLACK * WIDTH + total[BLACK]++] = i;
+					return;
+				case EMPTY:
+					continue;
+				default:
+					return;
+				}
+			}
+		}
 	}
 
 	void MoveList::updateHiddenAttackers(int from, int to) {
@@ -239,10 +286,12 @@ namespace Hopper
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -258,10 +307,12 @@ namespace Hopper
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -280,10 +331,12 @@ namespace Hopper
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -299,10 +352,12 @@ namespace Hopper
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -322,10 +377,12 @@ namespace Hopper
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -341,10 +398,12 @@ namespace Hopper
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -363,10 +422,12 @@ namespace Hopper
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -382,10 +443,12 @@ namespace Hopper
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:

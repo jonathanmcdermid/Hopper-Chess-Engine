@@ -50,16 +50,6 @@
 
 #define MEMORY		128
 
-#define PAWN_ISOLATED	-16
-#define PAWN_CONNECTED	+5
-#define PAWN_BACKWARD	-8
-#define PAWN_PHALANX	+0
-
-#define BONUS_BISHOP_PAIR		+32
-#define BONUS_ROOK_OPEN_FILE	+40
-#define BONUS_ROOK_KING_FILE	+15
-#define BONUS_QUEEN_SUPPORT		+5
-
 #define DIAGslide(from, to) (abs((to) % WIDTH - (from) % WIDTH) - abs((to) / WIDTH - (from) / WIDTH)) ? false : true
 #define NESWslide(from, to) (((to) - (from)) % BOARD_SOUTHWEST && ((to) - (from)) % BOARD_NORTHEAST) ? false : true
 #define NWSEslide(from, to) (((to) - (from)) % BOARD_SOUTHEAST && ((to) - (from)) % BOARD_NORTHWEST) ? false : true

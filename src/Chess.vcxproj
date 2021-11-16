@@ -28,17 +28,20 @@
     <ClCompile Include="Killers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Movelist.cpp" />
+    <ClCompile Include="tuner\tuner.cpp" />
     <ClCompile Include="Zobrist.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="Evaluate.h" />
     <ClInclude Include="Hashtable.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Killers.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="Move.h" />
     <ClInclude Include="Movelist.h" />
+    <ClInclude Include="tuner\tuner.h" />
     <ClInclude Include="Zobrist.h" />
   </ItemGroup>
   <ItemGroup>

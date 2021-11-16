@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cassert>
 #include "Interface.h"
+#include "tuner/tuner.h"
 
 namespace Hopper
 {
@@ -9,7 +10,7 @@ namespace Hopper
 	{//awaits input from user or uci
 		std::string input;
 		std::cout << "Hopper Engine v1.8 by Jonathan McDermid\n";
-		while (1) {
+		while (true) {
 			std::getline(std::cin, input);
 			if (input == "uci") {
 				uci(argc, argv);
@@ -17,6 +18,8 @@ namespace Hopper
 			}
 			if (input == "local")
 				local();
+			if (input == "tuner")
+				tuner();
 			if (input == "self")
 				self();
 			if (input == "perft")
@@ -136,6 +139,11 @@ namespace Hopper
 			}
 		}
 		std::cout << "good game\n";
+	}
+
+	void Interface::tuner()
+	{
+		tune();
 	}
 
 	void Interface::self()
