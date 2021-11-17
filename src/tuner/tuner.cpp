@@ -19,7 +19,7 @@ namespace Hopper
 
 		std::string line;
 
-		while (true) {
+		for(int i=0;i<1000000;++i){//while (true) {
 			if (logFile.eof())
 				break;
 			getline(logFile, line);
@@ -35,25 +35,25 @@ namespace Hopper
 
 		const unsigned numWeights =
 			// 12*64 for endgame and middlegame PSQTs
-			12 * SPACES +
+			2 * SPACES;
 			// 6*2 for endgame and middlegame piece values
-			6 * 2 +
-			// 8 for passed pawn rank bonus
-			8 +
-			// 5 for pawn file population penalty
-			5 +
-			// 1 for connected pawns
-			1 +
-			// 1 for backward pawns
-			1 +
-			// 1 for isolated pawns
-			1 +
-			// 2 for knight and bishop outpost
-			2 +
-			// 1 for rook open file
-			1 +
-			// 1 for bishop pair
-			1;
+			//6 * 2 +
+			//// 8 for passed pawn rank bonus
+			//8 +
+			//// 5 for pawn file population penalty
+			//5 +
+			//// 1 for connected pawns
+			//1 +
+			//// 1 for backward pawns
+			//1 +
+			//// 1 for isolated pawns
+			//1 +
+			//// 2 for knight and bishop outpost
+			//2 +
+			//// 1 for rook open file
+			//1 +
+			//// 1 for bishop pair
+			//1;
 
 		int* weights[numWeights];
 		bool skips[numWeights];
@@ -69,12 +69,12 @@ namespace Hopper
 		int bestWeights[numWeights];
 		memset(bestWeights, 0, sizeof(bestWeights));
 		bool improved = true;
-		int adjustment = 1;
+		int adjustment = 10;
 		for (unsigned iterations = 0; improved; ++iterations) {
 			improved = false;
 
 			for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
-				if (1){//skips[weightIndex] == false) {
+				if (skips[weightIndex] == false) {
 					*weights[weightIndex] += adjustment;
 					MSE = meanSquaredError(K);
 					if (MSE < bestMSE) {
@@ -104,7 +104,7 @@ namespace Hopper
 			}
 			if (improved == false && adjustment > 1) {
 				improved = true;
-				--adjustment;
+				adjustment = adjustment / 2;
 			}
 			for (int i = 0; i < numWeights; ++i)
 				*weights[i] = bestWeights[i];
@@ -197,41 +197,41 @@ namespace Hopper
 			weights[i++] = &mg_pawn_table[temp];
 		for (int temp = 0; temp < SPACES; ++temp)
 			weights[i++] = &eg_pawn_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &mg_knight_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &eg_knight_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &mg_bishop_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &eg_bishop_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &mg_rook_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &eg_rook_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &mg_queen_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &eg_queen_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &mg_king_table[temp];
-		for (int temp = 0; temp < SPACES; ++temp)
-			weights[i++] = &eg_king_table[temp];
-		for (int temp = 0; temp < 6; ++temp)
-			weights[i++] = &mg_value[temp];
-		for (int temp = 0; temp < 6; ++temp)
-			weights[i++] = &eg_value[temp];
-		for (int temp = 0; temp < 8; ++temp)
-			weights[i++] = &passed_rank_bonus[temp];
-		for (int temp = 0; temp < 5; ++temp)
-			weights[i++] = &pawn_file_population[temp];
-		weights[i++] = &pawn_connected;
-		weights[i++] = &pawn_backward;
-		weights[i++] = &pawn_isolated;
-		weights[i++] = &knight_outpost;
-		weights[i++] = &bishop_outpost;
-		weights[i++] = &rook_open_file;
-		weights[i++] = &bishop_pair;
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &mg_knight_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &eg_knight_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &mg_bishop_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &eg_bishop_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &mg_rook_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &eg_rook_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &mg_queen_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &eg_queen_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &mg_king_table[temp];
+		//for (int temp = 0; temp < SPACES; ++temp)
+		//	weights[i++] = &eg_king_table[temp];
+		//for (int temp = 0; temp < 6; ++temp)
+		//	weights[i++] = &mg_value[temp];
+		//for (int temp = 0; temp < 6; ++temp)
+		//	weights[i++] = &eg_value[temp];
+		//for (int temp = 0; temp < 8; ++temp)
+		//	weights[i++] = &passed_rank_bonus[temp];
+		//for (int temp = 0; temp < 5; ++temp)
+		//	weights[i++] = &pawn_file_population[temp];
+		//weights[i++] = &pawn_connected;
+		//weights[i++] = &pawn_backward;
+		//weights[i++] = &pawn_isolated;
+		//weights[i++] = &knight_outpost;
+		//weights[i++] = &bishop_outpost;
+		//weights[i++] = &rook_open_file;
+		//weights[i++] = &bishop_pair;
 
 		i = 0;
 		// pawn mg psqt
@@ -281,82 +281,82 @@ namespace Hopper
 			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
 		}
 
-		std::cout << "\nmg_knight_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-		std::cout << "\neg_knight_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-
-		std::cout << "\nmg_bishop_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-		std::cout << "\neg_bishop_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-
-		std::cout << "\nmg_rook_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-		std::cout << "\neg_rook_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-
-		std::cout << "\nmg_queen_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-		std::cout << "\neg_queen_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-
-		std::cout << "\nmg_king_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-		std::cout << "\neg_king_table\n";
-		for (int temp = 0; temp < SPACES; ++temp) {
-			std::cout << *weights[i++] << ",";
-			(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
-		}
-
-		std::cout << "\nmg_value_table\n";
-		for (int temp = 0; temp < 6; ++temp)
-			std::cout << *weights[i++] << ", ";
-		std::cout << "\neg_value_table\n";
-		for (int temp = 0; temp < 6; ++temp)
-			std::cout << *weights[i++] << ", ";
-
-		std::cout << "\npassed_rank_table\n";
-		for (int temp = 0; temp < 8; ++temp)
-			std::cout << *weights[i++] << ", ";
-
-		std::cout << "\npawn_population_table\n";
-		for (int temp = 0; temp < 5; ++temp)
-			std::cout << *weights[i++] << ", ";
-
-		std::cout << "\npawn_connected " << *weights[i++] << "\n";
-		std::cout << "\npawn_backward " << *weights[i++] << "\n";
-		std::cout << "\npawn_isolated " << *weights[i++] << "\n";
-		std::cout << "\nknight_outpost " << *weights[i++] << "\n";
-		std::cout << "\nbishop_outpost " << *weights[i++] << "\n";
-		std::cout << "\nrook_open " << *weights[i++] <<"\n";
-		std::cout << "\nbishop_pair " << *weights[i++] << "\n";
+		//std::cout << "\nmg_knight_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//std::cout << "\neg_knight_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//
+		//std::cout << "\nmg_bishop_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//std::cout << "\neg_bishop_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//
+		//std::cout << "\nmg_rook_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//std::cout << "\neg_rook_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//
+		//std::cout << "\nmg_queen_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//std::cout << "\neg_queen_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//
+		//std::cout << "\nmg_king_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//std::cout << "\neg_king_table\n";
+		//for (int temp = 0; temp < SPACES; ++temp) {
+		//	std::cout << *weights[i++] << ",";
+		//	(temp % 8 == 7) ? std::cout << "\n" : std::cout << " ";
+		//}
+		//
+		//std::cout << "\nmg_value_table\n";
+		//for (int temp = 0; temp < 6; ++temp)
+		//	std::cout << *weights[i++] << ", ";
+		//std::cout << "\neg_value_table\n";
+		//for (int temp = 0; temp < 6; ++temp)
+		//	std::cout << *weights[i++] << ", ";
+		//
+		//std::cout << "\npassed_rank_table\n";
+		//for (int temp = 0; temp < 8; ++temp)
+		//	std::cout << *weights[i++] << ", ";
+		//
+		//std::cout << "\npawn_population_table\n";
+		//for (int temp = 0; temp < 5; ++temp)
+		//	std::cout << *weights[i++] << ", ";
+		//
+		//std::cout << "\npawn_connected " << *weights[i++] << "\n";
+		//std::cout << "\npawn_backward " << *weights[i++] << "\n";
+		//std::cout << "\npawn_isolated " << *weights[i++] << "\n";
+		//std::cout << "\nknight_outpost " << *weights[i++] << "\n";
+		//std::cout << "\nbishop_outpost " << *weights[i++] << "\n";
+		//std::cout << "\nrook_open " << *weights[i++] <<"\n";
+		//std::cout << "\nbishop_pair " << *weights[i++] << "\n";
 	}
 }
