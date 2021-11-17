@@ -188,7 +188,7 @@ namespace Hopper
 			score = (myBoard->getTurn() == BLACK) ? - myEvaluate.eval(&myBoard->myPosition) : myEvaluate.eval(&myBoard->myPosition);
 			if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
 				myHashTable.newPawnEntry(myBoard->getCurrP(), myEvaluate.pawnEval(&myBoard->myPosition));
-			score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
+			score += (myBoard->getTurn() == BLACK) ? - myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 			if (TTentry->hashDepth == 0)
 				*TTentry = hashEntry(myBoard->getCurrZ(), 0, score, HASHNONE, NULLMOVE);
 		}
@@ -321,10 +321,10 @@ namespace Hopper
 				(TTentry->hashFlags == HASHALPHA && TTentry->hashEval <= alpha))
 				return TTentry->hashEval;
 		}
-		int score = (myBoard->getTurn() == BLACK) ? -myEvaluate.eval(&myBoard->myPosition) : myEvaluate.eval(&myBoard->myPosition);
+		int score = (myBoard->getTurn() == BLACK) ? - myEvaluate.eval(&myBoard->myPosition) : myEvaluate.eval(&myBoard->myPosition);
 		if (myHashTable.getPawnZobrist(myBoard->getCurrP()) != myBoard->getCurrP())
 			myHashTable.newPawnEntry(myBoard->getCurrP(), myEvaluate.pawnEval(&myBoard->myPosition));
-		score += (myBoard->getTurn() == BLACK) ? -myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
+		score += (myBoard->getTurn() == BLACK) ? - myHashTable.getPawnEval(myBoard->getCurrP()) : myHashTable.getPawnEval(myBoard->getCurrP());
 		if (TThit == false)
 			*TTentry = hashEntry(myBoard->getCurrZ(), 0, score, HASHNONE, NULLMOVE);
 		if (score >= beta)

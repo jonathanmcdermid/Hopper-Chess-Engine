@@ -63,18 +63,18 @@ namespace Hopper
 
 		std::string fen;
 		long double MSE;
-	//long double K = 1.027;//findK();
+	//long double K = 1.09374;//findK();
 		long double K = findK();
 		long double bestMSE = meanSquaredError(K);
 		int bestWeights[numWeights];
 		memset(bestWeights, 0, sizeof(bestWeights));
 		bool improved = true;
-		int adjustment = 10;
+		int adjustment = 1;
 		for (unsigned iterations = 0; improved; ++iterations) {
 			improved = false;
 
 			for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
-				if (skips[weightIndex] == false) {
+				if (1){//skips[weightIndex] == false) {
 					*weights[weightIndex] += adjustment;
 					MSE = meanSquaredError(K);
 					if (MSE < bestMSE) {
@@ -84,10 +84,10 @@ namespace Hopper
 							bestWeights[i] = *weights[i];
 					}
 					else {
-						if (weightIndex >= 768 && *weights[weightIndex] <= 0) {
-							weights[weightIndex] += 1;
-							continue;
-						}
+						//if (weightIndex >= 768 && *weights[weightIndex] <= 0) {
+						//	weights[weightIndex] += 1;
+						//	continue;
+						//}
 						*weights[weightIndex] -= 2 * adjustment;
 						MSE = meanSquaredError(K);
 						if (MSE < bestMSE) {
@@ -354,8 +354,8 @@ namespace Hopper
 		std::cout << "\npawn_connected " << *weights[i++] << "\n";
 		std::cout << "\npawn_backward " << *weights[i++] << "\n";
 		std::cout << "\npawn_isolated " << *weights[i++] << "\n";
-		std::cout << "\nknight_outpost_table " << *weights[i++] << "\n";
-		std::cout << "\nbishop_outpost_table " << *weights[i++] << "\n";
+		std::cout << "\nknight_outpost " << *weights[i++] << "\n";
+		std::cout << "\nbishop_outpost " << *weights[i++] << "\n";
 		std::cout << "\nrook_open " << *weights[i++] <<"\n";
 		std::cout << "\nbishop_pair " << *weights[i++] << "\n";
 	}
