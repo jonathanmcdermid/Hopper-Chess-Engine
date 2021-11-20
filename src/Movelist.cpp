@@ -17,11 +17,10 @@ namespace Hopper
 		return i;
 	}
 
-	MoveList::MoveList(Board* bd, Engine* e, Move pv, Move primary, Move secondary)
+	MoveList::MoveList(Thread* t, Move pv, Move primary, Move secondary)
 	{
 		generationState = GENPV;
-		myBoard = bd;
-		myEngine = e;
+		myThread = t;
 		index = 0;
 		memoryIndex = 0;
 		limit = 0;
@@ -38,8 +37,8 @@ namespace Hopper
 		for (unsigned i = 0; i < limit; ++i) {
 			if (storedMoves[i].myMove.isCap()) {
 				storedMoves[i].score = (storedMoves[i].myMove.getFlags() / NPROMOTE) & 1 << 15 |
-					1 << (6 + myBoard->getGridAt(storedMoves[i].myMove.getTo()) / 2) |
-					1 << (5 - myBoard->getGridAt(storedMoves[i].myMove.getFrom()) / 2);
+					1 << (6 + myThread->myBoard.getGridAt(storedMoves[i].myMove.getTo()) / 2) |
+					1 << (5 - myThread->myBoard.getGridAt(storedMoves[i].myMove.getFrom()) / 2);
 			}
 		}
 		std::sort(storedMoves, storedMoves + limit, smScoreComp);
@@ -50,8 +49,8 @@ namespace Hopper
 		for (unsigned i = 0; i < limit; ++i) {
 			if (storedMoves[i].myMove.isCap() == false) {
 				storedMoves[i].score = (storedMoves[i].myMove.getFlags() / NPROMOTE) & 1 << 15 |
-					1 << ((myBoard->getGridAt(storedMoves[i].myMove.getFrom()) / 2) % KING);
-				storedMoves[i].score += myEngine->HHtable[myBoard->getTurn()][storedMoves[i].myMove.getFrom()][storedMoves[i].myMove.getTo()];
+					1 << ((myThread->myBoard.getGridAt(storedMoves[i].myMove.getFrom()) / 2) % KING);
+				storedMoves[i].score += myThread->HHtable[myThread->myBoard.getTurn()][storedMoves[i].myMove.getFrom()][storedMoves[i].myMove.getTo()];
 			}
 		}
 		std::sort(storedMoves, storedMoves + limit, smScoreComp);
@@ -133,24 +132,24 @@ namespace Hopper
 		memoryIndex = 0;
 		switch (generationState) {
 		case GENPV:
-			if (myBoard->validateMove(pvMove.myMove)) { playSpecial = true; }
+			if (myThread->myBoard.validateMove(pvMove.myMove)) { playSpecial = true; }
 			break;
 		case GENKILLPRIMARY:
-			if (myBoard->validateMove(primaryMove.myMove)) { playSpecial = true; }
+			if (myThread->myBoard.validateMove(primaryMove.myMove)) { playSpecial = true; }
 			break;
 		case GENKILLSECONDARY:
-			if (myBoard->validateMove(secondaryMove.myMove)) {playSpecial = true; }
+			if (myThread->myBoard.validateMove(secondaryMove.myMove)) {playSpecial = true; }
 			break;
 		case GENWINCAPS:
 			index = 0;
-			limit += myBoard->genAllCapMoves(&storedMoves[limit]);
+			limit += myThread->myBoard.genAllCapMoves(&storedMoves[limit]);
 			if (pvMove.myMove.isCap() == true) removeDuplicate(pvMove);
 			MVVLVA();
 			while (index < limit && SEEcontrol() == false) { storedMoves[index++].score = 0; }
 			break;
 		case GENQUIETS:
 			index = 0;
-			limit += myBoard->genAllNonCapMoves(&storedMoves[limit]);
+			limit += myThread->myBoard.genAllNonCapMoves(&storedMoves[limit]);
 			if (pvMove.myMove.isCap() == false)	removeDuplicate(pvMove);
 			removeDuplicate(primaryMove);
 			removeDuplicate(secondaryMove);
@@ -169,22 +168,22 @@ namespace Hopper
 		// handles en passants and promotions in the laziest way possible
 		if (storedMoves[index].myMove.getFlags() == ENPASSANT)
 			return true;
-		bool side = myBoard->getTurn();
+		bool side = myThread->myBoard.getTurn();
 		unsigned to = storedMoves[index].myMove.getTo(), from = storedMoves[index].myMove.getFrom();
-		int see = see_piece_values[myBoard->getGridAt(to) / 2];
-		int trophy = see_piece_values[myBoard->getGridAt(from) / 2];
+		int see = see_piece_values[myThread->myBoard.getGridAt(to) / 2];
+		int trophy = see_piece_values[myThread->myBoard.getGridAt(from) / 2];
 		unsigned smallestIndex;
 		for (unsigned i = 0; i < 2; ++i) {
-			total[i] = myBoard->getThreatenedAt(i, to);
+			total[i] = myThread->myBoard.getThreatenedAt(i, to);
 			for (unsigned j = 0; j < total[i]; ++j) {
 				smallestIndex = i * WIDTH + j;
-				attackers[smallestIndex] = myBoard->getAttackersAt(i, j, to);
+				attackers[smallestIndex] = myThread->myBoard.getAttackersAt(i, j, to);
 				// handles promotions, assumes queen value
 				attackerValues[smallestIndex] =
-					((myBoard->getGridAt(attackers[smallestIndex]) == WHITE_PAWN && attackers[smallestIndex] < 16) ||
-						(myBoard->getGridAt(attackers[smallestIndex]) == BLACK_PAWN && attackers[smallestIndex] > 47)) ?
+					((myThread->myBoard.getGridAt(attackers[smallestIndex]) == WHITE_PAWN && attackers[smallestIndex] < 16) ||
+						(myThread->myBoard.getGridAt(attackers[smallestIndex]) == BLACK_PAWN && attackers[smallestIndex] > 47)) ?
 					see_piece_values[QUEEN] :
-					see_piece_values[myBoard->getGridAt(attackers[smallestIndex]) / 2];
+					see_piece_values[myThread->myBoard.getGridAt(attackers[smallestIndex]) / 2];
 			}
 		}
 		for (unsigned i = 0; i < total[side]; ++i) {
@@ -231,16 +230,16 @@ namespace Hopper
 	{
 		if (from > to) { // white
 			for (int i = to + 2 * BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
-				switch (myBoard->getGridAt(i))
+				switch (myThread->myBoard.getGridAt(i))
 				{
 				case WHITE_ROOK:
 				case WHITE_QUEEN:
-					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 					attackers[WHITE * WIDTH + total[WHITE]++] = i;
 					return;
 				case BLACK_ROOK:
 				case BLACK_QUEEN:
-					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 					attackers[BLACK * WIDTH + total[BLACK]++] = i;
 					return;
 				case EMPTY:
@@ -252,16 +251,16 @@ namespace Hopper
 		}
 		else { // black
 			for (int i = to + 2 * BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
-				switch (myBoard->getGridAt(i))
+				switch (myThread->myBoard.getGridAt(i))
 				{
 				case WHITE_ROOK:
 				case WHITE_QUEEN:
-					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 					attackers[WHITE * WIDTH + total[WHITE]++] = i;
 					return;
 				case BLACK_ROOK:
 				case BLACK_QUEEN:
-					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+					attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 					attackers[BLACK * WIDTH + total[BLACK]++] = i;
 					return;
 				case EMPTY:
@@ -275,23 +274,23 @@ namespace Hopper
 
 	void MoveList::updateHiddenAttackers(int from, int to) {
 		int i;
-		switch (myBoard->getGridAt(from) / 2) {
+		switch (myThread->myBoard.getGridAt(from) / 2) {
 		case PAWN:
 		case QUEEN:
 		case BISHOP:
 			if (NESWslide(from, to)) {
 				if (from > to) {
 					for (i = from + BOARD_SOUTHWEST; i % WIDTH < from % WIDTH && i < SPACES; i += BOARD_SOUTHWEST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -303,16 +302,16 @@ namespace Hopper
 				}
 				else {
 					for (i = from + BOARD_NORTHEAST; i % WIDTH > from % WIDTH && i >= 0; i += BOARD_NORTHEAST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -327,16 +326,16 @@ namespace Hopper
 			else if (NWSEslide(from,to)) {
 				if (from > to) {
 					for (i = from + BOARD_SOUTHEAST; i % WIDTH > from % WIDTH && i < SPACES; i += BOARD_SOUTHEAST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -348,16 +347,16 @@ namespace Hopper
 				}
 				else {
 					for (i = from + BOARD_NORTHWEST; i % WIDTH < from % WIDTH && i >= 0; i += BOARD_NORTHWEST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_BISHOP:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_BISHOP:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -373,16 +372,16 @@ namespace Hopper
 			if (NSslide(from, to)) {
 				if (from > to) {
 					for (i = from + BOARD_SOUTH; i < SPACES; i += BOARD_SOUTH) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -394,16 +393,16 @@ namespace Hopper
 				}
 				else {
 					for (i = from + BOARD_NORTH; i >= 0; i += BOARD_NORTH) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -418,16 +417,16 @@ namespace Hopper
 			else if (EWslide(from, to)) {
 				if (from > to) {
 					for (i = from + BOARD_EAST; i % WIDTH; i += BOARD_EAST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:
@@ -439,16 +438,16 @@ namespace Hopper
 				}
 				else {
 					for (i = from + BOARD_WEST; i % WIDTH != 7 && i >= 0; i += BOARD_WEST) {
-						switch (myBoard->getGridAt(i))
+						switch (myThread->myBoard.getGridAt(i))
 						{
 						case WHITE_ROOK:
 						case WHITE_QUEEN:
-							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[WHITE * WIDTH + total[WHITE]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[WHITE * WIDTH + total[WHITE]++] = i;
 							return;
 						case BLACK_ROOK:
 						case BLACK_QUEEN:
-							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myBoard->getGridAt(i) / 2];
+							attackerValues[BLACK * WIDTH + total[BLACK]] = see_piece_values[myThread->myBoard.getGridAt(i) / 2];
 							attackers[BLACK * WIDTH + total[BLACK]++] = i;
 							return;
 						case EMPTY:

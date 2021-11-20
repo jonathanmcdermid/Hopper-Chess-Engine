@@ -1,3 +1,4 @@
+#include <cstring>
 #include <random>
 #include "Board.h"
 #include "Zobrist.h"
@@ -17,6 +18,14 @@ namespace Hopper
 			zobristEnPassantFlag[i] = dis(gen);
 		for (unsigned i = 0; i < 4; ++i)
 			zobristCastle[i] = dis(gen);
+	}
+
+	void Zobrist::operator=(Zobrist z)
+	{
+		zobristTurn = z.zobristTurn;
+		memcpy(zobristCastle, z.zobristCastle, sizeof(z.zobristCastle));
+		memcpy(zobristPieces, z.zobristPieces, sizeof(z.zobristPieces));
+		memcpy(zobristEnPassantFlag, z.zobristEnPassantFlag, sizeof(z.zobristEnPassantFlag));
 	}
 
 	U64 Zobrist::newKey(Board* b)

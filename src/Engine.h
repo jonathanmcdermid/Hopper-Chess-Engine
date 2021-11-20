@@ -23,24 +23,40 @@ namespace Hopper
 		bool infinite = false;
 	} limits;
 
+	typedef struct Thread
+	{
+		Thread(Board* b = NULL, int n = 0) {
+			nThreads = n;
+			myBoard = *b;
+			nodes = 0;
+			depth = 0;
+			memset(HHtable, 0, sizeof(HHtable));
+		}
+		Board myBoard;
+		int nThreads = 0;
+		int nodes = 0;
+		int depth = 0;
+		int HHtable[2][SPACES][SPACES];
+		line principalVariation;
+		Killers myKillers;
+	} Thread;
+
 	class Engine
 	{
 	public:
-		Engine(Board* bd);
-		void makeMove();
+		Engine();
+		Move getBestMove(Thread* myThreads);
 		void perftControl();
+		void flushTT() { myHashTable.flush(); }
 		limits myLimits;
-		int HHtable[2][SPACES][SPACES];
 	private:
 		unsigned perft(int depth);
-		int alphaBeta(int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
-		int quiescentSearch(int alpha, int beta);
+		int alphaBeta(Thread* myThread, int depth, int ply, int alpha, int beta, line* pline, bool cutNode);
+		int quiescentSearch(Thread* myThread, int alpha, int beta);
 		void initLMRTables();
-		Board* myBoard;
-		Killers myKillers;
 		HashTable myHashTable;
 		Evaluate myEvaluate;
-		unsigned nodes;
 		int lastEval;
+		bool abort;
 	};
 }

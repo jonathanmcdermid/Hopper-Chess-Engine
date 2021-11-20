@@ -9,6 +9,7 @@ namespace Hopper
 	{
 	public:
 		Zobrist();
+		void operator=(Zobrist z);
 		U64 newKey(Board* b);
 		U64 newPawnKey(Board* b);
 		U64 piecesAt(unsigned p, unsigned z)const { return zobristPieces[p * SPACES + z]; }

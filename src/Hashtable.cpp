@@ -1,7 +1,16 @@
+#include <cstring>
 #include "Hashtable.h"
 
 namespace Hopper
 {
+    void HashTable::flush()
+    {
+        for (unsigned i = 0; i < myHashTable.size(); i += 2)
+            myHashTable[i] = hashEntry();
+        for (unsigned i = 0; i < myPawnHashTable.size(); i += 2)
+            myPawnHashTable[i] = pawnHashEntry();
+    }
+
     void HashTable::clean()
     {
         for (unsigned i = master; i < myHashTable.size(); i += 2)

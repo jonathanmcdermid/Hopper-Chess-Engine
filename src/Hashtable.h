@@ -50,6 +50,7 @@ namespace Hopper
     public:
         HashTable() { master = true; }
         void setSize(unsigned bytes);
+        void flush();
         void clean();
         void newEntry(U64 key, int d, int e, int f, Move b) { myHashTable[key % myHashTable.size()] = hashEntry(key, d, e, f, b); }
         void newEntry(U64 key, hashEntry& h) { myHashTable[key % myHashTable.size()] = h; }

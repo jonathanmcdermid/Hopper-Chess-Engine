@@ -4,12 +4,12 @@
 
 namespace Hopper
 {
-	class Engine;
+	struct Thread;
 
 	class MoveList
 	{
 	public:
-		MoveList(Board* bd, Engine* e, Move pv = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
+		MoveList(Thread* t, Move pv = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
 		void moveOrder(unsigned genState);
 		void MVVLVA();
 		void scoreQuiets();
@@ -22,8 +22,7 @@ namespace Hopper
 		void updateHiddenAttackers(int from, int to);
 		void handleEnPassant(int from, int to);
 	private:
-		Board* myBoard;
-		Engine* myEngine;
+		Thread* myThread;
 		scoredMove storedMoves[MEMORY];
 		scoredMove pvMove;
 		scoredMove primaryMove;

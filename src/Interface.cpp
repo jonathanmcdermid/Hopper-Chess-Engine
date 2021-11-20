@@ -8,6 +8,8 @@ namespace Hopper
 {
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
+		myThreads.push_back(Thread(&myBoard, 2));
+		myThreads.push_back(Thread(&myBoard, 2));
 		std::string input;
 		std::cout << "Hopper Engine v1.8 by Jonathan McDermid\n";
 		while (true) {
@@ -85,6 +87,8 @@ namespace Hopper
 		else
 			return;
 		myBoard.fenSet((const char*)fen.c_str());
+		for (int i = 0; i < myThreads.size(); ++i)
+			myThreads[i].myBoard.fenSet((const char*)fen.c_str());
 		while (is >> word) {
 			if (!playerMove(word)) {
 				std::cout << word << " is not a valid move\n";
@@ -96,7 +100,9 @@ namespace Hopper
 	void Interface::uci(int argc, char* argv[])
 	{//uci communication loop, some options non functioning
 		std::string word, cmd;
-		std::cout << "id name Hopper Engine v1.8 \nid author Jonathan McDermid\nuciok\n";
+		std::cout << "id name Hopper Engine v1.8 \nid author Jonathan McDermid\n";
+		std::cout << "option name Threads type spin default 1 min 1 max 10\n";
+		std::cout << "uciok\n";
 		for (int i = 1; i < argc; ++i)
 			cmd += std::string(argv[i]) + " ";
 		do {
@@ -107,17 +113,43 @@ namespace Hopper
 			is >> std::skipws >> word;
 			if (word == "uci")
 				std::cout << "id name Hopper Engine v1.8 \nid author Jonathan McDermid\nuciok\n";
+			else if (word == "setoption")
+				setOption(is);
 			else if (word == "go")
 				go(is);
 			else if (word == "position")
 				position(is);
-			else if (word == "ucinewgame")
+			else if (word == "ucinewgame") {
 				myBoard.fenSet(STARTFEN);
+				for (int i = 0; i < myThreads.size(); ++i)
+					myThreads[i].myBoard.fenSet(STARTFEN);
+				myEngine.flushTT();
+			}
 			else if (word == "isready")
 				std::cout << "readyok\n";
 			else if (word == "print")
 				myBoard.drawBoard();
 		} while (word != "quit" && argc == 1);
+	}
+
+	void Interface::setOption(std::istringstream& is)
+	{
+		std::string word;
+		int value;
+		while (is >> word) {
+			if (word == "Hash") {
+				is >> word;
+				is >> myEngine.myLimits.hashbytes;
+			}
+			else if (word == "Threads") {
+				is >> word;
+				is >> value;
+				myThreads.resize(0);
+				for (int i = 0; i < value; ++i)
+					myThreads.push_back(Thread(&myBoard, value));
+				std::cout << "info string set Threads to " << value << "\n";
+			}
+		}
 	}
 
 	void Interface::local()
@@ -127,7 +159,7 @@ namespace Hopper
 		while (1) {
 			std::getline(std::cin, input);
 			if (input.length()) {
-				while (!playerMove(input))
+				while (playerMove(input) == false)
 					std::getline(std::cin, input);
 				myBoard.drawBoard();
 				if (myBoard.isCheckMate())
@@ -171,6 +203,8 @@ namespace Hopper
 				nextMove = myBoard.createMove(from, to);
 				if (nextMove.getFlags() < NULLFLAGS) {
 					myBoard.movePiece(nextMove);
+					for (int i = 0; i < myThreads.size(); ++i)
+						myThreads[i].myBoard.movePiece(nextMove);
 					return true;
 				}
 			}
@@ -205,6 +239,8 @@ namespace Hopper
 							Move(nextMove.getFrom(), nextMove.getTo(), QPROMOTE);
 						break;
 					}
+					for (int i = 0; i < myThreads.size(); ++i)
+						myThreads[i].myBoard.movePiece(nextMove);
 					myBoard.movePiece(nextMove);
 					return true;
 				}
@@ -213,10 +249,14 @@ namespace Hopper
 		else if (input == "fenset") {
 			std::getline(std::cin, input);
 			myBoard.fenSet(input.c_str());
+			for (int i = 0; i < myThreads.size(); ++i)
+				myThreads[i].myBoard.fenSet(input.c_str());
 			myBoard.drawBoard();
 		}
 		else if (input == "unmove") {
 			myBoard.unmovePiece();
+			for (int i = 0; i < myThreads.size(); ++i)
+				myThreads[i].myBoard.unmovePiece();
 			myBoard.drawBoard();
 		}
 		return false;
@@ -224,7 +264,10 @@ namespace Hopper
 
 	void Interface::botMove()
 	{//generates internal moves
-		myEngine.makeMove();
+		Move bestMove = myEngine.getBestMove(&myThreads[0]);
+		myBoard.movePiece(bestMove);
+		for (int i = 0; i < myThreads.size(); ++i)
+			myThreads[i].myBoard.movePiece(bestMove);
 		std::string message = { 
 			(char)(myBoard.getCurrM().getFrom() % WIDTH + 'a'), 
 			(char)(WIDTH - myBoard.getCurrM().getFrom() / WIDTH + '0'),

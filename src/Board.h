@@ -21,6 +21,14 @@ namespace Hopper
 			this->pHist = p;
 			this->mHist = m;
 		}
+		void operator=(historyInfo h) {
+			this->fHist = h.fHist;
+			this->cHist = h.cHist;
+			this->vHist = h.vHist;
+			this->zHist = h.zHist;
+			this->pHist = h.pHist;
+			this->mHist = h.mHist;
+		}
 	}historyInfo;
 
 	typedef struct position {
@@ -66,6 +74,7 @@ namespace Hopper
 	{
 	public:
 		Board();
+		void operator=(Board b);
 		void fenSet(const char* fs);
 		bool isCheckMate();
 		bool isRepititionDraw()const;

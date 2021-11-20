@@ -10,6 +10,21 @@ namespace Hopper {
 		fenSet((const char*)STARTFEN);
 	}
 
+	void Board::operator=(Board b) 
+	{
+		myPosition = b.myPosition;
+		myZobrist = b.myZobrist;
+		memcpy(myHistory,		b.myHistory,	sizeof(b.myHistory));
+		memcpy(attackers,		b.attackers,	sizeof(b.attackers));
+		memcpy(threatened,		b.threatened,	sizeof(b.threatened));
+		memcpy(pinnedPieces,	b.pinnedPieces, sizeof(b.pinnedPieces));
+		memcpy(roleCounts,		b.roleCounts,	sizeof(b.roleCounts));
+		memcpy(kingPos,			b.kingPos,		sizeof(b.kingPos));
+		turn = b.turn;
+		pinCount = b.pinCount;
+		halfMoveClock = b.halfMoveClock;
+	}
+
 	void Board::drawBoard()
 	{//prints board in cmd
 		char letter;
