@@ -79,7 +79,8 @@ namespace Hopper
 		bool isCheckMate();
 		bool isRepititionDraw()const;
 		bool isPseudoRepititionDraw()const;
-		bool isMaterialDraw()const;
+		bool isMaterialDraw(bool team)const;
+		bool hasPromoted(bool team)const;
 		bool isCheck() const { return threatened[!turn][kingPos[turn]]; }
 		int getCurrC() const { return myHistory[halfMoveClock].cHist; }
 		int getCurrV() const { return myHistory[halfMoveClock].vHist; }

@@ -33,7 +33,7 @@
 
 #define SPACES		+64
 #define WIDTH		+8
-#define MAXDEPTH	+32
+#define MAXDEPTH	+64
 
 #define BOARD_NORTH			-8
 #define BOARD_SOUTH			+8

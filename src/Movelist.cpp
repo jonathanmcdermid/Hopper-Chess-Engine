@@ -1,3 +1,4 @@
+#include <random>
 #include <algorithm>
 #include <cstring>
 #include "Movelist.h"
@@ -30,6 +31,11 @@ namespace Hopper
 		if (secondary != primary && secondary != pv)
 			secondaryMove.myMove = secondary;
 		playSpecial = false;
+	}
+
+	void MoveList::shuffle()
+	{
+		std::random_shuffle(&storedMoves[index], &storedMoves[limit]);
 	}
 
 	void MoveList::MVVLVA() 

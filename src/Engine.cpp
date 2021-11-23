@@ -131,10 +131,16 @@ namespace Hopper
 		std::cout << "time " << (int) std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() << "\n";
 		myHashTable.clean();
 		for (int i = 0; i < myThreads[0].nThreads; ++i) {
+			myThreads[i].nodes = 0;
 			myThreads[i].myKillers.chrono();
 			myThreads[i].principalVariation.moveCount = 0;
 		}
 		return principalVariation[0].moveLink[0];
+	}
+
+	Move Engine::aspiration(Thread* myThread)
+	{
+
 	}
 
 	int Engine::alphaBeta(Thread* myThread, int depth, int ply, int alpha, int beta, line* pline, bool cutNode)
@@ -143,7 +149,7 @@ namespace Hopper
 			return quiescentSearch(myThread, alpha, beta);
 		++myThread->nodes;
 		bool PVnode = beta - alpha != 1;
-		//bool RootNode = ply == 0;
+		bool RootNode = ply == 0;
 		// probe transposition table for cutoffs
 		bool TThit;
 		hashEntry* TTentry = myHashTable.probe(myThread->myBoard.getCurrZ(), TThit);
@@ -190,8 +196,8 @@ namespace Hopper
 		if (PVnode == false && 
 			myThread->myBoard.getCurrM() != NULLMOVE && 
 			depth >= NULLMOVE_PRUNING_DEPTH && 
-			(TThit == false || (TTentry->hashFlags != HASHALPHA && TTentry->hashFlags != HASHNONE) || TTentry->hashEval >= beta)) {
-			//&& myThread->myBoard.getGamePhase() >= NULLMOVE_THRESHOLD) {
+			(TThit == false || (TTentry->hashFlags != HASHALPHA && TTentry->hashFlags != HASHNONE) || TTentry->hashEval >= beta) &&
+			myThread->myBoard.hasPromoted(myThread->myBoard.getTurn())) {
 			myThread->myBoard.movePiece(NULLMOVE);
 			score = -alphaBeta(myThread, depth - 7 - depth / 6, ply + 1, -beta, -beta + 1, &localLine, !cutNode);
 			myThread->myBoard.unmovePiece();
@@ -227,11 +233,13 @@ namespace Hopper
 		for (unsigned genstate = GENPV; genstate <= GENLOSECAPS; ++genstate)
 		{
 			localMoveList.moveOrder(genstate);
+			//if (RootNode)
+			//	localMoveList.shuffle();
 			while (localMoveList.movesLeft()) {
 				if(localMoveList.getCurrMove().isCap() == false)
 					HHentry = &myThread->HHtable[myThread->myBoard.getTurn()][localMoveList.getCurrMove().getFrom()][localMoveList.getCurrMove().getTo()];
 				myThread->myBoard.movePiece(localMoveList.getCurrMove());
-				if (myThread->myBoard.isPseudoRepititionDraw() || myThread->myBoard.isMaterialDraw())
+				if (myThread->myBoard.isPseudoRepititionDraw() || (myThread->myBoard.isMaterialDraw(WHITE) && myThread->myBoard.isMaterialDraw(BLACK)))
 					score = CONTEMPT;
 				else {
 					if (localMoveList.getCurrMove().isCap() == false && 
@@ -258,6 +266,8 @@ namespace Hopper
 						score = -alphaBeta(myThread, depth - 1, ply + 1, -beta, -alpha, &localLine, false);
 				}
 				myThread->myBoard.unmovePiece();
+				if (abort)
+					return alpha;
 				if (score > alpha) {
 					pline->moveLink[0] = localMoveList.getCurrMove();
 					memcpy(pline->moveLink + 1, localLine.moveLink, sizeof(int) * localLine.moveCount);
@@ -282,8 +292,6 @@ namespace Hopper
 				}
 				++movesPlayed;
 				localMoveList.increment();
-				if (abort)
-					return alpha;
 			}
 
 		}
@@ -309,6 +317,7 @@ namespace Hopper
 		if (myHashTable.getPawnZobrist(myThread->myBoard.getCurrP()) != myThread->myBoard.getCurrP())
 			myHashTable.newPawnEntry(myThread->myBoard.getCurrP(), myEvaluate.pawnEval(&myThread->myBoard.myPosition));
 		score += (myThread->myBoard.getTurn() == BLACK) ? - myHashTable.getPawnEval(myThread->myBoard.getCurrP()) : myHashTable.getPawnEval(myThread->myBoard.getCurrP());
+
 		if (TThit == false)
 			*TTentry = hashEntry(myThread->myBoard.getCurrZ(), 0, score, HASHNONE, NULLMOVE);
 		if (score >= beta)

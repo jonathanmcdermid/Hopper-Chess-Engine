@@ -11,6 +11,7 @@ namespace Hopper
 	public:
 		MoveList(Thread* t, Move pv = NULLMOVE, Move primary = NULLMOVE, Move secondary = NULLMOVE);
 		void moveOrder(unsigned genState);
+		void shuffle();
 		void MVVLVA();
 		void scoreQuiets();
 		void removeDuplicate(scoredMove m);

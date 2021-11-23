@@ -46,6 +46,7 @@ namespace Hopper
 	public:
 		Engine();
 		Move getBestMove(Thread* myThreads);
+		Move aspiration(Thread* myThread);
 		void perftControl();
 		void flushTT() { myHashTable.flush(); }
 		limits myLimits;

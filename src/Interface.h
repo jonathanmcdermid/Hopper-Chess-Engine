@@ -11,7 +11,6 @@ namespace Hopper
 	public:
 		Interface(int argc, char* argv[]);
 	private:
-		void uci(int argc, char* argv[]);
 		void go(std::istringstream& is);
 		void position(std::istringstream& is);
 		void tuner();

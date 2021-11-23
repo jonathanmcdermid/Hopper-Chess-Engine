@@ -2,11 +2,13 @@
 #include <random>
 #include "Board.h"
 #include "Zobrist.h"
+#include <ctime>
 
 namespace Hopper
 {
 	Zobrist::Zobrist()
 	{//generates pseudo random template
+		std::srand(std::time(0));
 		std::random_device rd;
 		std::mt19937_64 gen(rd());
 		std::uniform_int_distribution<std::uintmax_t> dis;

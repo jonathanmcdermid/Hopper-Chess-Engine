@@ -209,15 +209,21 @@ namespace Hopper {
 		return (myHistory[halfMoveClock].fHist >= 100);
 	}
 
-	bool Board::isMaterialDraw()const
+	bool Board::isMaterialDraw(bool team)const
 	{
-		return (roleCounts[WHITE_PAWN]	|| roleCounts[BLACK_PAWN]		||
-				roleCounts[WHITE_QUEEN] || roleCounts[BLACK_QUEEN]		||
-				roleCounts[WHITE_ROOK]  || roleCounts[BLACK_ROOK]		||
-				roleCounts[WHITE_KNIGHT] > 2 ||
-				roleCounts[WHITE_BISHOP] + roleCounts[WHITE_KNIGHT] / 2 > 1 ||
-				roleCounts[BLACK_KNIGHT] > 2 ||
-				roleCounts[BLACK_BISHOP] + roleCounts[BLACK_KNIGHT] / 2 > 1) == false;
+		return (roleCounts[WHITE_PAWN + team]	||
+				roleCounts[WHITE_QUEEN + team]	|| 
+				roleCounts[WHITE_ROOK + team]	|| 
+				roleCounts[WHITE_KNIGHT + team] > 2 ||
+				roleCounts[WHITE_BISHOP + team] + roleCounts[WHITE_KNIGHT + team] / 2 > 1) == false;
+	}
+
+	bool Board::hasPromoted(bool team)const
+	{
+		return (roleCounts[WHITE_KNIGHT + team] + 
+				roleCounts[WHITE_BISHOP + team] +
+				roleCounts[WHITE_ROOK   + team] +
+				roleCounts[WHITE_QUEEN  + team]);
 	}
 
 	void Board::movePiece(Move nextMove)

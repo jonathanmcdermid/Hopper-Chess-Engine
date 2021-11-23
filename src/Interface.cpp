@@ -8,39 +8,52 @@ namespace Hopper
 {
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
-		myThreads.push_back(Thread(&myBoard, 2));
-		myThreads.push_back(Thread(&myBoard, 2));
-		std::string input;
-		std::cout << "Hopper Engine v1.8 by Jonathan McDermid\n";
-		while (true) {
-			std::getline(std::cin, input);
-			if (input == "uci") {
-				uci(argc, argv);
-				input = "quit";
+		for (int i = 0; i < 4; ++i)
+			myThreads.push_back(Thread(&myBoard, 4));
+		std::string token;
+		std::string cmd;
+		//std::cout << "Hopper Engine v1.8 by Jonathan McDermid\n";
+		do {
+			if (argc == 1 && !getline(std::cin, cmd)) 
+				cmd = "quit";
+			std::istringstream is(cmd);
+			token.clear(); 
+			is >> std::skipws >> token;
+			if (token == "quit" || token == "stop")	break;
+			else if (token == "uci")
+				std::cout << "id name Hopper Engine v1.8 \n"
+				<< "id author Jonathan McDermid\n"
+				//<< "option name Hash type spin default 16 min 2 max 131072\n"
+				//<< "option name Threads type spin default 4 min 1 max 10\n"
+				<< "uciok\n";
+			else if (token == "setoption")  setOption(is);
+			else if (token == "go")         go(is);
+			else if (token == "position")   position(is);
+			else if (token == "ucinewgame") {
+				myBoard.fenSet(STARTFEN);
+				for (int i = 0; i < myThreads.size(); ++i)
+					myThreads[i].myBoard.fenSet(STARTFEN);
+				myEngine.flushTT();
 			}
-			if (input == "local")
-				local();
-			if (input == "tuner")
-				tuner();
-			if (input == "self")
-				self();
-			if (input == "perft")
-				myEngine.perftControl();
-			if (input == "3d" || input == "3D") {
+			else if (token == "isready")    std::cout << "readyok\n";
+			else if (token == "local")		local();
+			else if (token == "tuner")		tuner();
+			else if (token == "self")		self();
+			else if (token == "perft")		myEngine.perftControl();
+			else if (token == "3d" || token == "3D") {
 				std::cout << "Select opponent difficulty from 1 to 9\n";
-				while (1) {
-					std::getline(std::cin, input);
-					if (input.at(0) > '0' && input.at(0) <= '9') {
-						unsigned time = (input.at(0) - '0') * 30000;
+				while (true) {
+					std::getline(std::cin, token);
+					if (token.at(0) > '0' && token.at(0) <= '9') {
+						unsigned time = (token.at(0) - '0') * 30000;
 						myEngine.myLimits.time[WHITE] = time;
 						myEngine.myLimits.time[BLACK] = time;
 						return;
 					}
 				}
 			}
-			if (input == "quit")
-				exit(1);
-		}
+
+		} while (token != "quit" && argc == 1);
 	}
 
 	void Interface::go(std::istringstream& is)
@@ -97,59 +110,25 @@ namespace Hopper
 		}
 	}
 
-	void Interface::uci(int argc, char* argv[])
-	{//uci communication loop, some options non functioning
-		std::string word, cmd;
-		std::cout << "id name Hopper Engine v1.8 \nid author Jonathan McDermid\n";
-		std::cout << "option name Threads type spin default 1 min 1 max 10\n";
-		std::cout << "uciok\n";
-		for (int i = 1; i < argc; ++i)
-			cmd += std::string(argv[i]) + " ";
-		do {
-			if (argc == 1 && !getline(std::cin, cmd))
-				cmd = "quit";
-			std::istringstream is(cmd);
-			word.clear();
-			is >> std::skipws >> word;
-			if (word == "uci")
-				std::cout << "id name Hopper Engine v1.8 \nid author Jonathan McDermid\nuciok\n";
-			else if (word == "setoption")
-				setOption(is);
-			else if (word == "go")
-				go(is);
-			else if (word == "position")
-				position(is);
-			else if (word == "ucinewgame") {
-				myBoard.fenSet(STARTFEN);
-				for (int i = 0; i < myThreads.size(); ++i)
-					myThreads[i].myBoard.fenSet(STARTFEN);
-				myEngine.flushTT();
-			}
-			else if (word == "isready")
-				std::cout << "readyok\n";
-			else if (word == "print")
-				myBoard.drawBoard();
-		} while (word != "quit" && argc == 1);
-	}
-
 	void Interface::setOption(std::istringstream& is)
 	{
-		std::string word;
-		int value;
-		while (is >> word) {
-			if (word == "Hash") {
-				is >> word;
-				is >> myEngine.myLimits.hashbytes;
-			}
-			else if (word == "Threads") {
-				is >> word;
-				is >> value;
-				myThreads.resize(0);
-				for (int i = 0; i < value; ++i)
-					myThreads.push_back(Thread(&myBoard, value));
-				std::cout << "info string set Threads to " << value << "\n";
-			}
+		std::string token, name, value;
+
+		is >> token; 
+		while (is >> token && token != "value")
+			name += (name.empty() ? "" : " ") + token;
+		while (is >> token)
+			value += (value.empty() ? "" : " ") + token;
+		//if (Options.count(name))
+		//	Options[name] = value;
+		if (name == "Threads") {
+			myThreads.resize(0);
+			for (int i = 0; i < stoi(value); ++i)
+				myThreads.push_back(Thread(&myBoard, stoi(value)));
+			std::cout << "info string set Threads to " << value << "\n";
 		}
+		else
+			std::cout << "No such option: " << name << "\n";
 	}
 
 	void Interface::local()
@@ -188,7 +167,7 @@ namespace Hopper
 				while (!playerMove(input))
 					std::getline(std::cin, input);
 				myBoard.drawBoard();
-				if (myBoard.isCheckMate() || myBoard.isMaterialDraw() || myBoard.isRepititionDraw())
+				if (myBoard.isCheckMate() || (myBoard.isMaterialDraw(WHITE) && myBoard.isMaterialDraw(BLACK))|| myBoard.isRepititionDraw())
 					break;
 			}
 		}
