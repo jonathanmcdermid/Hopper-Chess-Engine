@@ -26,6 +26,11 @@ namespace Hopper
 				LMRTable[depth][ordered] = (int) (0.75 + log(depth) * log(ordered) / 2.25);
 	}
 
+	void Engine::setHashSize(unsigned s)
+	{
+		myHashTable.setSize(s);
+	}
+
 	Move Engine::getBestMove(Thread* myThreads)
 	{//calls minimax and controls depth, alpha beta windows, and time
 		auto startTime = std::chrono::high_resolution_clock::now();
@@ -35,112 +40,97 @@ namespace Hopper
 		unsigned window = 25;
 		int alpha = LOWERLIMIT, beta = UPPERLIMIT;
 		int nodes;
-		int score;//FIX ME FOR THREADS
-		line principalVariation[10];// FIX ME FOR THREADS
+		int score;
+		line principalVariation[10];
 		scoredMove rootMoves[MEMORY];
 		unsigned nMoves = myThreads->myBoard.genAllMoves(rootMoves);
-		if (nMoves == 1) {
-			principalVariation[0].moveLink[0] = rootMoves[0].myMove;
-			principalVariation[0].moveCount = 1;
-		}
-		else {
-			bool fail = false;
-			bool panic = false;
-			bool consensus = true;
-			bool TThit;
-			Move moveHistory[MAXDEPTH];
-			unsigned timeallotted = (myLimits.time[myThreads[0].myBoard.getTurn()] + myLimits.inc[myThreads[0].myBoard.getTurn()]) / (myLimits.movesleft + 1);
-			for (int depth = 1; depth < myLimits.depth; ++depth) {
-				nodes = 0;
-				abort = false;
-				for (int i = 0; i < myThreads[0].nThreads; ++i) {
-					processes[i] = std::thread([this](Thread* myThread, int depth, int ply, int alpha, int beta, line* pline, bool cutNode) {
-						alphaBeta(myThread, depth, ply, alpha, beta, pline, cutNode); }, 
-						&myThreads[i], depth + i, 0, alpha, beta, &principalVariation[i], false);
-				}
-				for (int i = 0; i < myThreads[0].nThreads; ++i) {
-					if (depth == MAXDEPTH - 1)
-						i=i;
-					processes[i].join();
-					abort = true;
-					nodes += myThreads[i].nodes;
-				}
-				score = myHashTable.probe(myThreads[0].myBoard.getCurrZ(), TThit)->hashEval;
-				std::string message;
-				std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
-				for (unsigned i = 0; i < principalVariation[0].moveCount; ++i) {
-					message += {
-						(char)(principalVariation[0].moveLink[i].getFrom() % WIDTH + 'a'),
-							(char)(WIDTH - (int)(principalVariation[0].moveLink[i].getFrom() / WIDTH) + '0'),
-							(char)(principalVariation[0].moveLink[i].getTo() % WIDTH + 'a'),
-							(char)(WIDTH - (int)(principalVariation[0].moveLink[i].getTo() / WIDTH) + '0'),
-							(char)' ' };
-				}
-				std::cout << message << "\n";
-				if (score <= alpha || score >= beta) {
-					fail = true;
-					beta = UPPERLIMIT;
-					alpha = LOWERLIMIT;
-					--depth;
-				}
-				//else if (score >= beta) {
-				//	beta = UPPERLIMIT;
-				//	--depth;
-				//}
-				else {
-					alpha	= depth > 5 ? score - window : LOWERLIMIT;
-					beta	= depth > 5 ? score + window : UPPERLIMIT;
-					fail = false;
-					consensus = true;
-					moveHistory[depth - 1] = principalVariation[0].moveLink[0];
-					for (int i = (depth > CONSENSUS_THRESHOLD) ? depth - CONSENSUS_THRESHOLD : 1; i < depth; ++i) {
-						if (moveHistory[i - 1] != moveHistory[i]) {
-							consensus = false;
-							break;
-						}
-					}
-				}
-				now = std::chrono::high_resolution_clock::now();
-				// if PV mate is found, no point in continuing search
-				if (score >= MATE - MAXDEPTH || score <= -MATE + MAXDEPTH ||
-					// if PV is a draw in less moves than the depth searched, no point in continuing
-					//(score == CONTEMPT && principalVariation.moveCount < depth && fail == false) ||
-					// if we are over time limit, need to stop search unless we are significantly lower than previous eval
-					std::chrono::duration_cast<std::chrono::milliseconds >
-					(now - startTime).count() > timeallotted ||
-					// if we are about to get flagged, end no matter what 
-					std::chrono::duration_cast<std::chrono::milliseconds>
-					(now - startTime).count() > myLimits.time[myThreads[0].myBoard.getTurn()] / 3 ||
-					// if the past few iterative searches have yielded the same move, we will stop early
-					(consensus == true && panic == false && 
-					std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / CONSENSUS_REDUCTION_FACTOR) ||
-					// if engine was in panic state but has now found a move, we can stop
-					(panic == true && score >= lastEval - PANIC_THRESHOLD)) {
-					// if we are over our time limit but we cant find a good move, take more time and panic
-					if (score < lastEval - PANIC_THRESHOLD && panic == false) {
-						timeallotted *= 1 + MIN((lastEval - score) / PANIC_THRESHOLD, PANIC_EXTENSION_LIMIT);
-						panic = true;
-					}
-					else {
-						lastEval = score;
+		if (nMoves == 1)
+			return rootMoves[0].myMove;
+		bool fail = false;
+		bool panic = false;
+		bool consensus = true;
+		bool TThit;
+		Move moveHistory[MAXDEPTH];
+		unsigned timeallotted = (myLimits.time[myThreads[0].myBoard.getTurn()] + myLimits.inc[myThreads[0].myBoard.getTurn()]) / (myLimits.movesleft + 1);
+		for (int depth = 1; depth < myLimits.depth; ++depth) {
+			nodes = 0;
+			abort = false;
+			for (int i = 0; i < myThreads[0].nThreads; ++i) {
+				processes[i] = std::thread([this](Thread* myThread, int depth, int ply, int alpha, int beta, line* pline, bool cutNode) {
+					alphaBeta(myThread, depth, ply, alpha, beta, pline, cutNode); },
+					&myThreads[i], depth + i, 0, alpha, beta, &principalVariation[i], false);
+			}
+			for (int i = 0; i < myThreads[0].nThreads; ++i) {
+				processes[i].join();
+				abort = true;
+				nodes += myThreads[i].nodes;
+			}
+			score = myHashTable.probe(myThreads[0].myBoard.getCurrZ(), TThit)->hashEval;
+			std::string message;
+			std::cout << "info depth " << depth << " score cp " << score << " nodes " << nodes << " pv ";
+			for (unsigned i = 0; i < principalVariation[0].moveCount; ++i) {
+				message += {
+					(char)(principalVariation[0].moveLink[i].getFrom() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(principalVariation[0].moveLink[i].getFrom() / WIDTH) + '0'),
+						(char)(principalVariation[0].moveLink[i].getTo() % WIDTH + 'a'),
+						(char)(WIDTH - (int)(principalVariation[0].moveLink[i].getTo() / WIDTH) + '0'),
+						(char)' ' };
+			}
+			std::cout << message << std::endl;
+			if (score <= alpha || score >= beta) {
+				fail = true;
+				beta = UPPERLIMIT;
+				alpha = LOWERLIMIT;
+				--depth;
+			}
+			else {
+				alpha = depth > 5 ? score - window : LOWERLIMIT;
+				beta = depth > 5 ? score + window : UPPERLIMIT;
+				fail = false;
+				consensus = true;
+				moveHistory[depth - 1] = principalVariation[0].moveLink[0];
+				for (int i = (depth > CONSENSUS_THRESHOLD) ? depth - CONSENSUS_THRESHOLD : 1; i < depth; ++i) {
+					if (moveHistory[i - 1] != moveHistory[i]) {
+						consensus = false;
 						break;
 					}
 				}
 			}
+			now = std::chrono::high_resolution_clock::now();
+			// if PV mate is found, no point in continuing search
+			if (score >= MATE - MAXDEPTH || score <= -MATE + MAXDEPTH ||
+				// if PV is a draw in less moves than the depth searched, no point in continuing
+				//(score == CONTEMPT && principalVariation.moveCount < depth && fail == false) ||
+				// if we are over time limit, need to stop search unless we are significantly lower than previous eval
+				std::chrono::duration_cast<std::chrono::milliseconds>
+				(now - startTime).count() > timeallotted ||
+				// if we are about to get flagged, end no matter what 
+				std::chrono::duration_cast<std::chrono::milliseconds>
+				(now - startTime).count() > myLimits.time[myThreads[0].myBoard.getTurn()] / 3 ||
+				// if the past few iterative searches have yielded the same move, we will stop early
+				(consensus == true && panic == false &&
+					std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeallotted / CONSENSUS_REDUCTION_FACTOR) ||
+				// if engine was in panic state but has now found a move, we can stop
+				(panic == true && score >= lastEval - PANIC_THRESHOLD)) {
+				// if we are over our time limit but we cant find a good move, take more time and panic
+				if (score < lastEval - PANIC_THRESHOLD && panic == false) {
+					timeallotted *= 1 + MIN((lastEval - score) / PANIC_THRESHOLD, PANIC_EXTENSION_LIMIT);
+					panic = true;
+				}
+				else {
+					lastEval = score;
+					break;
+				}
+			}
 		}
-		std::cout << "time " << (int) std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() << "\n";
+		std::cout << "time " << (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() << std::endl;
 		myHashTable.clean();
 		for (int i = 0; i < myThreads[0].nThreads; ++i) {
 			myThreads[i].nodes = 0;
 			myThreads[i].myKillers.chrono();
 			myThreads[i].principalVariation.moveCount = 0;
 		}
-		return principalVariation[0].moveLink[0];
-	}
-
-	Move Engine::aspiration(Thread* myThread)
-	{
-
+		return myHashTable.probe(myThreads[0].myBoard.getCurrZ(), TThit)->hashMove;
 	}
 
 	int Engine::alphaBeta(Thread* myThread, int depth, int ply, int alpha, int beta, line* pline, bool cutNode)
@@ -233,8 +223,6 @@ namespace Hopper
 		for (unsigned genstate = GENPV; genstate <= GENLOSECAPS; ++genstate)
 		{
 			localMoveList.moveOrder(genstate);
-			//if (RootNode)
-			//	localMoveList.shuffle();
 			while (localMoveList.movesLeft()) {
 				if(localMoveList.getCurrMove().isCap() == false)
 					HHentry = &myThread->HHtable[myThread->myBoard.getTurn()][localMoveList.getCurrMove().getFrom()][localMoveList.getCurrMove().getTo()];
@@ -358,7 +346,7 @@ namespace Hopper
 			unsigned n = perft(depth);
 			auto stopTime = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-			std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() << "\n";
+			std::cout << "info depth " << depth << " nodes " << n << " time " << (int)duration.count() << std::endl;
 		}
 	}
 
@@ -385,7 +373,7 @@ namespace Hopper
 						(char)(WIDTH - (int)(allMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
-			std::cout << message << "\n";
+			std::cout << message << std::endl;
 			message = "Caps: ";
 			for (unsigned i = 0; i < capCount; ++i) {
 				message += {
@@ -395,7 +383,7 @@ namespace Hopper
 						(char)(WIDTH - (int)(allCapMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
-			std::cout << message << "\n";
+			std::cout << message << std::endl;
 			message = "NonCaps: ";
 			for (unsigned i = 0; i < nonCapCount; ++i) {
 				message += {
@@ -405,7 +393,7 @@ namespace Hopper
 						(char)(WIDTH - (int)(allNonCapMoves[i].myMove.getTo() / WIDTH) + '0'),
 						(char)' ' };
 			}
-			std::cout << message << "\n";
+			std::cout << message << std::endl;
 			moveCount = myThread->myBoard.genAllCapMoves(allMoves);
 		}
 		unsigned n = 0;

@@ -35,6 +35,25 @@ namespace Hopper
 
 	unsigned Board::removeIllegalMoves(scoredMove* nextMove, unsigned moveCount)
 	{
+		for (unsigned i = 0; i < moveCount; ++i) {
+			if (myPosition.grid[nextMove[i].myMove.getFrom()] == WHITE_KING || myPosition.grid[nextMove[i].myMove.getFrom()] == BLACK_KING) {
+				if (threatened[!turn][nextMove[i].myMove.getTo()]) {
+					nextMove[i--] = nextMove[--moveCount];
+				}
+				else if (turn == WHITE) {
+					if (nextMove[i].myMove.getFlags() == KCASTLE && (threatened[BLACK][60] || threatened[BLACK][61]))
+						nextMove[i--] = nextMove[--moveCount];
+					else if (nextMove[i].myMove.getFlags() == QCASTLE && (threatened[BLACK][60] || threatened[BLACK][59]))
+						nextMove[i--] = nextMove[--moveCount];
+				}
+				else {
+					if (nextMove[i].myMove.getFlags() == KCASTLE && (threatened[WHITE][4] || threatened[WHITE][5]))
+						nextMove[i--] = nextMove[--moveCount];
+					else if (nextMove[i].myMove.getFlags() == QCASTLE && (threatened[WHITE][4] || threatened[WHITE][3]))
+						nextMove[i--] = nextMove[--moveCount];
+				}
+			}
+		}
 		for (int i = 0; i < pinCount; ++i) {
 			for (unsigned j = 0; j < moveCount; ++j) {
 				if (nextMove[j].myMove.getFrom() == pinnedPieces[i]) {
@@ -139,21 +158,21 @@ namespace Hopper
 		switch (myPosition.grid[from]) {
 		case WHITE_KING:
 		case BLACK_KING:
-			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + BOARD_SOUTHEAST] && enemyPiece(myPosition.grid[from + BOARD_SOUTHEAST], turn))
+			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && enemyPiece(myPosition.grid[from + BOARD_SOUTHEAST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTHEAST, CAPTURE);
-			if ((from + BOARD_EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + BOARD_EAST] && enemyPiece(myPosition.grid[from + BOARD_EAST], turn))
+			if ((from + BOARD_EAST) % WIDTH > from % WIDTH && enemyPiece(myPosition.grid[from + BOARD_EAST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_EAST, CAPTURE);
-			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + BOARD_NORTHWEST] && enemyPiece(myPosition.grid[from + BOARD_NORTHWEST], turn))
+			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8 && enemyPiece(myPosition.grid[from + BOARD_NORTHWEST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTHWEST, CAPTURE);
-			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + BOARD_WEST] && enemyPiece(myPosition.grid[from + BOARD_WEST], turn))
+			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0 && enemyPiece(myPosition.grid[from + BOARD_WEST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_WEST, CAPTURE);
-			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + BOARD_SOUTHWEST] && enemyPiece(myPosition.grid[from + BOARD_SOUTHWEST], turn))
+			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && enemyPiece(myPosition.grid[from + BOARD_SOUTHWEST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTHWEST, CAPTURE);
-			if (from < 56 && !threatened[!turn][from + BOARD_SOUTH] && enemyPiece(myPosition.grid[from + BOARD_SOUTH], turn))
+			if (from < 56 && enemyPiece(myPosition.grid[from + BOARD_SOUTH], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTH, CAPTURE);
-			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + BOARD_NORTHEAST] && enemyPiece(myPosition.grid[from + BOARD_NORTHEAST], turn))
+			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6 && enemyPiece(myPosition.grid[from + BOARD_NORTHEAST], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTHEAST, CAPTURE);
-			if (from > 7 && !threatened[!turn][from + BOARD_NORTH] && enemyPiece(myPosition.grid[from + BOARD_NORTH], turn))
+			if (from > 7 && enemyPiece(myPosition.grid[from + BOARD_NORTH], turn))
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTH, CAPTURE);
 			return moveCount;
 		case WHITE_PAWN:
@@ -278,36 +297,36 @@ namespace Hopper
 		case WHITE_KING:
 		case BLACK_KING:
 			if (turn == WHITE) {
-				if (from == 60 && !threatened[BLACK][60]) {
-					if (myPosition.grid[61] == EMPTY && myPosition.grid[62] == EMPTY && !threatened[BLACK][61] && !threatened[BLACK][62] && (myHistory[halfMoveClock].cHist & 1 << 0))
+				if (from == 60) {
+					if (myPosition.grid[61] == EMPTY && myPosition.grid[62] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 0))
 						nextMove[moveCount++].myMove = Move(60, 62, KCASTLE);
-					if (myPosition.grid[59] == EMPTY && myPosition.grid[58] == EMPTY && myPosition.grid[57] == EMPTY && !threatened[BLACK][59] && !threatened[BLACK][58] && (myHistory[halfMoveClock].cHist & 1 << 1))
+					if (myPosition.grid[59] == EMPTY && myPosition.grid[58] == EMPTY && myPosition.grid[57] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 1))
 						nextMove[moveCount++].myMove = Move(60, 58, QCASTLE);
 				}
 			}
 			else {
-				if (from == 4 && !threatened[WHITE][4]) {
-					if (myPosition.grid[5] == EMPTY && myPosition.grid[6] == EMPTY && !threatened[WHITE][5] && !threatened[WHITE][6] && (myHistory[halfMoveClock].cHist & 1 << 2))
+				if (from == 4) {
+					if (myPosition.grid[5] == EMPTY && myPosition.grid[6] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 2))
 						nextMove[moveCount++].myMove = Move(4, 6, KCASTLE);
-					if (myPosition.grid[3] == EMPTY && myPosition.grid[2] == EMPTY && myPosition.grid[1] == EMPTY && !threatened[WHITE][3] && !threatened[WHITE][2] && (myHistory[halfMoveClock].cHist & 1 << 3))
+					if (myPosition.grid[3] == EMPTY && myPosition.grid[2] == EMPTY && myPosition.grid[1] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 3))
 						nextMove[moveCount++].myMove = Move(4, 2, QCASTLE);
 				}
 			}
-			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && !threatened[!turn][from + BOARD_SOUTHEAST] && myPosition.grid[from + BOARD_SOUTHEAST] == EMPTY)
+			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55 && myPosition.grid[from + BOARD_SOUTHEAST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTHEAST, STANDARD);
-			if ((from + BOARD_EAST) % WIDTH > from % WIDTH && !threatened[!turn][from + BOARD_EAST] && myPosition.grid[from + BOARD_EAST] == EMPTY)
+			if ((from + BOARD_EAST) % WIDTH > from % WIDTH && myPosition.grid[from + BOARD_EAST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_EAST, STANDARD);
-			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8 && !threatened[!turn][from + BOARD_NORTHWEST] && myPosition.grid[from + BOARD_NORTHWEST] == EMPTY)
+			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8 && myPosition.grid[from + BOARD_NORTHWEST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTHWEST, STANDARD);
-			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0 && !threatened[!turn][from + BOARD_WEST] && myPosition.grid[from + BOARD_WEST] == EMPTY)
+			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0 && myPosition.grid[from + BOARD_WEST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_WEST, STANDARD);
-			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && !threatened[!turn][from + BOARD_SOUTHWEST] && myPosition.grid[from + BOARD_SOUTHWEST] == EMPTY)
+			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57 && myPosition.grid[from + BOARD_SOUTHWEST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTHWEST, STANDARD);
-			if (from < 56 && !threatened[!turn][from + BOARD_SOUTH] && myPosition.grid[from + BOARD_SOUTH] == EMPTY)
+			if (from < 56 && myPosition.grid[from + BOARD_SOUTH] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_SOUTH, STANDARD);
-			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6 && !threatened[!turn][from + BOARD_NORTHEAST] && myPosition.grid[from + BOARD_NORTHEAST] == EMPTY)
+			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6 && myPosition.grid[from + BOARD_NORTHEAST] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTHEAST, STANDARD);
-			if (from > 7 && !threatened[!turn][from + BOARD_NORTH] && myPosition.grid[from + BOARD_NORTH] == EMPTY)
+			if (from > 7 && myPosition.grid[from + BOARD_NORTH] == EMPTY)
 				nextMove[moveCount++].myMove = Move(from, from + BOARD_NORTH, STANDARD);
 			return moveCount;
 		case WHITE_PAWN:
@@ -415,58 +434,58 @@ namespace Hopper
 		case WHITE_KING:
 		case BLACK_KING:
 			if (turn == WHITE) {
-				if (from == 60 && !threatened[BLACK][60]) {
-					if (myPosition.grid[61] == EMPTY && myPosition.grid[62] == EMPTY && !threatened[BLACK][61] && !threatened[BLACK][62] && (myHistory[halfMoveClock].cHist & 1 << 0))
+				if (from == 60) {
+					if (myPosition.grid[61] == EMPTY && myPosition.grid[62] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 0))
 						nextMove[moveCount++].myMove = Move(60, 62, KCASTLE);
-					if (myPosition.grid[59] == EMPTY && myPosition.grid[58] == EMPTY && myPosition.grid[57] == EMPTY && !threatened[BLACK][59] && !threatened[BLACK][58] && (myHistory[halfMoveClock].cHist & 1 << 1))
+					if (myPosition.grid[59] == EMPTY && myPosition.grid[58] == EMPTY && myPosition.grid[57] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 1))
 						nextMove[moveCount++].myMove = Move(60, 58, QCASTLE);
 				}
 			}
 			else {
-				if (from == 4 && !threatened[WHITE][4]) {
-					if (myPosition.grid[5] == EMPTY && myPosition.grid[6] == EMPTY && !threatened[WHITE][5] && !threatened[WHITE][6] && (myHistory[halfMoveClock].cHist & 1 << 2))
+				if (from == 4) {
+					if (myPosition.grid[5] == EMPTY && myPosition.grid[6] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 2))
 						nextMove[moveCount++].myMove = Move(4, 6, KCASTLE);
-					if (myPosition.grid[3] == EMPTY && myPosition.grid[2] == EMPTY && myPosition.grid[1] == EMPTY && !threatened[WHITE][3] && !threatened[WHITE][2] && (myHistory[halfMoveClock].cHist & 1 << 3))
+					if (myPosition.grid[3] == EMPTY && myPosition.grid[2] == EMPTY && myPosition.grid[1] == EMPTY && (myHistory[halfMoveClock].cHist & 1 << 3))
 						nextMove[moveCount++].myMove = Move(4, 2, QCASTLE);
 				}
 			}
 			if ((from + BOARD_SOUTHEAST) % WIDTH > from % WIDTH && from < 55)
-				if (!threatened[!turn][from + BOARD_SOUTHEAST] && !validPiece(myPosition.grid[from + BOARD_SOUTHEAST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_SOUTHEAST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_SOUTHEAST] == EMPTY ? 
 					Move(from, from + BOARD_SOUTHEAST, STANDARD) : 
 					Move(from, from + BOARD_SOUTHEAST, CAPTURE);
 			if ((from + BOARD_EAST) % WIDTH > from % WIDTH)
-				if (!threatened[!turn][from + BOARD_EAST] && !validPiece(myPosition.grid[from + BOARD_EAST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_EAST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_EAST] == EMPTY ? 
 					Move(from, from + BOARD_EAST, STANDARD) : 
 					Move(from, from + BOARD_EAST, CAPTURE);
 			if ((from + BOARD_NORTHWEST) % WIDTH < from % WIDTH && from > 8) //bad
-				if (!threatened[!turn][from + BOARD_NORTHWEST] && !validPiece(myPosition.grid[from + BOARD_NORTHWEST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_NORTHWEST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_NORTHWEST] == EMPTY ?
 					Move(from, from + BOARD_NORTHWEST, STANDARD) :
 					Move(from, from + BOARD_NORTHWEST, CAPTURE);
 			if ((from + BOARD_WEST) % WIDTH < from % WIDTH && from > 0)
-				if (!threatened[!turn][from + BOARD_WEST] && !validPiece(myPosition.grid[from + BOARD_WEST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_WEST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_WEST] == EMPTY ? 
 					Move(from, from + BOARD_WEST, STANDARD) : 
 					Move(from, from + BOARD_WEST, CAPTURE);
 			if ((from + BOARD_SOUTHWEST) % WIDTH < from % WIDTH && from < 57)
-				if (!threatened[!turn][from + BOARD_SOUTHWEST] && !validPiece(myPosition.grid[from + BOARD_SOUTHWEST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_SOUTHWEST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_SOUTHWEST] == EMPTY ? 
 					Move(from, from + BOARD_SOUTHWEST, STANDARD) : 
 					Move(from, from + BOARD_SOUTHWEST, CAPTURE);
 			if (from < 56)
-				if (!threatened[!turn][from + BOARD_SOUTH] && !validPiece(myPosition.grid[from + BOARD_SOUTH], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_SOUTH], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_SOUTH] == EMPTY ? 
 					Move(from, from + BOARD_SOUTH, STANDARD) :
 					Move(from, from + BOARD_SOUTH, CAPTURE);
 			if ((from + BOARD_NORTHEAST) % WIDTH > from % WIDTH && from > 6)//bad
-				if (!threatened[!turn][from + BOARD_NORTHEAST] && !validPiece(myPosition.grid[from + BOARD_NORTHEAST], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_NORTHEAST], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_NORTHEAST] == EMPTY ? 
 					Move(from, from + BOARD_NORTHEAST, STANDARD) : 
 					Move(from, from + BOARD_NORTHEAST, CAPTURE);
 			if (from > 7)//bad
-				if (!threatened[!turn][from + BOARD_NORTH] && !validPiece(myPosition.grid[from + BOARD_NORTH], turn))
+				if (!validPiece(myPosition.grid[from + BOARD_NORTH], turn))
 					nextMove[moveCount++].myMove = myPosition.grid[from + BOARD_NORTH] == EMPTY ? 
 					Move(from, from + BOARD_NORTH, STANDARD) : 
 					Move(from, from + BOARD_NORTH, CAPTURE);

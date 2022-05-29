@@ -24,10 +24,8 @@ namespace Hopper
             if (bytes & 1 << i)
                 break;
         }
-        unsigned j = 1 << (i - 5);
-        unsigned k = 1 << (i - 6);
-        myHashTable.resize(j);
-        myPawnHashTable.resize(k);
+        myHashTable.resize(1 << (i - 5));
+        myPawnHashTable.resize(1 << (i - 6));
     }
 
     hashEntry* HashTable::probe(U64 key, bool& found) {

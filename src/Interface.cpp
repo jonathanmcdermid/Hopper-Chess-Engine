@@ -8,11 +8,11 @@ namespace Hopper
 {
 	Interface::Interface(int argc, char* argv[])
 	{//awaits input from user or uci
-		for (int i = 0; i < 4; ++i)
-			myThreads.push_back(Thread(&myBoard, 4));
+		for (int i = 0; i < 8; ++i)
+			myThreads.push_back(Thread(&myBoard, 8));
 		std::string token;
 		std::string cmd;
-		//std::cout << "Hopper Engine v1.8 by Jonathan McDermid\n";
+		//std::cout << "Hopper Engine v1.9 by Jonathan McDermid" << std:: endl;
 		do {
 			if (argc == 1 && !getline(std::cin, cmd)) 
 				cmd = "quit";
@@ -21,11 +21,11 @@ namespace Hopper
 			is >> std::skipws >> token;
 			if (token == "quit" || token == "stop")	break;
 			else if (token == "uci")
-				std::cout << "id name Hopper Engine v1.8 \n"
-				<< "id author Jonathan McDermid\n"
-				//<< "option name Hash type spin default 16 min 2 max 131072\n"
-				//<< "option name Threads type spin default 4 min 1 max 10\n"
-				<< "uciok\n";
+				std::cout << "id name Hopper Engine v1.8 " << std:: endl
+				<< "id author Jonathan McDermid" << std::endl
+				//<< "option name Hash type spin default 16 min 2 max 131072" << std:: endl
+				//<< "option name Threads type spin default 8 min 1 max 10" << std:: endl
+				<< "uciok" << std::endl;
 			else if (token == "setoption")  setOption(is);
 			else if (token == "go")         go(is);
 			else if (token == "position")   position(is);
@@ -35,13 +35,13 @@ namespace Hopper
 					myThreads[i].myBoard.fenSet(STARTFEN);
 				myEngine.flushTT();
 			}
-			else if (token == "isready")    std::cout << "readyok\n";
+			else if (token == "isready")    std::cout << "readyok" << std::endl;
 			else if (token == "local")		local();
 			else if (token == "tuner")		tuner();
 			else if (token == "self")		self();
 			else if (token == "perft")		myEngine.perftControl();
 			else if (token == "3d" || token == "3D") {
-				std::cout << "Select opponent difficulty from 1 to 9\n";
+				std::cout << "Select opponent difficulty from 1 to 9" << std::endl;
 				while (true) {
 					std::getline(std::cin, token);
 					if (token.at(0) > '0' && token.at(0) <= '9') {
@@ -104,7 +104,7 @@ namespace Hopper
 			myThreads[i].myBoard.fenSet((const char*)fen.c_str());
 		while (is >> word) {
 			if (!playerMove(word)) {
-				std::cout << word << " is not a valid move\n";
+				std::cout << word << " is not a valid move" << std::endl;
 				exit(1);
 			}
 		}
@@ -125,10 +125,13 @@ namespace Hopper
 			myThreads.resize(0);
 			for (int i = 0; i < stoi(value); ++i)
 				myThreads.push_back(Thread(&myBoard, stoi(value)));
-			std::cout << "info string set Threads to " << value << "\n";
+			std::cout << "info string set Threads to " << value << std::endl;
+		}
+		else if (name == "Hash") {
+			myEngine.setHashSize(stoi(value));
 		}
 		else
-			std::cout << "No such option: " << name << "\n";
+			std::cout << "No such option: " << name << std::endl;
 	}
 
 	void Interface::local()
@@ -149,7 +152,7 @@ namespace Hopper
 					break;
 			}
 		}
-		std::cout << "good game\n";
+		std::cout << "good game" << std::endl;
 	}
 
 	void Interface::tuner()
@@ -171,7 +174,7 @@ namespace Hopper
 					break;
 			}
 		}
-		std::cout << "good game\n";
+		std::cout << "good game" << std::endl;
 	}
 
 	bool Interface::playerMove(std::string input) {//makes external moves
@@ -257,22 +260,22 @@ namespace Hopper
 		switch (myBoard.getCurrM().getFlags()) {
 		case NPROMOTE:
 		case NPROMOTEC:
-			std::cout << "n\n";
+			std::cout << "n" << std::endl;
 			break;
 		case BPROMOTE:
 		case BPROMOTEC:
-			std::cout << "b\n";
+			std::cout << "b" << std::endl;
 			break;
 		case RPROMOTE:
 		case RPROMOTEC:
-			std::cout << "r\n";
+			std::cout << "r" << std::endl;
 			break;
 		case QPROMOTE:
 		case QPROMOTEC:
-			std::cout << "q\n";
+			std::cout << "q" << std::endl;
 			break;
 		default:
-			std::cout << "\n";
+			std::cout << std::endl;
 		}
 	}
 }

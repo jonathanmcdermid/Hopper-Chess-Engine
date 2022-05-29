@@ -14,7 +14,7 @@ namespace Hopper
 		while(i < killerLimit[ply]) {
 			if (trackedKillers[ply][i].myMove == cm) {
 				++trackedKillers[ply][i].score;
-				std::sort(trackedKillers[ply], trackedKillers[ply] + killerLimit[ply], smScoreComp);
+				std::sort(trackedKillers[ply], trackedKillers[ply] + i, smScoreComp);
 				return;
 			}
 			++i;
